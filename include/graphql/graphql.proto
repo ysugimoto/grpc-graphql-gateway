@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package graphql;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.MethodOptions {
+  GraphqlQuery query = 50001;
+  GraphqlMutation mutation = 50002;
+}
+
+extend google.protobuf.FieldOptions {
+  GraphqlField field = 50003;
+}
+
+message GraphqlQuery {
+  string name = 1;
+  string field = 2;
+  bool autoresolve = 3;
+}
+
+message GraphqlMutation {
+  string name = 1;
+  string field = 2;
+  bool autoresolve = 3;
+  bool extract_field = 4;
+}
+
+message GraphqlField {
+  bool optional = 1;
+  string name = 2;
+}

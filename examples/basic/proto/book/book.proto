@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option go_package = "github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/book";
+
+package book;
+
+import "author/author.proto";
+import "graphql/graphql.proto";
+
+message Book {
+  int64 id = 1;
+  string name = 2;
+  author.Author author = 3;
+}
+
+message ListBooksRequest {}
+message ListBooksResponse {
+  repeated Book books = 1;
+}
+
+message GetBookRequest {
+  int64 id = 1;
+}
+
+service BookService {
+  rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
+    option (graphql.query) = {
+      name: "books"
+      field: "books"
+    };
+  }
+  rpc GetBook(GetBookRequest) returns (Book) {
+    option (graphql.query) = {
+      name: "book"
+      autoresolve: true
+    };
+  }
+}
+

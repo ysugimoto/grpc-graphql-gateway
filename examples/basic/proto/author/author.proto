@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option go_package = "github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/author";
+
+package author;
+
+import "graphql/graphql.proto";
+
+message Author {
+  string name = 2;
+}
+
+message ListAuthorsRequest {}
+message ListAuthorsResponse {
+  repeated Author authors = 1;
+}
+
+message GetAuthorRequest {
+  string name = 1;
+}
+
+service AuthorService {
+  rpc ListAuthors(ListAuthorsRequest) returns (ListAuthorsResponse) {
+    option (graphql.query) = {
+      name: "authors"
+    };
+  }
+  rpc GetAuthor(GetAuthorRequest) returns (Author) {
+    option (graphql.query) = {
+      name: "author"
+    };
+  }
+}
+
+
