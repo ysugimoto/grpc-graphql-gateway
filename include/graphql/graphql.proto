@@ -13,17 +13,25 @@ extend google.protobuf.FieldOptions {
   GraphqlField field = 50003;
 }
 
+message GraphqlResponse {
+  bool repeated = 1;
+  bool optional = 2;
+  string expose = 3;
+}
+
 message GraphqlQuery {
   string name = 1;
   string field = 2;
   bool autoresolve = 3;
+  GraphqlResponse response = 4;
 }
 
 message GraphqlMutation {
   string name = 1;
   string field = 2;
   bool autoresolve = 3;
-  bool extract_field = 4;
+  bool input_type = 4;
+  GraphqlResponse response = 5;
 }
 
 message GraphqlField {

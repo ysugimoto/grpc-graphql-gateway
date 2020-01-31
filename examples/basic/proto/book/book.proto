@@ -7,10 +7,18 @@ package book;
 import "author/author.proto";
 import "graphql/graphql.proto";
 
+enum BookType {
+  JAVASCRIPT  = 0;
+  ECMASCRIPT  = 1;
+  GIT         = 2;
+  ASP_DOT_NET = 3;
+}
+
 message Book {
   int64 id = 1;
   string name = 2;
-  author.Author author = 3;
+  BookType type = 3;
+  author.Author author = 4;
 }
 
 message ListBooksRequest {}
@@ -26,7 +34,11 @@ service BookService {
   rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
     option (graphql.query) = {
       name: "books"
-      field: "books"
+      response {
+        repeated: true
+        optional: true
+        expose: "books"
+      }
     };
   }
   rpc GetBook(GetBookRequest) returns (Book) {

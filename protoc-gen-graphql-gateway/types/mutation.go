@@ -14,6 +14,13 @@ type MutationSpec struct {
 	Option *graphql.GraphqlMutation
 }
 
+func (m *MutationSpec) GetExposeField() string {
+	if m.Option.Response == nil {
+		return ""
+	}
+	return m.Option.Response.GetExpose()
+}
+
 func (m *MutationSpec) BuildQuery() string {
 	format := "%s(%s): %s%s"
 	name := m.Option.GetName()

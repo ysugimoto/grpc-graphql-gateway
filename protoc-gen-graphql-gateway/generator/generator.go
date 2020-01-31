@@ -2,43 +2,34 @@ package generator
 
 import (
 	"errors"
-	"log"
+	_ "log"
 	"strings"
 
 	"path/filepath"
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/builder"
 	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/format"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/graphql"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/resolver"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
 )
 
 type Generator struct {
 	req *plugin.CodeGeneratorRequest
+	r   *resolver.Resolver
 
-	messages  map[string]*types.Message
 	queries   format.Queries
 	mutations format.Mutations
 	types     format.Types
 }
 
 func New(req *plugin.CodeGeneratorRequest) *Generator {
-	messages := make(map[string]*types.Message)
-
-	for _, f := range req.GetProtoFile() {
-		if strings.HasPrefix(f.GetPackage(), "google.protobuf") {
-			continue
-		}
-		for _, m := range f.GetMessageType() {
-			key := f.GetPackage() + "." + m.GetName()
-			messages[key] = types.NewMessage(m, f)
-		}
-	}
 	return &Generator{
-		req:      req,
-		messages: messages,
+		req: req,
+		r:   resolver.New(req),
 
 		queries:   format.Queries{},
 		mutations: format.Mutations{},
@@ -46,18 +37,7 @@ func New(req *plugin.CodeGeneratorRequest) *Generator {
 	}
 }
 
-func (g *Generator) FindMessage(names ...string) *types.Message {
-	for _, n := range names {
-		if m, ok := g.messages[n]; ok {
-			return m
-		}
-	}
-	return nil
-}
-
-func (g *Generator) Generate() *plugin.CodeGeneratorResponse {
-	resp := &plugin.CodeGeneratorResponse{}
-
+func (g *Generator) Generate(resp *plugin.CodeGeneratorResponse) {
 	var genError error
 	defer func() {
 		if genError != nil {
@@ -70,7 +50,7 @@ func (g *Generator) Generate() *plugin.CodeGeneratorResponse {
 	if g.req.Parameter != nil {
 		args, genError = types.NewParams(g.req.GetParameter())
 		if genError != nil {
-			return resp
+			return
 		}
 	}
 
@@ -82,7 +62,7 @@ func (g *Generator) Generate() *plugin.CodeGeneratorResponse {
 					qs, err := g.AnalyzeQuery(m, opt)
 					if err != nil {
 						genError = err
-						return resp
+						return
 					}
 					g.queries.Add(pkg, qs)
 				}
@@ -90,7 +70,7 @@ func (g *Generator) Generate() *plugin.CodeGeneratorResponse {
 					ms, err := g.AnalyzeMutation(m, opt)
 					if err != nil {
 						genError = err
-						return resp
+						return
 					}
 					g.mutations.Add(pkg, ms)
 				}
@@ -100,25 +80,27 @@ func (g *Generator) Generate() *plugin.CodeGeneratorResponse {
 
 	if len(g.queries) == 0 {
 		genError = errors.New("nothing to generate queries")
-		return resp
+		return
 	}
 
+	var builders []builder.Builder
 	queries := g.queries.Concat()
+	builders = append(builders, builder.NewQuery(queries))
 	mutations := g.mutations.Concat()
-	stack := make(map[string]struct{})
-	for _, q := range queries {
-		g.types = append(g.types, g.resolveMessages(q.Output, stack)...)
+	builders = append(builders, builder.NewMutation(mutations))
+	bs, err := g.r.ResolveTypes(queries, mutations)
+	if err != nil {
+		genError = err
+		return
 	}
-	for _, m := range mutations {
-		g.types = append(g.types, g.resolveMessages(m.Output, stack)...)
-	}
+	builders = append(builders, bs...)
 
 	if args.QueryOut != "" {
-		schema := format.NewSchema(queries, mutations, g.types.Sort())
+		schema := format.NewSchema(builders)
 		file, err := schema.Format(filepath.Join(args.QueryOut, "./query.graphql"))
 		if err != nil {
 			genError = err
-			return resp
+			return
 		}
 		resp.File = append(resp.File, file)
 	}
@@ -130,7 +112,6 @@ func (g *Generator) Generate() *plugin.CodeGeneratorResponse {
 	// 	return resp
 	// }
 	// resp.File = append(resp.File, file)
-	return resp
 }
 
 func (g *Generator) AnalyzeQuery(
@@ -138,14 +119,14 @@ func (g *Generator) AnalyzeQuery(
 	opt *graphql.GraphqlQuery,
 ) (*types.QuerySpec, error) {
 	var req, resp *types.Message
-	if req = g.FindMessage(
+	if req = g.r.FindMessage(
 		m.GetInputType(),
 		strings.TrimPrefix(m.GetInputType(), "."),
 		"."+m.GetInputType(),
 	); req == nil {
 		return nil, errors.New("InputType: " + m.GetInputType() + " not exists")
 	}
-	if resp = g.FindMessage(
+	if resp = g.r.FindMessage(
 		m.GetOutputType(),
 		strings.TrimPrefix(m.GetOutputType(), "."),
 		"."+m.GetOutputType(),
@@ -165,11 +146,10 @@ func (g *Generator) AnalyzeMutation(
 	opt *graphql.GraphqlMutation,
 ) (*types.MutationSpec, error) {
 	var req, resp *types.Message
-	var ok bool
-	if req, ok = g.messages[m.GetInputType()]; !ok {
+	if req = g.r.FindMessage(m.GetInputType()); req == nil {
 		return nil, errors.New("InputType: " + m.GetInputType() + " not exists")
 	}
-	if resp, ok = g.messages[m.GetOutputType()]; !ok {
+	if resp = g.r.FindMessage(m.GetOutputType()); resp == nil {
 		return nil, errors.New("OutputType: " + m.GetOutputType() + " not exists")
 	}
 
@@ -178,29 +158,4 @@ func (g *Generator) AnalyzeMutation(
 		Output: resp,
 		Option: opt,
 	}, nil
-}
-
-func (g *Generator) resolveMessages(m *types.Message, stack map[string]struct{}) []*types.Message {
-	ret := []*types.Message{}
-	if _, ok := stack[m.Descriptor.GetName()]; !ok {
-		ret = append(ret, m)
-		stack[m.Descriptor.GetName()] = struct{}{}
-	}
-
-	for _, f := range m.Descriptor.GetField() {
-		if f.GetType() != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-			continue
-		}
-		mm := g.FindMessage(
-			f.GetTypeName(),
-			strings.TrimPrefix(f.GetTypeName(), "."),
-			"."+f.GetTypeName(),
-		)
-		if mm == nil {
-			log.Println("resolveMessages: undefined: " + f.GetTypeName())
-			continue
-		}
-		ret = append(ret, g.resolveMessages(mm, stack)...)
-	}
-	return ret
 }

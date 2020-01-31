@@ -6,22 +6,18 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/builder"
 )
 
 type Schema struct {
-	q   []*types.QuerySpec
-	m   []*types.MutationSpec
-	t   []*types.Message
-	out *bytes.Buffer
+	items []builder.Builder
+	out   *bytes.Buffer
 }
 
-func NewSchema(q []*types.QuerySpec, m []*types.MutationSpec, t Types) *Schema {
+func NewSchema(bs []builder.Builder) *Schema {
 	return &Schema{
-		q:   q,
-		m:   m,
-		t:   t,
-		out: new(bytes.Buffer),
+		items: bs,
+		out:   new(bytes.Buffer),
 	}
 }
 
@@ -30,20 +26,10 @@ func (s Schema) write(line string) {
 }
 
 func (s *Schema) Format(file string) (*plugin.CodeGeneratorResponse_File, error) {
-	s.write(`type Query {`)
-	for _, q := range s.q {
-		s.write("  " + q.BuildQuery())
-	}
-	s.write("}")
-
-	for _, m := range s.m {
-		s.write("")
-		s.write(m.BuildQuery())
-	}
-
-	for _, t := range s.t {
-		s.write("")
-		s.write(t.BuildQuery())
+	for _, item := range s.items {
+		if line := item.BuildQuery(); line != "" {
+			s.write(line)
+		}
 	}
 
 	return &plugin.CodeGeneratorResponse_File{

@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	resp := &plugin.CodeGeneratorResponse{}
+
 	buf, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		log.Fatalln(err)
@@ -23,7 +25,7 @@ func main() {
 	}
 
 	g := generator.New(&req)
-	resp := g.Generate()
+	g.Generate(resp)
 
 	buf, err = proto.Marshal(resp)
 	if err != nil {

@@ -23,6 +23,9 @@ service AuthorService {
   rpc ListAuthors(ListAuthorsRequest) returns (ListAuthorsResponse) {
     option (graphql.query) = {
       name: "authors"
+      response {
+        expose: "authors"
+      }
     };
   }
   rpc GetAuthor(GetAuthorRequest) returns (Author) {

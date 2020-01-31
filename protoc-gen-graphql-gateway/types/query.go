@@ -14,6 +14,13 @@ type QuerySpec struct {
 	Option *graphql.GraphqlQuery
 }
 
+func (q *QuerySpec) GetExposeField() string {
+	if q.Option.Response == nil {
+		return ""
+	}
+	return q.Option.Response.GetExpose()
+}
+
 func (q *QuerySpec) BuildQuery() string {
 	format := "%s(%s): %s%s"
 	name := q.Option.GetName()
