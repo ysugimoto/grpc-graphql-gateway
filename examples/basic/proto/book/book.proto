@@ -30,6 +30,12 @@ message GetBookRequest {
   int64 id = 1;
 }
 
+message CreateBookRequest {
+  string name = 1;
+  BookType type = 2;
+  author.Author author = 3;
+}
+
 service BookService {
   rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
     option (graphql.query) = {
@@ -45,6 +51,13 @@ service BookService {
     option (graphql.query) = {
       name: "book"
       autoresolve: true
+    };
+  }
+
+  rpc CreateBook(CreateBookRequest) returns (Book) {
+    option (graphql.mutation) = {
+      name: "createbook"
+      input_type: true
     };
   }
 }

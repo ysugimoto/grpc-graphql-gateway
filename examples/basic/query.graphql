@@ -1,0 +1,32 @@
+type Query {
+  author(name: String!): Author!
+  authors(): [Author!]!
+  book(id: Int!): Book!
+  books(): [Book!]
+}
+
+type Mutation {
+  createbook(name: String!, type: BookType!, author: Author!): Book!
+}
+
+# message Author in author/author.proto
+type Author {
+  name: String!
+}
+
+# message Book in book/book.proto
+type Book {
+  id: Int!
+  name: String!
+  type: BookType!
+  author: Author!
+}
+
+# message BookType in book/book.proto
+enum BookType {
+  JAVASCRIPT
+  ECMASCRIPT
+  GIT
+  ASP_DOT_NET
+}
+

@@ -9,17 +9,16 @@ import (
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
+	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/builder"
 	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/format"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/graphql"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/resolver"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
 )
 
 type Generator struct {
 	req *plugin.CodeGeneratorRequest
-	r   *resolver.Resolver
+	r   *Resolver
 
 	queries   format.Queries
 	mutations format.Mutations
@@ -29,7 +28,7 @@ type Generator struct {
 func New(req *plugin.CodeGeneratorRequest) *Generator {
 	return &Generator{
 		req: req,
-		r:   resolver.New(req),
+		r:   NewResolver(req),
 
 		queries:   format.Queries{},
 		mutations: format.Mutations{},
@@ -83,35 +82,47 @@ func (g *Generator) Generate(resp *plugin.CodeGeneratorResponse) {
 		return
 	}
 
-	var builders []builder.Builder
 	queries := g.queries.Concat()
-	builders = append(builders, builder.NewQuery(queries))
 	mutations := g.mutations.Concat()
-	builders = append(builders, builder.NewMutation(mutations))
-	bs, err := g.r.ResolveTypes(queries, mutations)
+	types, err := g.r.ResolveTypes(queries, mutations)
 	if err != nil {
 		genError = err
 		return
 	}
-	builders = append(builders, bs...)
 
 	if args.QueryOut != "" {
-		schema := format.NewSchema(builders)
-		file, err := schema.Format(filepath.Join(args.QueryOut, "./query.graphql"))
-		if err != nil {
-			genError = err
-			return
+		builders := []builder.Builder{
+			builder.NewQuery(queries),
+			builder.NewMutation(mutations),
 		}
-		resp.File = append(resp.File, file)
+		builders = append(builders, types...)
+		schema := format.NewSchema(builders)
+		resp.File = append(
+			resp.File,
+			schema.Format(filepath.Join(args.QueryOut, "./query.graphql")),
+		)
 	}
 
-	// program := format.NewProgram(g.queries, g.mutations)
-	// file, err = program.Format()
-	// if err != nil {
-	// 	genError = err
-	// 	return resp
-	// }
-	// resp.File = append(resp.File, file)
+	if args.ProgramOut != "" {
+		builders := []builder.Builder{
+			builder.NewPackage(args.ProgramPackage),
+			builder.NewImport(queries, mutations),
+		}
+		builders = append(builders, types...)
+		builders = append(
+			builders,
+			builder.NewQuery(queries),
+			builder.NewMutation(mutations),
+			builder.NewHandler(),
+		)
+		program := format.NewProgram(builders)
+		resp.File = append(
+			resp.File,
+			program.Format(
+				filepath.Join(args.ProgramOut, "./app/query.grahpql.go"),
+			),
+		)
+	}
 }
 
 func (g *Generator) AnalyzeQuery(
@@ -119,18 +130,10 @@ func (g *Generator) AnalyzeQuery(
 	opt *graphql.GraphqlQuery,
 ) (*types.QuerySpec, error) {
 	var req, resp *types.Message
-	if req = g.r.FindMessage(
-		m.GetInputType(),
-		strings.TrimPrefix(m.GetInputType(), "."),
-		"."+m.GetInputType(),
-	); req == nil {
+	if req = g.r.FindMessage(strings.TrimPrefix(m.GetInputType(), ".")); req == nil {
 		return nil, errors.New("InputType: " + m.GetInputType() + " not exists")
 	}
-	if resp = g.r.FindMessage(
-		m.GetOutputType(),
-		strings.TrimPrefix(m.GetOutputType(), "."),
-		"."+m.GetOutputType(),
-	); resp == nil {
+	if resp = g.r.FindMessage(strings.TrimPrefix(m.GetOutputType(), ".")); resp == nil {
 		return nil, errors.New("OutputType: " + m.GetOutputType() + " not exists")
 	}
 
@@ -146,10 +149,10 @@ func (g *Generator) AnalyzeMutation(
 	opt *graphql.GraphqlMutation,
 ) (*types.MutationSpec, error) {
 	var req, resp *types.Message
-	if req = g.r.FindMessage(m.GetInputType()); req == nil {
+	if req = g.r.FindMessage(strings.TrimPrefix(m.GetInputType(), ".")); req == nil {
 		return nil, errors.New("InputType: " + m.GetInputType() + " not exists")
 	}
-	if resp = g.r.FindMessage(m.GetOutputType()); resp == nil {
+	if resp = g.r.FindMessage(strings.TrimPrefix(m.GetOutputType(), ".")); resp == nil {
 		return nil, errors.New("OutputType: " + m.GetOutputType() + " not exists")
 	}
 

@@ -21,11 +21,11 @@ func NewSchema(bs []builder.Builder) *Schema {
 	}
 }
 
-func (s Schema) write(line string) {
+func (s *Schema) write(line string) {
 	io.WriteString(s.out, line+"\n")
 }
 
-func (s *Schema) Format(file string) (*plugin.CodeGeneratorResponse_File, error) {
+func (s *Schema) Format(file string) *plugin.CodeGeneratorResponse_File {
 	for _, item := range s.items {
 		if line := item.BuildQuery(); line != "" {
 			s.write(line)
@@ -35,5 +35,5 @@ func (s *Schema) Format(file string) (*plugin.CodeGeneratorResponse_File, error)
 	return &plugin.CodeGeneratorResponse_File{
 		Name:    proto.String(file),
 		Content: proto.String(s.out.String()),
-	}, nil
+	}
 }

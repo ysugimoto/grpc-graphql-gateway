@@ -4,7 +4,7 @@ graphql: build
 	find ./proto -name "*.proto" | xargs protoc \
 		-Iproto \
 		--plugin=../../dist/protoc-gen-graphql-gateway \
-		--graphql-gateway_out=query=./:./
+		--graphql-gateway_out=query=./,go=./app:./
 
 build: clean init
 	cd ../../ && make

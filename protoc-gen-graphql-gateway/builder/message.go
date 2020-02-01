@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
 )
@@ -26,17 +27,21 @@ func (b *Message) BuildQuery() string {
 		fmt.Sprintf("type %s {", m.Descriptor.GetName()),
 	}
 	for _, f := range m.Descriptor.GetField() {
-		sign := "!"
+		fieldType := ext.ConvertGraphqlType(f)
+		if f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			fieldType = "[" + fieldType + "]"
+		}
+		var optional bool
 		if opt := ext.GraphqlFieldExtension(f); opt != nil {
-			if opt.GetOptional() {
-				sign = ""
-			}
+			optional = opt.GetOptional()
+		}
+		if !optional {
+			fieldType += "!"
 		}
 		lines = append(lines, fmt.Sprintf(
-			"  %s: %s%s",
+			"  %s: %s",
 			f.GetName(),
-			ext.ConvertGraphqlType(f),
-			sign,
+			fieldType,
 		))
 	}
 	lines = append(lines, "}\n")
@@ -44,6 +49,40 @@ func (b *Message) BuildQuery() string {
 	return strings.Join(lines, "\n")
 }
 
-func (m *Message) BuildProgram() string {
-	return ""
+func (b *Message) BuildProgram() string {
+	fields := make([]string, len(b.m.Descriptor.GetField()))
+	for i, f := range b.m.Descriptor.GetField() {
+		fieldType := ext.ConvertGoType(f)
+		if f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			fieldType = "graphql.NewList(" + fieldType + ")"
+		}
+
+		var optional bool
+		if opt := ext.GraphqlFieldExtension(f); opt != nil {
+			optional = opt.GetOptional()
+		}
+		if !optional {
+			fieldType = "graphql.NewNonNull(" + fieldType + ")"
+		}
+
+		fields[i] = fmt.Sprintf(`
+			"%s": &graphql.Field{
+				Type: %s,
+			},`,
+			f.GetName(),
+			fieldType,
+		)
+	}
+
+	return fmt.Sprintf(`
+var %s = graphql.NewObject(graphql.ObjectConfig{
+	Name: "%s",
+	Fields: graphql.Fields{
+		%s
+	},
+})`,
+		ext.MessageName(b.m.Descriptor.GetName()),
+		b.m.Descriptor.GetName(),
+		strings.Join(fields, "\n"),
+	)
 }

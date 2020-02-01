@@ -54,6 +54,16 @@ func (a *App) ListAuthors(ctx context.Context, req *author.ListAuthorsRequest) (
 		Authors: localData.Authors,
 	}, nil
 }
+
+func (a *App) CreateBook(ctx context.Context, req *book.CreateBookRequest) (*book.Book, error) {
+	return &book.Book{
+		Id:     100,
+		Name:   req.GetName(),
+		Type:   req.GetType(),
+		Author: req.GetAuthor(),
+	}, nil
+}
+
 func (a *App) GetAuthor(ctx context.Context, req *author.GetAuthorRequest) (*author.Author, error) {
 	name := req.GetName()
 	for _, a := range localData.Authors {

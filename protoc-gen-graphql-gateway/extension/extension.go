@@ -3,7 +3,7 @@ package extension
 import (
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/graphql"
+	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 )
 
 func GraphqlQueryOption(m *descriptor.MethodDescriptorProto) *graphql.GraphqlQuery {

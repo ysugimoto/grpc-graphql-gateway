@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
 )
 
@@ -35,5 +36,26 @@ func (b *Enum) BuildQuery() string {
 }
 
 func (b *Enum) BuildProgram() string {
-	return ""
+	values := make([]string, len(b.e.Descriptor.GetValue()))
+	for i, v := range b.e.Descriptor.GetValue() {
+		values[i] = fmt.Sprintf(`
+			"%s": &graphql.EnumValueConfig{
+				Value: %d,
+			},`,
+			v.GetName(),
+			v.GetNumber(),
+		)
+	}
+	return fmt.Sprintf(`
+var %s = graphql.NewEnum(graphql.EnumConfig{
+	Name: "%s",
+	Values: graphql.EnumValueConfigMap{
+		%s
+	},
+})`,
+
+		ext.EnumName(b.e.Descriptor.GetName()),
+		b.e.Descriptor.GetName(),
+		strings.Join(values, "\n"),
+	)
 }

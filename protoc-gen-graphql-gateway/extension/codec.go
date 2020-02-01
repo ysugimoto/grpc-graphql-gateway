@@ -25,28 +25,37 @@ func ConvertGraphqlType(f *descriptor.FieldDescriptorProto) string {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE,
 		descriptor.FieldDescriptorProto_TYPE_ENUM:
 		spec := strings.Split(f.GetTypeName(), ".")
-		return spec[len(spec)-1]
+		name := spec[len(spec)-1]
+		return name
 	default:
 		return "Unknown"
 	}
 }
 
-func ConvertGoType(f descriptor.FieldDescriptorProto) string {
+func ConvertGoType(f *descriptor.FieldDescriptorProto) string {
 	switch f.GetType() {
 	case descriptor.FieldDescriptorProto_TYPE_BOOL:
-		return "bool"
+		return "graphql.Bool"
 	case descriptor.FieldDescriptorProto_TYPE_DOUBLE,
 		descriptor.FieldDescriptorProto_TYPE_FLOAT:
-		return "float64"
+		return "graphql.Float"
 	case descriptor.FieldDescriptorProto_TYPE_INT32,
 		descriptor.FieldDescriptorProto_TYPE_INT64,
 		descriptor.FieldDescriptorProto_TYPE_SFIXED32,
 		descriptor.FieldDescriptorProto_TYPE_SFIXED64,
 		descriptor.FieldDescriptorProto_TYPE_UINT32,
 		descriptor.FieldDescriptorProto_TYPE_UINT64:
-		return "int64"
+		return "graphql.Int"
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
-		return "string"
+		return "graphql.String"
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		spec := strings.Split(f.GetTypeName(), ".")
+		name := spec[len(spec)-1]
+		return MessageName(name)
+	case descriptor.FieldDescriptorProto_TYPE_ENUM:
+		spec := strings.Split(f.GetTypeName(), ".")
+		name := spec[len(spec)-1]
+		return EnumName(name)
 	default:
 		return "interface{}"
 	}

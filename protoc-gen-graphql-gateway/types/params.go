@@ -12,7 +12,9 @@ type Params struct {
 }
 
 func NewParams(p string) (*Params, error) {
-	params := &Params{}
+	params := &Params{
+		ProgramPackage: "main",
+	}
 
 	for _, v := range strings.Split(p, ",") {
 		kv := strings.SplitN(v, "=", 2)
@@ -22,7 +24,7 @@ func NewParams(p string) (*Params, error) {
 		switch kv[0] {
 		case "query":
 			params.QueryOut = kv[1]
-		case "goout":
+		case "go":
 			params.ProgramOut = kv[1]
 		case "gopkg":
 			params.ProgramPackage = kv[1]

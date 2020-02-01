@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/graphql"
 )
 
 type QuerySpec struct {
@@ -14,11 +15,28 @@ type QuerySpec struct {
 	Option *graphql.GraphqlQuery
 }
 
-func (q *QuerySpec) GetExposeField() string {
+func (q *QuerySpec) IsOutputOptional() bool {
 	if q.Option.Response == nil {
-		return ""
+		return false
 	}
-	return q.Option.Response.GetExpose()
+	return q.Option.Response.GetOptional()
+}
+
+func (q *QuerySpec) GetExposeField() (*descriptor.FieldDescriptorProto, error) {
+	if q.Option.Response == nil {
+		return nil, nil
+	}
+	expose := q.Option.Response.GetExpose()
+	for _, f := range q.Output.Descriptor.GetField() {
+		if f.GetName() == expose {
+			return f, nil
+		}
+	}
+	return nil, fmt.Errorf(
+		"expose field %s not found in message %s",
+		expose,
+		q.Output.Descriptor.GetName(),
+	)
 }
 
 func (q *QuerySpec) BuildQuery() string {

@@ -1,4 +1,4 @@
-package resolver
+package generator
 
 import (
 	"errors"
@@ -16,7 +16,7 @@ type Resolver struct {
 	enums    map[string]*types.Enum
 }
 
-func New(req *plugin.CodeGeneratorRequest) *Resolver {
+func NewResolver(req *plugin.CodeGeneratorRequest) *Resolver {
 	messages := make(map[string]*types.Message)
 	enums := make(map[string]*types.Enum)
 
