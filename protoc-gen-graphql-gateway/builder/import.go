@@ -80,6 +80,7 @@ import (
 
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/gqlerrors"
+	"google.golang.org/grpc"
 	%s
 )`,
 		strings.Join(dendencies, "\n"),

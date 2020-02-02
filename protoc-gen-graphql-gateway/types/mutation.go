@@ -10,9 +10,11 @@ import (
 )
 
 type MutationSpec struct {
-	Input  *Message
-	Output *Message
-	Option *graphql.GraphqlMutation
+	Input   *Message
+	Output  *Message
+	Option  *graphql.GraphqlMutation
+	Method  *descriptor.MethodDescriptorProto
+	Service *descriptor.ServiceDescriptorProto
 }
 
 func (m *MutationSpec) GetExposeField() (*descriptor.FieldDescriptorProto, error) {

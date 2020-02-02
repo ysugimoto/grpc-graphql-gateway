@@ -137,13 +137,17 @@ func (q *Query) BuildProgram() string {
 	}
 
 	return fmt.Sprintf(`
-var %s = graphql.NewObject(graphql.ObjectConfig{
-	Name: "Query",
-	Fields: graphql.Fields{
-		%s
-	},
-})`,
-		ext.QueryName(),
+func createSchema(conn *grpc.ClientConn) graphql.Schema {
+	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
+		Query: graphql.NewObject(graphql.ObjectConfig{
+			Name: "Query",
+			Fields: graphql.Fields{
+				%s
+			},
+		}),
+	})
+	return schema
+}`,
 		strings.Join(fields, "\n"),
 	)
 }

@@ -10,9 +10,11 @@ import (
 )
 
 type QuerySpec struct {
-	Input  *Message
-	Output *Message
-	Option *graphql.GraphqlQuery
+	Input   *Message
+	Output  *Message
+	Option  *graphql.GraphqlQuery
+	Method  *descriptor.MethodDescriptorProto
+	Service *descriptor.ServiceDescriptorProto
 }
 
 func (q *QuerySpec) IsOutputOptional() bool {

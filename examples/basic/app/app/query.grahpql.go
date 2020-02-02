@@ -10,6 +10,7 @@ import (
 	"github.com/graphql-go/graphql/gqlerrors"
 	author "github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/author"
 	book "github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/book"
+	"google.golang.org/grpc"
 )
 
 var gql_Type_Author = graphql.NewObject(graphql.ObjectConfig{
@@ -57,53 +58,91 @@ var gql_Enum_BookType = graphql.NewEnum(graphql.EnumConfig{
 	},
 })
 
-var gql_Query = graphql.NewObject(graphql.ObjectConfig{
-	Name: "Query",
-	Fields: graphql.Fields{
-		"author": &graphql.Field{
-			Type: graphql.NewNonNull(gql_Type_Author),
-			Args: graphql.FieldConfigArgument{
-				"name": &graphql.ArgumentConfig{
-					Type: graphql.NewNonNull(graphql.String),
+func createSchema(conn *grpc.ClientConn) graphql.Schema {
+	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
+		Query: graphql.NewObject(graphql.ObjectConfig{
+			Name: "Query",
+			Fields: graphql.Fields{
+				"author": &graphql.Field{
+					Type: graphql.NewNonNull(gql_Type_Author),
+					Args: graphql.FieldConfigArgument{
+						"name": &graphql.ArgumentConfig{
+							Type: graphql.NewNonNull(graphql.String),
+						},
+					},
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						client := author.NewAuthorServiceClient(conn)
+						resp, err := client.GetAuthor(
+							p.Context,
+							&author.GetAuthorRequest{},
+						)
+						if err != nil {
+							return nil, err
+						}
+						return resp, nil
+					},
+				},
+				"authors": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(gql_Type_Author)),
+
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						client := author.NewAuthorServiceClient(conn)
+						resp, err := client.ListAuthors(
+							p.Context,
+							&author.ListAuthorsRequest{},
+						)
+						if err != nil {
+							return nil, err
+						}
+						return resp.GetAuthors(), nil
+					},
+				},
+				"book": &graphql.Field{
+					Type: graphql.NewNonNull(gql_Type_Book),
+					Args: graphql.FieldConfigArgument{
+						"id": &graphql.ArgumentConfig{
+							Type: graphql.NewNonNull(graphql.Int),
+						},
+					},
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						client := book.NewBookServiceClient(conn)
+						resp, err := client.GetBook(
+							p.Context,
+							&book.GetBookRequest{},
+						)
+						if err != nil {
+							return nil, err
+						}
+						return resp, nil
+					},
+				},
+				"books": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(gql_Type_Book)),
+
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						client := book.NewBookServiceClient(conn)
+						resp, err := client.ListBooks(
+							p.Context,
+							&book.ListBooksRequest{},
+						)
+						if err != nil {
+							return nil, err
+						}
+						return resp.GetBooks(), nil
+					},
 				},
 			},
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return nil, nil
-			},
-		},
-		"authors": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.NewList(gql_Type_Author)),
-
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return nil, nil
-			},
-		},
-		"book": &graphql.Field{
-			Type: graphql.NewNonNull(gql_Type_Book),
-			Args: graphql.FieldConfigArgument{
-				"id": &graphql.ArgumentConfig{
-					Type: graphql.NewNonNull(graphql.Int),
-				},
-			},
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return nil, nil
-			},
-		},
-		"books": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.NewList(gql_Type_Book)),
-
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return nil, nil
-			},
-		},
-	},
-})
+		}),
+	})
+	return schema
+}
 
 type ErrorHandler func(errs []gqlerrors.FormattedError)
 
 const (
 	optNameErrorHandler = "errorhandler"
 	optNameAllowCORS    = "allowcors"
+	optNameGrpcOption   = "grpcoption"
 )
 
 type Option struct {
@@ -125,15 +164,23 @@ func WithCORS() Option {
 	}
 }
 
+func WithGrpcOption(opts ...grpc.DialOption) Option {
+	return Option{
+		name:  optNameGrpcOption,
+		value: opts,
+	}
+}
+
 type GraphqlResolver struct {
-	schema       graphql.Schema
 	errorHandler ErrorHandler
 	allowCORS    bool
+	grpcOptions  []grpc.DialOption
 }
 
 func New(opts ...Option) *GraphqlResolver {
 	var eh ErrorHandler
 	var cors bool
+	var grpcOptions []grpc.DialOption
 
 	for _, o := range opts {
 		switch o.name {
@@ -141,12 +188,15 @@ func New(opts ...Option) *GraphqlResolver {
 			eh = o.value.(ErrorHandler)
 		case optNameAllowCORS:
 			cors = true
+		case optNameGrpcOption:
+			grpcOptions = value.([]grpc.DialOption)
 		}
 	}
 
 	return &GraphqlResolver{
 		errorHandler: eh,
 		allowCORS:    cors,
+		grpcOptions:  grpcOptions,
 	}
 }
 
@@ -190,8 +240,15 @@ func (g *GraphqlResolver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	conn, err := grpc.Dial("localhost:50051", g.grpcOptions...)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	defer conn.Close()
+
 	result := graphql.Do(graphql.Params{
-		Schema:        g.schema,
+		Schema:        createSchema(conn),
 		RequestString: query,
 		Context:       r.Context(),
 	})

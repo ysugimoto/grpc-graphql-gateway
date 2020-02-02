@@ -1,6 +1,11 @@
 package builder
 
 import (
+	"fmt"
+
+	"path/filepath"
+
+	"github.com/iancoleman/strcase"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
 )
 
@@ -19,8 +24,37 @@ func (b *Resolver) BuildSchema() string {
 }
 
 func (b *Resolver) BuildProgram() string {
+	pkgName := filepath.Base(b.q.Input.GoPackageName())
+	if pkgName == "main" {
+		pkgName = ""
+	} else {
+		pkgName += "."
+	}
+
+	var response string
+	if expose, _ := b.q.GetExposeField(); expose != nil {
+		response = ".Get" + strcase.ToCamel(expose.GetName()) + "()"
+	}
+
 	// TODO: implement
-	return `func(p graphql.ResolveParams) (interface{}, error) {
-		return nil, nil
-	}`
+	return fmt.Sprintf(`func(p graphql.ResolveParams) (interface{}, error) {
+		client := %sNew%sClient(conn)
+		resp,err := client.%s(
+			p.Context,
+			&%s{
+				%s
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+		return resp%s, nil
+	}`,
+		pkgName,
+		b.q.Service.GetName(),
+		b.q.Method.GetName(),
+		b.q.Input.StructName(false),
+		"",
+		response,
+	)
 }

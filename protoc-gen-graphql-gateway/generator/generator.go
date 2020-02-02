@@ -57,7 +57,7 @@ func (g *Generator) Generate(resp *plugin.CodeGeneratorResponse) {
 		for _, s := range f.GetService() {
 			for _, m := range s.GetMethod() {
 				if opt := ext.GraphqlQueryOption(m); opt != nil {
-					qs, err := g.AnalyzeQuery(m, opt)
+					qs, err := g.AnalyzeQuery(m, s, opt)
 					if err != nil {
 						genError = err
 						return
@@ -65,7 +65,7 @@ func (g *Generator) Generate(resp *plugin.CodeGeneratorResponse) {
 					g.queries.Add(pkg, qs)
 				}
 				if opt := ext.GraphqlMutationOption(m); opt != nil {
-					ms, err := g.AnalyzeMutation(m, opt)
+					ms, err := g.AnalyzeMutation(m, s, opt)
 					if err != nil {
 						genError = err
 						return
@@ -128,6 +128,7 @@ func (g *Generator) Generate(resp *plugin.CodeGeneratorResponse) {
 
 func (g *Generator) AnalyzeQuery(
 	m *descriptor.MethodDescriptorProto,
+	s *descriptor.ServiceDescriptorProto,
 	opt *graphql.GraphqlQuery,
 ) (*types.QuerySpec, error) {
 	var req, resp *types.Message
@@ -139,14 +140,17 @@ func (g *Generator) AnalyzeQuery(
 	}
 
 	return &types.QuerySpec{
-		Input:  req,
-		Output: resp,
-		Option: opt,
+		Input:   req,
+		Output:  resp,
+		Option:  opt,
+		Method:  m,
+		Service: s,
 	}, nil
 }
 
 func (g *Generator) AnalyzeMutation(
 	m *descriptor.MethodDescriptorProto,
+	s *descriptor.ServiceDescriptorProto,
 	opt *graphql.GraphqlMutation,
 ) (*types.MutationSpec, error) {
 	var req, resp *types.Message
@@ -158,8 +162,10 @@ func (g *Generator) AnalyzeMutation(
 	}
 
 	return &types.MutationSpec{
-		Input:  req,
-		Output: resp,
-		Option: opt,
+		Input:   req,
+		Output:  resp,
+		Option:  opt,
+		Method:  m,
+		Service: s,
 	}, nil
 }

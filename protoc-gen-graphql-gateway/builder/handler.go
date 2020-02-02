@@ -7,6 +7,7 @@ type ErrorHandler func(errs []gqlerrors.FormattedError)
 const (
 	optNameErrorHandler = "errorhandler"
 	optNameAllowCORS = "allowcors"
+	optNameGrpcOption = "grpcoption"
 )
 
 type Option struct {
@@ -28,15 +29,23 @@ func WithCORS() Option {
 	}
 }
 
+func WithGrpcOption(opts ...grpc.DialOption) Option {
+	return Option {
+		name: optNameGrpcOption,
+		value: opts,
+	}
+}
+
 type GraphqlResolver struct {
-	schema graphql.Schema
 	errorHandler ErrorHandler
 	allowCORS bool
+	grpcOptions []grpc.DialOption
 }
 
 func New(opts ...Option) *GraphqlResolver {
 	var eh ErrorHandler
 	var cors bool
+	var grpcOptions []grpc.DialOption
 
 	for _, o := range opts {
 		switch o.name {
@@ -44,12 +53,15 @@ func New(opts ...Option) *GraphqlResolver {
 				eh = o.value.(ErrorHandler)
 			case optNameAllowCORS:
 				cors = true
+			case optNameGrpcOption:
+				grpcOptions = value.([]grpc.DialOption)
 		}
 	}
 
 	return &GraphqlResolver {
 		errorHandler: eh,
 		allowCORS: cors,
+		grpcOptions: grpcOptions,
 	}
 }
 
@@ -93,8 +105,15 @@ func (g *GraphqlResolver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 	}
 
+	conn, err := grpc.Dial("localhost:50051", g.grpcOptions...)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	defer conn.Close()
+
 	result := graphql.Do(graphql.Params{
-		Schema: g.schema,
+		Schema: createSchema(conn),
 		RequestString: query,
 		Context: r.Context(),
 	})
