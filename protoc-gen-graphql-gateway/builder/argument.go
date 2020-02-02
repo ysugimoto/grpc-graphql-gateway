@@ -49,5 +49,5 @@ func (b *Argument) BuildProgram() string {
 		)
 	}
 
-	return strings.Join(args, "\n")
+	return strings.TrimSpace(strings.Join(args, "\n"))
 }

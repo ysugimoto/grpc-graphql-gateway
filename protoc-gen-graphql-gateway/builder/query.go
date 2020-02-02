@@ -92,12 +92,12 @@ func (q *Query) BuildProgram() string {
 
 		var argField string
 		if args != "" {
-			argField = fmt.Sprintf(`
+			argField = strings.TrimSpace(fmt.Sprintf(`
 				Args: graphql.FieldConfigArgument{
 					%s
 				},`,
 				args,
-			)
+			))
 		}
 		var typeName string
 		expose, _ := v.GetExposeField()
@@ -123,18 +123,17 @@ func (q *Query) BuildProgram() string {
 			}
 		}
 
-		fields[i] = fmt.Sprintf(`
+		fields[i] = strings.TrimSpace(fmt.Sprintf(`
 			"%s": &graphql.Field{
 				Type: %s,
 				%s
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					return nil, nil
-				},
+				Resolve: %s,
 			},`,
 			v.Option.GetName(),
 			typeName,
 			argField,
-		)
+			NewResolver(v).BuildProgram(),
+		))
 	}
 
 	return fmt.Sprintf(`

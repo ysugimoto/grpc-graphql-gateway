@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"go/format"
+	"io/ioutil"
 
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
@@ -36,6 +37,7 @@ func (p *Program) Format(file string) (*plugin.CodeGeneratorResponse_File, error
 
 	out, err := format.Source(p.out.Bytes())
 	if err != nil {
+		ioutil.WriteFile("/tmp/example.go", p.out.Bytes(), 0644)
 		return nil, err
 	}
 

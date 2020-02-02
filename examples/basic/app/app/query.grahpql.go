@@ -15,7 +15,6 @@ import (
 var gql_Type_Author = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Author",
 	Fields: graphql.Fields{
-
 		"name": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.String),
 		},
@@ -25,19 +24,15 @@ var gql_Type_Author = graphql.NewObject(graphql.ObjectConfig{
 var gql_Type_Book = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Book",
 	Fields: graphql.Fields{
-
 		"id": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.Int),
 		},
-
 		"name": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.String),
 		},
-
 		"type": &graphql.Field{
 			Type: graphql.NewNonNull(gql_Enum_BookType),
 		},
-
 		"author": &graphql.Field{
 			Type: graphql.NewNonNull(gql_Type_Author),
 		},
@@ -47,19 +42,15 @@ var gql_Type_Book = graphql.NewObject(graphql.ObjectConfig{
 var gql_Enum_BookType = graphql.NewEnum(graphql.EnumConfig{
 	Name: "BookType",
 	Values: graphql.EnumValueConfigMap{
-
 		"JAVASCRIPT": &graphql.EnumValueConfig{
 			Value: 0,
 		},
-
 		"ECMASCRIPT": &graphql.EnumValueConfig{
 			Value: 1,
 		},
-
 		"GIT": &graphql.EnumValueConfig{
 			Value: 2,
 		},
-
 		"ASP_DOT_NET": &graphql.EnumValueConfig{
 			Value: 3,
 		},
@@ -69,12 +60,9 @@ var gql_Enum_BookType = graphql.NewEnum(graphql.EnumConfig{
 var gql_Query = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Query",
 	Fields: graphql.Fields{
-
 		"author": &graphql.Field{
 			Type: graphql.NewNonNull(gql_Type_Author),
-
 			Args: graphql.FieldConfigArgument{
-
 				"name": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
@@ -83,7 +71,6 @@ var gql_Query = graphql.NewObject(graphql.ObjectConfig{
 				return nil, nil
 			},
 		},
-
 		"authors": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.NewList(gql_Type_Author)),
 
@@ -91,12 +78,9 @@ var gql_Query = graphql.NewObject(graphql.ObjectConfig{
 				return nil, nil
 			},
 		},
-
 		"book": &graphql.Field{
 			Type: graphql.NewNonNull(gql_Type_Book),
-
 			Args: graphql.FieldConfigArgument{
-
 				"id": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.Int),
 				},
@@ -105,7 +89,6 @@ var gql_Query = graphql.NewObject(graphql.ObjectConfig{
 				return nil, nil
 			},
 		},
-
 		"books": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.NewList(gql_Type_Book)),
 
@@ -169,6 +152,7 @@ func New(opts ...Option) *GraphqlResolver {
 
 func corsHeader(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", r.URL.Host)
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Set("Access-Control-Max-Age", "1728000")
 }

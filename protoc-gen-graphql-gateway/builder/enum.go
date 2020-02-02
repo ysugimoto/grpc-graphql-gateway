@@ -38,13 +38,13 @@ func (b *Enum) BuildQuery() string {
 func (b *Enum) BuildProgram() string {
 	values := make([]string, len(b.e.Descriptor.GetValue()))
 	for i, v := range b.e.Descriptor.GetValue() {
-		values[i] = fmt.Sprintf(`
+		values[i] = strings.TrimSpace(fmt.Sprintf(`
 			"%s": &graphql.EnumValueConfig{
 				Value: %d,
 			},`,
 			v.GetName(),
 			v.GetNumber(),
-		)
+		))
 	}
 	return fmt.Sprintf(`
 var %s = graphql.NewEnum(graphql.EnumConfig{
@@ -56,6 +56,6 @@ var %s = graphql.NewEnum(graphql.EnumConfig{
 
 		ext.EnumName(b.e.Descriptor.GetName()),
 		b.e.Descriptor.GetName(),
-		strings.Join(values, "\n"),
+		strings.TrimSpace(strings.Join(values, "\n")),
 	)
 }

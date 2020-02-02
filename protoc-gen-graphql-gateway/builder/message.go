@@ -65,13 +65,13 @@ func (b *Message) BuildProgram() string {
 			fieldType = "graphql.NewNonNull(" + fieldType + ")"
 		}
 
-		fields[i] = fmt.Sprintf(`
+		fields[i] = strings.TrimSpace(fmt.Sprintf(`
 			"%s": &graphql.Field{
 				Type: %s,
 			},`,
 			f.GetName(),
 			fieldType,
-		)
+		))
 	}
 
 	return fmt.Sprintf(`
@@ -83,6 +83,6 @@ var %s = graphql.NewObject(graphql.ObjectConfig{
 })`,
 		ext.MessageName(b.m.Descriptor.GetName()),
 		b.m.Descriptor.GetName(),
-		strings.Join(fields, "\n"),
+		strings.TrimSpace(strings.Join(fields, "\n")),
 	)
 }
