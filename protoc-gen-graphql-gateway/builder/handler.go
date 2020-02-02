@@ -53,13 +53,13 @@ func New(opts ...Option) *GraphqlResolver {
 	}
 }
 
-func (g *GraphqlResolver) SetCORSHeader(w http.ResponseWriter, r *http.Request) {
+func corsHeader(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", r.URL.Host)
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Set("Access-Control-Max-Age", "1728000")
 }
 
-func (g *GraphqlResolver) RespondError(w http.ResponseWriter, status int, message string) {
+func respondError(w http.ResponseWriter, status int, message string) {
 	m := []byte(message)
 	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.Header().Set("Content-Length", fmt.Sprint(len(m)))
@@ -71,24 +71,24 @@ func (g *GraphqlResolver) RespondError(w http.ResponseWriter, status int, messag
 
 func (g *GraphqlResolver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if g.allowCORS {
-		g.SetCORSHeader(w, r)
+		corsHeader(w, r)
 	}
 	var query string
 	switch r.Method {
 		case http.MethodOptions:
-			g.RespondError(w, http.StatusNoContent, "")
+			respondError(w, http.StatusNoContent, "")
 			return
 		case http.MethodPost:
 			buf, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				g.RespondError(w, http.StatusBadRequest, "malformed request body")
+				respondError(w, http.StatusBadRequest, "malformed request body")
 				return
 			}
 			query = string(buf)
 		case http.MethodGet:
 			query = r.URL.Query().Get("query")
 		default:
-			g.RespondError(w, http.StatusBadRequest, "invalid request method: '" + r.Method + "'")
+			respondError(w, http.StatusBadRequest, "invalid request method: '" + r.Method + "'")
 			return
 	}
 
@@ -107,8 +107,7 @@ func (g *GraphqlResolver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Length", fmt.Sprint(len(out)))
 	w.WriteHeader(http.StatusOK)
 	w.Write(out)
-}
-`
+}`
 
 type Handler struct {
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/builder"
 	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/format"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
 )
 
@@ -20,9 +19,9 @@ type Generator struct {
 	req *plugin.CodeGeneratorRequest
 	r   *Resolver
 
-	queries   format.Queries
-	mutations format.Mutations
-	types     format.Types
+	queries   Queries
+	mutations Mutations
+	types     Types
 }
 
 func New(req *plugin.CodeGeneratorRequest) *Generator {
@@ -30,9 +29,9 @@ func New(req *plugin.CodeGeneratorRequest) *Generator {
 		req: req,
 		r:   NewResolver(req),
 
-		queries:   format.Queries{},
-		mutations: format.Mutations{},
-		types:     format.Types{},
+		queries:   Queries{},
+		mutations: Mutations{},
+		types:     Types{},
 	}
 }
 
@@ -96,11 +95,13 @@ func (g *Generator) Generate(resp *plugin.CodeGeneratorResponse) {
 			builder.NewMutation(mutations),
 		}
 		builders = append(builders, types...)
-		schema := format.NewSchema(builders)
-		resp.File = append(
-			resp.File,
-			schema.Format(filepath.Join(args.QueryOut, "./query.graphql")),
-		)
+		schema := NewSchema(builders)
+		file, err := schema.Format(filepath.Join(args.QueryOut, "./query.graphql"))
+		if err != nil {
+			genError = err
+			return
+		}
+		resp.File = append(resp.File, file)
 	}
 
 	if args.ProgramOut != "" {
@@ -115,13 +116,13 @@ func (g *Generator) Generate(resp *plugin.CodeGeneratorResponse) {
 			builder.NewMutation(mutations),
 			builder.NewHandler(),
 		)
-		program := format.NewProgram(builders)
-		resp.File = append(
-			resp.File,
-			program.Format(
-				filepath.Join(args.ProgramOut, "./app/query.grahpql.go"),
-			),
-		)
+		program := NewProgram(builders)
+		file, err := program.Format(filepath.Join(args.ProgramOut, "./app/query.grahpql.go"))
+		if err != nil {
+			genError = err
+			return
+		}
+		resp.File = append(resp.File, file)
 	}
 }
 

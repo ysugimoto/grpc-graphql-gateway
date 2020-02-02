@@ -22,6 +22,13 @@ func (q *QuerySpec) IsOutputOptional() bool {
 	return q.Option.Response.GetOptional()
 }
 
+func (q *QuerySpec) IsOutputRepeated() bool {
+	if q.Option.Response == nil {
+		return false
+	}
+	return q.Option.Response.GetRepeated()
+}
+
 func (q *QuerySpec) GetExposeField() (*descriptor.FieldDescriptorProto, error) {
 	if q.Option.Response == nil {
 		return nil, nil

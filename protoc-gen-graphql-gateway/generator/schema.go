@@ -1,4 +1,4 @@
-package format
+package generator
 
 import (
 	"bytes"
@@ -25,7 +25,7 @@ func (s *Schema) write(line string) {
 	io.WriteString(s.out, line+"\n")
 }
 
-func (s *Schema) Format(file string) *plugin.CodeGeneratorResponse_File {
+func (s *Schema) Format(file string) (*plugin.CodeGeneratorResponse_File, error) {
 	for _, item := range s.items {
 		if line := item.BuildQuery(); line != "" {
 			s.write(line)
@@ -35,5 +35,5 @@ func (s *Schema) Format(file string) *plugin.CodeGeneratorResponse_File {
 	return &plugin.CodeGeneratorResponse_File{
 		Name:    proto.String(file),
 		Content: proto.String(s.out.String()),
-	}
+	}, nil
 }

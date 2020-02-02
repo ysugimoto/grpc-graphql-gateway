@@ -99,6 +99,29 @@ func (q *Query) BuildProgram() string {
 				args,
 			)
 		}
+		var typeName string
+		expose, _ := v.GetExposeField()
+		if expose != nil {
+			typeName = ext.ConvertGoType(expose)
+			if expose.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				typeName = "graphql.NewList(" + typeName + ")"
+			}
+			var optional bool
+			if opt := ext.GraphqlFieldExtension(expose); opt != nil {
+				optional = opt.GetOptional()
+			}
+			if !optional {
+				typeName = "graphql.NewNonNull(" + typeName + ")"
+			}
+		} else {
+			typeName = ext.MessageName(v.Output.Descriptor.GetName())
+			if v.IsOutputRepeated() {
+				typeName = "graphql.NewList(" + typeName + ")"
+			}
+			if !v.IsOutputOptional() {
+				typeName = "graphql.NewNonNull(" + typeName + ")"
+			}
+		}
 
 		fields[i] = fmt.Sprintf(`
 			"%s": &graphql.Field{
@@ -109,7 +132,7 @@ func (q *Query) BuildProgram() string {
 				},
 			},`,
 			v.Option.GetName(),
-			ext.MessageName(v.Input.Descriptor.GetName()),
+			typeName,
 			argField,
 		)
 	}
