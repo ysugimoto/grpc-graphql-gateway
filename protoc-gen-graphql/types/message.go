@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
+	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/extension"
 )
 
 type Message struct {

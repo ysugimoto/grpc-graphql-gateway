@@ -6,7 +6,7 @@ import (
 
 	"path/filepath"
 
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
 )
 
 type Import struct {

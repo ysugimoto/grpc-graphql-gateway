@@ -6,23 +6,37 @@ import (
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
-	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
+	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/extension"
 )
 
-type MutationSpec struct {
+type QuerySpec struct {
 	Input   *Message
 	Output  *Message
-	Option  *graphql.GraphqlMutation
+	Option  *graphql.GraphqlQuery
 	Method  *descriptor.MethodDescriptorProto
 	Service *descriptor.ServiceDescriptorProto
 }
 
-func (m *MutationSpec) GetExposeField() (*descriptor.FieldDescriptorProto, error) {
-	if m.Option.Response == nil {
+func (q *QuerySpec) IsOutputOptional() bool {
+	if q.Option.Response == nil {
+		return false
+	}
+	return q.Option.Response.GetOptional()
+}
+
+func (q *QuerySpec) IsOutputRepeated() bool {
+	if q.Option.Response == nil {
+		return false
+	}
+	return q.Option.Response.GetRepeated()
+}
+
+func (q *QuerySpec) GetExposeField() (*descriptor.FieldDescriptorProto, error) {
+	if q.Option.Response == nil {
 		return nil, nil
 	}
-	expose := m.Option.Response.GetExpose()
-	for _, f := range m.Output.Descriptor.GetField() {
+	expose := q.Option.Response.GetExpose()
+	for _, f := range q.Output.Descriptor.GetField() {
 		if f.GetName() == expose {
 			return f, nil
 		}
@@ -30,26 +44,26 @@ func (m *MutationSpec) GetExposeField() (*descriptor.FieldDescriptorProto, error
 	return nil, fmt.Errorf(
 		"expose field %s not found in message %s",
 		expose,
-		m.Output.Descriptor.GetName(),
+		q.Output.Descriptor.GetName(),
 	)
 }
 
-func (m *MutationSpec) BuildQuery() string {
+func (q *QuerySpec) BuildQuery() string {
 	format := "%s(%s): %s%s"
-	name := m.Option.GetName()
-	args := m.ExtractArguments(m.Input)
-	returnType := m.Output.Descriptor.GetName()
+	name := q.Option.GetName()
+	args := q.ExtractArguments(q.Input)
+	returnType := q.Output.Descriptor.GetName()
 	// TODO: check via option
 	sign := "!"
 	return fmt.Sprintf(format, name, args, returnType, sign)
 }
 
-func (m *MutationSpec) ExtractArguments(input *Message) string {
+func (q *QuerySpec) ExtractArguments(input *Message) string {
 	var args []string
 	for _, f := range input.Descriptor.GetField() {
 		sign := "!"
 		if opt := ext.GraphqlFieldExtension(f); opt != nil {
-			if o := opt.GetOptional(); o {
+			if opt.GetOptional() {
 				sign = ""
 			}
 		}

@@ -1,6 +1,6 @@
 .PHONY: command
 
-CMD=protoc-gen-graphql-gateway
+CMD=protoc-gen-graphql
 
 command:
 	protoc -I $(shell brew --prefix protobuf)/include/google \

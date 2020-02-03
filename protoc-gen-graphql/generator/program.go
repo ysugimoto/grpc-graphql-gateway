@@ -9,7 +9,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/builder"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
 )
 
 type Program struct {

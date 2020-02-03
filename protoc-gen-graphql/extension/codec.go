@@ -60,3 +60,24 @@ func ConvertGoType(f *descriptor.FieldDescriptorProto) string {
 		return "interface{}"
 	}
 }
+
+func ConvertGoPrimitiveType(f *descriptor.FieldDescriptorProto) string {
+	switch f.GetType() {
+	case descriptor.FieldDescriptorProto_TYPE_BOOL:
+		return "bool"
+	case descriptor.FieldDescriptorProto_TYPE_DOUBLE,
+		descriptor.FieldDescriptorProto_TYPE_FLOAT:
+		return "float"
+	case descriptor.FieldDescriptorProto_TYPE_INT32,
+		descriptor.FieldDescriptorProto_TYPE_INT64,
+		descriptor.FieldDescriptorProto_TYPE_SFIXED32,
+		descriptor.FieldDescriptorProto_TYPE_SFIXED64,
+		descriptor.FieldDescriptorProto_TYPE_UINT32,
+		descriptor.FieldDescriptorProto_TYPE_UINT64:
+		return "int64"
+	case descriptor.FieldDescriptorProto_TYPE_STRING:
+		return "string"
+	default:
+		return "interface{}"
+	}
+}

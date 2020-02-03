@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/generator"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/generator"
 )
 
 func main() {

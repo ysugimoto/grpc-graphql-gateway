@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
+	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/extension"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
 )
 
 type Enum struct {

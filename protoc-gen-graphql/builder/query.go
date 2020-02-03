@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
+	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/extension"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
 )
 
 type Query struct {

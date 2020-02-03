@@ -10,9 +10,9 @@ import (
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/builder"
-	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/extension"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
+	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/extension"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
 )
 
 type Generator struct {

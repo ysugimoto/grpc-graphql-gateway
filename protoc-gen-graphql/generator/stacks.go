@@ -3,7 +3,7 @@ package generator
 import (
 	"sort"
 
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-gateway/types"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
 )
 
 type Queries map[string][]*types.QuerySpec

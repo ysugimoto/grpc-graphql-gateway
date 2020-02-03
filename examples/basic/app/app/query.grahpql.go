@@ -70,10 +70,9 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 					},
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						client := author.NewAuthorServiceClient(conn)
-						resp, err := client.GetAuthor(
-							p.Context,
-							&author.GetAuthorRequest{},
-						)
+						req := &author.GetAuthorRequest{}
+						req.Name = p.Args["name"].(string)
+						resp, err := client.GetAuthor(p.Context, req)
 						if err != nil {
 							return nil, err
 						}
@@ -85,10 +84,8 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						client := author.NewAuthorServiceClient(conn)
-						resp, err := client.ListAuthors(
-							p.Context,
-							&author.ListAuthorsRequest{},
-						)
+						req := &author.ListAuthorsRequest{}
+						resp, err := client.ListAuthors(p.Context, req)
 						if err != nil {
 							return nil, err
 						}
@@ -104,10 +101,9 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 					},
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						client := book.NewBookServiceClient(conn)
-						resp, err := client.GetBook(
-							p.Context,
-							&book.GetBookRequest{},
-						)
+						req := &book.GetBookRequest{}
+						req.Id = int64(p.Args["id"].(int))
+						resp, err := client.GetBook(p.Context, req)
 						if err != nil {
 							return nil, err
 						}
@@ -119,10 +115,8 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						client := book.NewBookServiceClient(conn)
-						resp, err := client.ListBooks(
-							p.Context,
-							&book.ListBooksRequest{},
-						)
+						req := &book.ListBooksRequest{}
+						resp, err := client.ListBooks(p.Context, req)
 						if err != nil {
 							return nil, err
 						}
