@@ -2,131 +2,31 @@ package builder
 
 var handlerTemplate = `
 
-type ErrorHandler func(errs []gqlerrors.FormattedError)
+func graphqlHandler(endpoint string, conn *grpc.ClientConn) runtime.GraphqlHandler {
+	schema := createSchema(conn)
 
-const (
-	optNameErrorHandler = "errorhandler"
-	optNameAllowCORS = "allowcors"
-	optNameGrpcOption = "grpcoption"
-)
-
-type Option struct {
-	name string
-	value interface{}
-}
-
-func WithErrorHandler(eh ErrorHandler) Option {
-	return Option {
-		name: optNameErrorHandler,
-		value: eh,
-	}
-}
-
-func WithCORS() Option {
-	return Option {
-		name: optNameAllowCORS,
-		value: true,
-	}
-}
-
-func WithGrpcOption(opts ...grpc.DialOption) Option {
-	return Option {
-		name: optNameGrpcOption,
-		value: opts,
-	}
-}
-
-type GraphqlResolver struct {
-	errorHandler ErrorHandler
-	allowCORS bool
-	grpcOptions []grpc.DialOption
-}
-
-func New(opts ...Option) *GraphqlResolver {
-	var eh ErrorHandler
-	var cors bool
-	var grpcOptions []grpc.DialOption
-
-	for _, o := range opts {
-		switch o.name {
-			case optNameErrorHandler:
-				eh = o.value.(ErrorHandler)
-			case optNameAllowCORS:
-				cors = true
-			case optNameGrpcOption:
-				grpcOptions = value.([]grpc.DialOption)
+	return func(w http.ResponseWriter, r *http.Request) *graphql.Result {
+		if r.URL.Path != endpoint {
+			runtime.Respond(w, http.StatusNotFound, "endpoint not found")
+			return nil
 		}
-	}
-
-	return &GraphqlResolver {
-		errorHandler: eh,
-		allowCORS: cors,
-		grpcOptions: grpcOptions,
-	}
-}
-
-func corsHeader(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", r.URL.Host)
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Set("Access-Control-Max-Age", "1728000")
-}
-
-func respondError(w http.ResponseWriter, status int, message string) {
-	m := []byte(message)
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	w.Header().Set("Content-Length", fmt.Sprint(len(m)))
-	w.WriteHeader(status)
-	if len(m) > 0 {
-		w.Write(m)
-	}
-}
-
-func (g *GraphqlResolver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if g.allowCORS {
-		corsHeader(w, r)
-	}
-	var query string
-	switch r.Method {
-		case http.MethodOptions:
-			respondError(w, http.StatusNoContent, "")
-			return
-		case http.MethodPost:
-			buf, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				respondError(w, http.StatusBadRequest, "malformed request body")
-				return
-			}
-			query = string(buf)
-		case http.MethodGet:
-			query = r.URL.Query().Get("query")
-		default:
-			respondError(w, http.StatusBadRequest, "invalid request method: '" + r.Method + "'")
-			return
-	}
-
-	conn, err := grpc.Dial("localhost:50051", g.grpcOptions...)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	defer conn.Close()
-
-	result := graphql.Do(graphql.Params{
-		Schema: createSchema(conn),
-		RequestString: query,
-		Context: r.Context(),
-	})
-	if len(result.Errors) > 0 {
-		if g.errorHandler != nil {
-			g.errorHandler(result.Errors)
+		query, variables, err := runtime.ParseRequest(r)
+		if err != nil {
+			runtime.Respond(w, http.StatusBadRequest, err.Error())
+			return nil
 		}
+
+		return graphql.Do(graphql.Params{
+			Schema: schema,
+			RequestString: query,
+			VariableValues: variables,
+			Context: r.Context(),
+		})
 	}
-	out, _ := json.Marshal(result)
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Length", fmt.Sprint(len(out)))
-	w.WriteHeader(http.StatusOK)
-	w.Write(out)
+}
+
+func RegisterGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn, endpoint string) {
+	mux.Handler = graphqlHandler(endpoint, conn)
 }`
 
 type Handler struct {

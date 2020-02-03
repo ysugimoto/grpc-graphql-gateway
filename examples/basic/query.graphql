@@ -6,7 +6,7 @@ type Query {
 }
 
 type Mutation {
-  createbook(name: String!, type: BookType!, author: Author!): Book!
+  createbook(title: String!, type: BookType!, author: Author!): Book!
 }
 
 # message Author in author/author.proto
@@ -17,7 +17,7 @@ type Author {
 # message Book in book/book.proto
 type Book {
   id: Int!
-  name: String!
+  title: String!
   type: BookType!
   author: Author!
 }

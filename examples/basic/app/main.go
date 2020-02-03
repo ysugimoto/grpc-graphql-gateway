@@ -58,7 +58,7 @@ func (a *App) ListAuthors(ctx context.Context, req *author.ListAuthorsRequest) (
 func (a *App) CreateBook(ctx context.Context, req *book.CreateBookRequest) (*book.Book, error) {
 	return &book.Book{
 		Id:     100,
-		Name:   req.GetName(),
+		Title:  req.GetTitle(),
 		Type:   req.GetType(),
 		Author: req.GetAuthor(),
 	}, nil

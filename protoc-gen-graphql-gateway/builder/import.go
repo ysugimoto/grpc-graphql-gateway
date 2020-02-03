@@ -73,16 +73,15 @@ func (b *Import) BuildProgram() string {
 
 	return fmt.Sprintf(`
 import (
-	"fmt"
 	"net/http"
-	"encoding/json"
-	"io/ioutil"
 
 	"github.com/graphql-go/graphql"
-	"github.com/graphql-go/graphql/gqlerrors"
 	"google.golang.org/grpc"
+	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
+
 	%s
-)`,
+)
+`,
 		strings.Join(dendencies, "\n"),
 	)
 }
