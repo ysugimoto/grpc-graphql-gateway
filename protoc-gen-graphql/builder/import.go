@@ -73,6 +73,7 @@ func (b *Import) BuildProgram() string {
 
 	return fmt.Sprintf(`
 import (
+	"errors"
 	"net/http"
 
 	"github.com/graphql-go/graphql"

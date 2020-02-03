@@ -137,7 +137,7 @@ func (q *Query) BuildProgram() string {
 	}
 
 	return fmt.Sprintf(`
-func createSchema(conn *grpc.ClientConn) graphql.Schema {
+func createSchema(c *runtime.Connection) graphql.Schema {
 	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
 		Query: graphql.NewObject(graphql.ObjectConfig{
 			Name: "Query",

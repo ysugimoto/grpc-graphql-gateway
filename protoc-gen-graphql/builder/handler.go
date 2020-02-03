@@ -2,8 +2,22 @@ package builder
 
 var handlerTemplate = `
 
-func graphqlHandler(endpoint string, conn *grpc.ClientConn) runtime.GraphqlHandler {
-	schema := createSchema(conn)
+func graphqlHandler(endpoint string, v interface{}) (runtime.GraphqlHandler, error) {
+	var c *runtime.Connection
+	if v == nil {
+		c = runtime.NewConnection(nil)
+	} else {
+		switch t := v.(type) {
+		case *grpc.ClientConn:
+			c = runtime.NewConnection(t)
+		case *runtime.Connection:
+			c = t
+		default:
+			return nil, errors.New("invalid type conversion")
+		}
+	}
+
+	schema := createSchema(c)
 
 	return func(w http.ResponseWriter, r *http.Request) *graphql.Result {
 		if r.URL.Path != endpoint {
@@ -22,11 +36,12 @@ func graphqlHandler(endpoint string, conn *grpc.ClientConn) runtime.GraphqlHandl
 			VariableValues: variables,
 			Context: r.Context(),
 		})
-	}
+	}, nil
 }
 
-func RegisterGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn, endpoint string) {
-	mux.Handler = graphqlHandler(endpoint, conn)
+func RegisterGraphqlHandler(mux *runtime.ServeMux, v interface{}, endpoint string) (err error) {
+	mux.Handler, err = graphqlHandler(endpoint, v)
+	return
 }`
 
 type Handler struct {

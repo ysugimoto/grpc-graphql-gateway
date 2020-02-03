@@ -37,6 +37,11 @@ message CreateBookRequest {
 }
 
 service BookService {
+  option (graphql.service) = {
+    host: "localhost:8080"
+    insecure: true
+  };
+
   rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
     option (graphql.query) = {
       name: "books"

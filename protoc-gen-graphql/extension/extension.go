@@ -47,3 +47,15 @@ func GraphqlFieldExtension(f *descriptor.FieldDescriptorProto) *graphql.GraphqlF
 		return field
 	}
 }
+
+func GraphqlServiceExtension(s *descriptor.ServiceDescriptorProto) *graphql.GraphqlService {
+	if opts := s.GetOptions(); opts == nil {
+		return nil
+	} else if ext, err := proto.GetExtension(opts, graphql.E_Service); err != nil {
+		return nil
+	} else if service, ok := ext.(*graphql.GraphqlService); !ok {
+		return nil
+	} else {
+		return service
+	}
+}

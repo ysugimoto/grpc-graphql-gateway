@@ -6,13 +6,22 @@ option go_package = "github.com/ysugimoto/grpc-graphql-gateway/graphql";
 
 import "google/protobuf/descriptor.proto";
 
+extend google.protobuf.ServiceOptions {
+  GraphqlService service = 50001;
+}
+
 extend google.protobuf.MethodOptions {
   GraphqlQuery query = 50001;
   GraphqlMutation mutation = 50002;
 }
 
 extend google.protobuf.FieldOptions {
-  GraphqlField field = 50003;
+  GraphqlField field = 50004;
+}
+
+message GraphqlService {
+  string host = 1;
+  bool insecure = 2;
 }
 
 message GraphqlResponse {

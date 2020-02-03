@@ -99,8 +99,44 @@ func (b *Resolver) BuildProgram() string {
 
 	}
 
+	var connLogic string
+	service := ext.GraphqlServiceExtension(b.q.Service)
+	if service == nil || service.GetHost() == "" {
+		connLogic = `
+		conn := c.Default
+		if conn == nil {
+			return nil, errors.New("failed to find default grpc connection")
+		}`
+	} else {
+		var option string
+		if service.GetInsecure() {
+			option = ", grpc.WithInsecure()"
+		}
+		connLogic = strings.TrimSpace(fmt.Sprintf(`
+			var keep bool
+			conn := c.Find("%s")
+			if conn == nil {
+				if c, err := grpc.Dial("%s"%s); err != nil {
+					return nil, errors.New("failed to find grpc connection for '%s'")
+				} else {
+					conn = c
+				}
+			} else {
+				keep = true
+			}
+			if !keep {
+				defer conn.Close()
+			}`,
+			service.GetHost(),
+			service.GetHost(),
+			option,
+			service.GetHost(),
+		))
+	}
+
 	// TODO: implement
 	return fmt.Sprintf(`func(p graphql.ResolveParams) (interface{}, error) {
+		%s
 		client := %sNew%sClient(conn)
 		%s
 		resp,err := client.%s(p.Context, req)
@@ -109,6 +145,7 @@ func (b *Resolver) BuildProgram() string {
 		}
 		return resp%s, nil
 	}`,
+		connLogic,
 		pkgName,
 		b.q.Service.GetName(),
 		strings.Join(input, "\n"),

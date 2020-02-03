@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/graphql-go/graphql"
@@ -56,7 +57,7 @@ var gql_Enum_BookType = graphql.NewEnum(graphql.EnumConfig{
 	},
 })
 
-func createSchema(conn *grpc.ClientConn) graphql.Schema {
+func createSchema(c *runtime.Connection) graphql.Schema {
 	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
 		Query: graphql.NewObject(graphql.ObjectConfig{
 			Name: "Query",
@@ -69,6 +70,11 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 						},
 					},
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+
+						conn := c.Default
+						if conn == nil {
+							return nil, errors.New("failed to find default grpc connection")
+						}
 						client := author.NewAuthorServiceClient(conn)
 						req := &author.GetAuthorRequest{}
 						req.Name = p.Args["name"].(string)
@@ -83,6 +89,11 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 					Type: graphql.NewNonNull(graphql.NewList(gql_Type_Author)),
 
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+
+						conn := c.Default
+						if conn == nil {
+							return nil, errors.New("failed to find default grpc connection")
+						}
 						client := author.NewAuthorServiceClient(conn)
 						req := &author.ListAuthorsRequest{}
 						resp, err := client.ListAuthors(p.Context, req)
@@ -100,6 +111,20 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 						},
 					},
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						var keep bool
+						conn := c.Find("localhost:8080")
+						if conn == nil {
+							if c, err := grpc.Dial("localhost:8080", grpc.WithInsecure()); err != nil {
+								return nil, errors.New("failed to find grpc connection for 'localhost:8080'")
+							} else {
+								conn = c
+							}
+						} else {
+							keep = true
+						}
+						if !keep {
+							defer conn.Close()
+						}
 						client := book.NewBookServiceClient(conn)
 						req := &book.GetBookRequest{}
 						req.Id = int64(p.Args["id"].(int))
@@ -114,6 +139,20 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 					Type: graphql.NewNonNull(graphql.NewList(gql_Type_Book)),
 
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						var keep bool
+						conn := c.Find("localhost:8080")
+						if conn == nil {
+							if c, err := grpc.Dial("localhost:8080", grpc.WithInsecure()); err != nil {
+								return nil, errors.New("failed to find grpc connection for 'localhost:8080'")
+							} else {
+								conn = c
+							}
+						} else {
+							keep = true
+						}
+						if !keep {
+							defer conn.Close()
+						}
 						client := book.NewBookServiceClient(conn)
 						req := &book.ListBooksRequest{}
 						resp, err := client.ListBooks(p.Context, req)
@@ -129,8 +168,22 @@ func createSchema(conn *grpc.ClientConn) graphql.Schema {
 	return schema
 }
 
-func graphqlHandler(endpoint string, conn *grpc.ClientConn) runtime.GraphqlHandler {
-	schema := createSchema(conn)
+func graphqlHandler(endpoint string, v interface{}) (runtime.GraphqlHandler, error) {
+	var c *runtime.Connection
+	if v == nil {
+		c = runtime.NewConnection(nil)
+	} else {
+		switch t := v.(type) {
+		case *grpc.ClientConn:
+			c = runtime.NewConnection(t)
+		case *runtime.Connection:
+			c = t
+		default:
+			return nil, errors.New("invalid type conversion")
+		}
+	}
+
+	schema := createSchema(c)
 
 	return func(w http.ResponseWriter, r *http.Request) *graphql.Result {
 		if r.URL.Path != endpoint {
@@ -149,9 +202,10 @@ func graphqlHandler(endpoint string, conn *grpc.ClientConn) runtime.GraphqlHandl
 			VariableValues: variables,
 			Context:        r.Context(),
 		})
-	}
+	}, nil
 }
 
-func RegisterGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn, endpoint string) {
-	mux.Handler = graphqlHandler(endpoint, conn)
+func RegisterGraphqlHandler(mux *runtime.ServeMux, v interface{}, endpoint string) (err error) {
+	mux.Handler, err = graphqlHandler(endpoint, v)
+	return
 }
