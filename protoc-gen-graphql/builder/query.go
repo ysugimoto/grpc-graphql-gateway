@@ -106,9 +106,6 @@ func (q *Query) ExtractArguments(input *spec.Message) string {
 }
 
 func (q *Query) BuildProgram() (string, error) {
-	if len(q.ms) == 0 {
-		return "", nil
-	}
 	fields := make([]string, len(q.ms))
 	connections := make(map[string]string)
 

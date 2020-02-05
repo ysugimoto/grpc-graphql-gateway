@@ -14,7 +14,6 @@ import (
 type ServeMux struct {
 	middlewares  []MiddlewareFunc
 	ErrorHandler GraphqlErrorHandler
-	schema       graphql.Schema
 
 	queries   graphql.Fields
 	mutations graphql.Fields
@@ -56,19 +55,16 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Make collected schema if not generated yet
-	if s.schema == nil {
-		s.schema, _ = graphql.NewSchema(graphql.SchemaConfig{
-			Query: graphql.NewObject(graphql.ObjectConfig{
-				Name:   "Query",
-				Fields: s.queries,
-			}),
-			Mutation: graphql.NewObject(graphql.ObjectConfig{
-				Name:   "Mutation",
-				Fields: s.mutations,
-			}),
-		})
-	}
+	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
+		Query: graphql.NewObject(graphql.ObjectConfig{
+			Name:   "Query",
+			Fields: s.queries,
+		}),
+		Mutation: graphql.NewObject(graphql.ObjectConfig{
+			Name:   "Mutation",
+			Fields: s.mutations,
+		}),
+	})
 
 	// TODO: assign variables
 	query, variables, err := parseRequest(r)
@@ -78,7 +74,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := graphql.Do(graphql.Params{
-		Schema:         s.schema,
+		Schema:         schema,
 		RequestString:  query,
 		VariableValues: variables,
 		Context:        r.Context(),

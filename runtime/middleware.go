@@ -3,7 +3,6 @@ package runtime
 import (
 	"net/http"
 
-	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/gqlerrors"
 )
 

@@ -103,10 +103,6 @@ func (m *Mutation) BuildQuery() (string, error) {
 }
 
 func (m *Mutation) BuildProgram() (string, error) {
-	if len(m.ms) == 0 {
-		return "", nil
-	}
-
 	fields := make([]string, len(m.ms))
 	inputTypes := make([]string, len(m.ms))
 
