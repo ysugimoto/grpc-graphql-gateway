@@ -1,9 +1,10 @@
-package middleware
+package runtime
 
 import (
 	"net/http"
 )
 
+// Cors is middelware function to provide CORS headers to response headers
 func Cors() MiddlewareFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		w.Header().Set("Access-Control-Allow-Origin", r.URL.Host)

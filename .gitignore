@@ -15,6 +15,6 @@
 # vendor/
 #
 
-dist/protoc-gen-graphql
+dist/protoc-gen-graphql*
 examples/**/google
 examples/**/graphql

@@ -1,63 +1,26 @@
 package runtime
 
 import (
-	"errors"
 	"fmt"
 
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/graphql-go/graphql"
-	"github.com/graphql-go/graphql/gqlerrors"
-	"github.com/ysugimoto/grpc-graphql-gateway/middleware"
 )
 
-type GraphqlHandler func(w http.ResponseWriter, r *http.Request) *graphql.Result
-type GraphqlErrorHandler func(errs gqlerrors.FormattedErrors)
-
-func Respond(w http.ResponseWriter, status int, message string) {
-	m := []byte(message)
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	w.Header().Set("Content-Length", fmt.Sprint(len(m)))
-	w.WriteHeader(status)
-	if len(m) > 0 {
-		w.Write(m)
-	}
-}
-
-func parseRequest(r *http.Request) (
-	query string,
-	variables map[string]interface{},
-	parseError error,
-) {
-	switch r.Method {
-	case http.MethodPost:
-		buf, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			parseError = errors.New("malformed request body, " + err.Error())
-			return
-		}
-		query = string(buf)
-	case http.MethodGet:
-		query = r.URL.Query().Get("query")
-	default:
-		parseError = errors.New("invalid request method: '" + r.Method + "'")
-	}
-	return
-}
-
+// ServeMux is struct can execute graphql request via incoming HTTP request.
+// This is inspired from grpc-gateway implementation, thanks!
 type ServeMux struct {
-	middlewares  []middleware.MiddlewareFunc
-	ErrorHandler func(errs []gqlerrors.FormattedError) error
+	middlewares  []MiddlewareFunc
+	ErrorHandler GraphqlErrorHandler
 	schema       graphql.Schema
-	Handler      GraphqlHandler
 
 	queries   graphql.Fields
 	mutations graphql.Fields
 }
 
-func NewServeMux(ms ...middleware.MiddlewareFunc) *ServeMux {
+func NewServeMux(ms ...MiddlewareFunc) *ServeMux {
 	return &ServeMux{
 		middlewares: ms,
 
@@ -78,11 +41,13 @@ func (s *ServeMux) AddMutationField(fields graphql.Fields) {
 	}
 }
 
-func (s *ServeMux) Use(ms ...middleware.MiddlewareFunc) *ServeMux {
+// Use adds more middlwares which user defined
+func (s *ServeMux) Use(ms ...MiddlewareFunc) *ServeMux {
 	s.middlewares = append(s.middlewares, ms...)
 	return s
 }
 
+// ServeHTTP implements http.Handler
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, m := range s.middlewares {
 		if err := m(w, r); err != nil {
@@ -91,17 +56,21 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
-		Query: graphql.NewObject(graphql.ObjectConfig{
-			Name:   "Query",
-			Fields: s.queries,
-		}),
-		Mutation: graphql.NewObject(graphql.ObjectConfig{
-			Name:   "Mutation",
-			Fields: s.mutations,
-		}),
-	})
+	// Make collected schema if not generated yet
+	if s.schema == nil {
+		s.schema, _ = graphql.NewSchema(graphql.SchemaConfig{
+			Query: graphql.NewObject(graphql.ObjectConfig{
+				Name:   "Query",
+				Fields: s.queries,
+			}),
+			Mutation: graphql.NewObject(graphql.ObjectConfig{
+				Name:   "Mutation",
+				Fields: s.mutations,
+			}),
+		})
+	}
 
+	// TODO: assign variables
 	query, variables, err := parseRequest(r)
 	if err != nil {
 		Respond(w, http.StatusBadRequest, err.Error())
@@ -109,7 +78,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := graphql.Do(graphql.Params{
-		Schema:         schema,
+		Schema:         s.schema,
 		RequestString:  query,
 		VariableValues: variables,
 		Context:        r.Context(),
@@ -117,10 +86,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if len(result.Errors) > 0 {
 		if s.ErrorHandler != nil {
-			if err := s.ErrorHandler(result.Errors); err != nil {
-				Respond(w, http.StatusInternalServerError, err.Error())
-				return
-			}
+			s.ErrorHandler(result.Errors)
 		}
 	}
 
