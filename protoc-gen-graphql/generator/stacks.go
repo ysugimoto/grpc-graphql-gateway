@@ -3,54 +3,49 @@ package generator
 import (
 	"sort"
 
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
-type Queries map[string][]*types.QuerySpec
+// Queries stacks unique methods by each package.
+type Queries map[string][]*spec.Method
 
-func (q Queries) Add(pkg string, qs *types.QuerySpec) {
+func (q Queries) Add(pkg string, m *spec.Method) {
 	if _, ok := q[pkg]; !ok {
-		q[pkg] = make([]*types.QuerySpec, 0)
+		q[pkg] = make([]*spec.Method, 0)
 	}
-	q[pkg] = append(q[pkg], qs)
+	q[pkg] = append(q[pkg], m)
 }
 
-func (q Queries) Concat() []*types.QuerySpec {
-	var stack []*types.QuerySpec
+// Collect() returns flatten each methods
+func (q Queries) Collect() []*spec.Method {
+	var stack []*spec.Method
 	for _, v := range q {
 		stack = append(stack, v...)
 	}
 	sort.Slice(stack, func(i, j int) bool {
-		return stack[i].Option.GetName() < stack[j].Option.GetName()
+		return stack[i].QueryName() < stack[j].QueryName()
 	})
 	return stack
 }
 
-type Mutations map[string][]*types.MutationSpec
+// Mutations stacks unique methods by each package.
+type Mutations map[string][]*spec.Method
 
-func (m Mutations) Add(pkg string, ms *types.MutationSpec) {
-	if _, ok := m[pkg]; !ok {
-		m[pkg] = make([]*types.MutationSpec, 0)
+func (mu Mutations) Add(pkg string, m *spec.Method) {
+	if _, ok := mu[pkg]; !ok {
+		mu[pkg] = make([]*spec.Method, 0)
 	}
-	m[pkg] = append(m[pkg], ms)
+	mu[pkg] = append(mu[pkg], m)
 }
 
-func (m Mutations) Concat() []*types.MutationSpec {
-	var stack []*types.MutationSpec
-	for _, v := range m {
+// Collect() returns flatten each methods
+func (mu Mutations) Collect() []*spec.Method {
+	var stack []*spec.Method
+	for _, v := range mu {
 		stack = append(stack, v...)
 	}
 	sort.Slice(stack, func(i, j int) bool {
-		return stack[i].Option.GetName() < stack[j].Option.GetName()
+		return stack[i].MutationName() < stack[j].MutationName()
 	})
 	return stack
-}
-
-type Types []*types.Message
-
-func (t Types) Sort() []*types.Message {
-	sort.Slice(t, func(i, j int) bool {
-		return t[i].MessageName() < t[j].MessageName()
-	})
-	return t
 }

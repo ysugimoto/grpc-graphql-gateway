@@ -5,77 +5,38 @@ import (
 	"strings"
 
 	"path/filepath"
-
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
 )
 
+// Import Builder is used only for Go program generation.
+// This builder generates import package section in Go program.
+// If we need to import more libraries, it should be added here.
 type Import struct {
-	qs []*types.QuerySpec
-	ms []*types.MutationSpec
+	imports []string
 }
 
-func NewImport(qs []*types.QuerySpec, ms []*types.MutationSpec) *Import {
+func NewImport(imports []string) *Import {
 	return &Import{
-		qs: qs,
-		ms: ms,
+		imports: imports,
 	}
 }
 
-func (b *Import) BuildQuery() string {
-	return ""
+func (b *Import) BuildQuery() (string, error) {
+	return "", nil
 }
 
-func (b *Import) BuildProgram() string {
-	var dendencies []string
-	stack := map[string]struct{}{}
+func (b *Import) BuildProgram() (string, error) {
+	var deps []string
 
-	for _, v := range b.qs {
-		input := v.Input.GoPackageName()
-		if _, ok := stack[input]; !ok {
-			dendencies = append(dendencies, fmt.Sprintf(
-				`%s "%s"`,
-				filepath.Base(input),
-				input,
-			))
-			stack[input] = struct{}{}
-		}
-		output := v.Output.GoPackageName()
-		if _, ok := stack[output]; !ok {
-			dendencies = append(dendencies, fmt.Sprintf(
-				`%s "%s"`,
-				filepath.Base(output),
-				output,
-			))
-			dendencies = append(dendencies, output)
-			stack[output] = struct{}{}
-		}
-	}
-	for _, v := range b.ms {
-		input := v.Input.GoPackageName()
-		if _, ok := stack[input]; !ok {
-			dendencies = append(dendencies, fmt.Sprintf(
-				`%s "%s"`,
-				filepath.Base(input),
-				input,
-			))
-			stack[input] = struct{}{}
-		}
-		output := v.Output.GoPackageName()
-		if _, ok := stack[output]; !ok {
-			dendencies = append(dendencies, fmt.Sprintf(
-				`%s "%s"`,
-				filepath.Base(output),
-				output,
-			))
-			stack[output] = struct{}{}
+	for _, i := range b.imports {
+		if idx := strings.Index(i, "/"); idx > -1 {
+			deps = append(deps, fmt.Sprintf(`%s "%s"`, filepath.Base(i), i))
+		} else {
+			deps = append(deps, i)
 		}
 	}
 
 	return fmt.Sprintf(`
 import (
-	"errors"
-	"net/http"
-
 	"github.com/graphql-go/graphql"
 	"google.golang.org/grpc"
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
@@ -83,6 +44,6 @@ import (
 	%s
 )
 `,
-		strings.Join(dendencies, "\n"),
-	)
+		strings.Join(deps, "\n"),
+	), nil
 }

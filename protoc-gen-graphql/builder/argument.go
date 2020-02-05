@@ -4,50 +4,48 @@ import (
 	"fmt"
 	"strings"
 
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/extension"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
+// Argument builder is builder for graphql argument definition.
 type Argument struct {
-	a *types.ArgumentSpec
+	m *spec.Message
 }
 
-func NewArgument(a *types.ArgumentSpec) *Argument {
+func NewArgument(m *spec.Message) *Argument {
 	return &Argument{
-		a: a,
+		m: m,
 	}
 }
 
-func (b *Argument) BuildQuery() string {
-	return ""
+// On Graphql schema generation, this builder nothing to geneate
+func (b *Argument) BuildQuery() (string, error) {
+	return "", nil
 }
 
-func (b *Argument) BuildProgram() string {
-	fields := b.a.Message.Descriptor.GetField()
-	args := make([]string, len(fields))
+// Generate Go program for field arguments
+func (b *Argument) BuildProgram() (string, error) {
+	var args []string
 
-	for i, f := range fields {
-		fieldType := ext.ConvertGoType(f)
-		if f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+	for _, f := range b.m.Fields() {
+		fieldType := f.GraphqlGoType()
+		if f.IsRepeated() {
 			fieldType = "graphql.NewList(" + fieldType + ")"
 		}
-
-		var optional bool
-		if opt := ext.GraphqlFieldExtension(f); opt != nil {
-			optional = opt.GetOptional()
-		}
-		if !optional {
+		if !f.IsOptional() {
 			fieldType = "graphql.NewNonNull(" + fieldType + ")"
 		}
-		args[i] = fmt.Sprintf(`
+
+		args = append(args, strings.TrimSpace(fmt.Sprintf(`
+			%s
 			"%s": &graphql.ArgumentConfig{
 				Type: %s,
 			},`,
-			f.GetName(),
+			f.Comment(spec.GoComment),
+			f.Name(),
 			fieldType,
-		)
+		)))
 	}
 
-	return strings.TrimSpace(strings.Join(args, "\n"))
+	return strings.TrimSpace(strings.Join(args, "\n")), nil
 }

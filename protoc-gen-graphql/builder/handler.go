@@ -1,60 +1,47 @@
 package builder
 
+import (
+	"fmt"
+
+	"github.com/iancoleman/strcase"
+)
+
 var handlerTemplate = `
 
-func graphqlHandler(endpoint string, v interface{}) (runtime.GraphqlHandler, error) {
-	var c *runtime.Connection
-	if v == nil {
-		c = runtime.NewConnection(nil)
-	} else {
-		switch t := v.(type) {
-		case *grpc.ClientConn:
-			c = runtime.NewConnection(t)
-		case *runtime.Connection:
-			c = t
-		default:
-			return nil, errors.New("invalid type conversion")
-		}
-	}
-
-	schema := createSchema(c)
-
-	return func(w http.ResponseWriter, r *http.Request) *graphql.Result {
-		if r.URL.Path != endpoint {
-			runtime.Respond(w, http.StatusNotFound, "endpoint not found")
-			return nil
-		}
-		query, variables, err := runtime.ParseRequest(r)
-		if err != nil {
-			runtime.Respond(w, http.StatusBadRequest, err.Error())
-			return nil
-		}
-
-		return graphql.Do(graphql.Params{
-			Schema: schema,
-			RequestString: query,
-			VariableValues: variables,
-			Context: r.Context(),
-		})
-	}, nil
+// Register package divided graphql handler "without" *grpc.ClientConn,
+// therefore gRPC connection will be opened and closed automatically.
+// Occasionally you worried about open/close performance for each handling graphql request,
+// then you can call Register%sHandler with *grpc.ClientConn manually.
+func Register%sGraphql(mux *runtime.ServeMux) {
+	Register%sGraphqlHandler(mux, nil)
 }
 
-func RegisterGraphqlHandler(mux *runtime.ServeMux, v interface{}, endpoint string) (err error) {
-	mux.Handler, err = graphqlHandler(endpoint, v)
-	return
+// Register package divided graphql handler "with" *grpc.ClientConn.
+// this function accepts your client connection, so that we reuse that and never close connection inside.
+// You need to close it maunally when appication will terminate.
+func Register%sGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) {
+	mux.AddQueryField(getQueryFields(conn))
+	mux.AddMutationField(getMutationFields(conn))
 }`
 
+// Handler Builder is used only for Go program generation.
+// This builder generates export functions which register service
 type Handler struct {
+	pkgName string
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(p string) *Handler {
+	return &Handler{
+		pkgName: p,
+	}
 }
 
-func (b *Handler) BuildQuery() string {
-	return ""
+func (b *Handler) BuildQuery() (string, error) {
+	return "", nil
 }
 
-func (b *Handler) BuildProgram() string {
-	return handlerTemplate
+func (b *Handler) BuildProgram() (string, error) {
+	n := strcase.ToCamel(b.pkgName)
+
+	return fmt.Sprintf(handlerTemplate, n, n, n, n), nil
 }

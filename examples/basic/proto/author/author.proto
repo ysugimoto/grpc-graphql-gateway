@@ -20,6 +20,11 @@ message GetAuthorRequest {
 }
 
 service AuthorService {
+  option (graphql.service) = {
+    host: "localhost:8080"
+    insecure: true
+  };
+
   rpc ListAuthors(ListAuthorsRequest) returns (ListAuthorsResponse) {
     option (graphql.query) = {
       name: "authors"

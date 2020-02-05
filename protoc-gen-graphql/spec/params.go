@@ -1,20 +1,17 @@
-package types
+package spec
 
 import (
 	"errors"
 	"strings"
 )
 
+// Params spec have plugin parameters
 type Params struct {
-	QueryOut       string
-	ProgramOut     string
-	ProgramPackage string
+	QueryOut string
 }
 
 func NewParams(p string) (*Params, error) {
-	params := &Params{
-		ProgramPackage: "main",
-	}
+	params := &Params{}
 
 	for _, v := range strings.Split(p, ",") {
 		kv := strings.SplitN(v, "=", 2)
@@ -24,10 +21,6 @@ func NewParams(p string) (*Params, error) {
 		switch kv[0] {
 		case "query":
 			params.QueryOut = kv[1]
-		case "go":
-			params.ProgramOut = kv[1]
-		case "gopkg":
-			params.ProgramPackage = kv[1]
 		default:
 			return nil, errors.New("Unacceptable argument " + kv[0] + " provided")
 		}

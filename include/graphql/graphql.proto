@@ -24,6 +24,11 @@ message GraphqlService {
   bool insecure = 2;
 }
 
+message GraphqlRequest {
+  string name = 1;
+  string expose = 2;
+}
+
 message GraphqlResponse {
   bool repeated = 1;
   bool optional = 2;
@@ -33,16 +38,14 @@ message GraphqlResponse {
 message GraphqlQuery {
   string name = 1;
   string field = 2;
-  bool autoresolve = 3;
   GraphqlResponse response = 4;
 }
 
 message GraphqlMutation {
   string name = 1;
   string field = 2;
-  bool autoresolve = 3;
-  bool input_type = 4;
-  GraphqlResponse response = 5;
+  GraphqlRequest request = 3;
+  GraphqlResponse response = 4;
 }
 
 message GraphqlField {

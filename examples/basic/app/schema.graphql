@@ -1,0 +1,66 @@
+type Query {
+  author(name: String!): Author
+  authors(): [authors!]!
+  book(id: Int!): Book
+  books(): [books!]
+}
+
+type Mutation {
+  createbook(input: CreateBookRequest): Book
+}
+
+input CreateBookRequest {
+  title: String!
+  type: BookType!
+  author: Author!
+} # message CreateBookRequest in book/book.proto
+
+type GetAuthorRequest {
+  name: String!
+} # message GetAuthorRequest in author/author.proto
+
+type Author {
+  name: String!
+} # message Author in author/author.proto
+
+type ListAuthorsRequest {
+} # message ListAuthorsRequest in author/author.proto
+
+type ListAuthorsResponse {
+  authors: [Author]!
+} # message ListAuthorsResponse in author/author.proto
+
+type GetBookRequest {
+"""
+this is example comment for id field
+"""
+  id: Int!
+} # message GetBookRequest in book/book.proto
+
+type Book {
+  id: Int!
+  title: String!
+  type: BookType!
+  author: Author!
+} # message Book in book/book.proto
+
+enum BookType {
+  JAVASCRIPT
+  ECMASCRIPT
+  GIT
+  ASP_DOT_NET
+} # message BookType in book/book.proto
+
+type ListBooksRequest {
+} # message ListBooksRequest in book/book.proto
+
+type ListBooksResponse {
+  books: [Book]!
+} # message ListBooksResponse in book/book.proto
+
+type CreateBookRequest {
+  title: String!
+  type: BookType!
+  author: Author!
+} # message CreateBookRequest in book/book.proto
+

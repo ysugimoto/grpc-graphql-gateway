@@ -9,6 +9,7 @@ import (
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
 )
 
+// Schema generator is used for generating GraphQL schema.
 type Schema struct {
 	items []builder.Builder
 	out   *bytes.Buffer
@@ -27,7 +28,10 @@ func (s *Schema) write(line string) {
 
 func (s *Schema) Format(file string) (*plugin.CodeGeneratorResponse_File, error) {
 	for _, item := range s.items {
-		if line := item.BuildQuery(); line != "" {
+		// call BuildQuery() for each builder
+		if line, err := item.BuildQuery(); err != nil {
+			return nil, err
+		} else if line != "" {
 			s.write(line)
 		}
 	}

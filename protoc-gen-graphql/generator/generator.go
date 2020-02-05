@@ -2,170 +2,152 @@ package generator
 
 import (
 	"errors"
-	_ "log"
-	"strings"
+	"fmt"
 
 	"path/filepath"
 
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
-	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/extension"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/resolver"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
+// Generator is struct for analyzing protobuf definition
+// and factory graphql definition in protobuf to generate,
+// and collect builders with expected order.
 type Generator struct {
-	req *plugin.CodeGeneratorRequest
-	r   *Resolver
-
-	queries   Queries
-	mutations Mutations
-	types     Types
 }
 
-func New(req *plugin.CodeGeneratorRequest) *Generator {
-	return &Generator{
-		req: req,
-		r:   NewResolver(req),
-
-		queries:   Queries{},
-		mutations: Mutations{},
-		types:     Types{},
-	}
+func New() *Generator {
+	return &Generator{}
 }
 
-func (g *Generator) Generate(resp *plugin.CodeGeneratorResponse) {
-	var genError error
-	defer func() {
-		if genError != nil {
-			msg := genError.Error()
-			resp.Error = &msg
-		}
-	}()
+func (g *Generator) Generate(
+	files []*spec.File,
+	args *spec.Params,
+) ([]*plugin.CodeGeneratorResponse_File, error) {
 
-	args := &types.Params{}
-	if g.req.Parameter != nil {
-		args, genError = types.NewParams(g.req.GetParameter())
-		if genError != nil {
-			return
-		}
+	var genFiles []*plugin.CodeGeneratorResponse_File
+
+	queries, mutations, err := g.analyzeMethods(files)
+	if err != nil {
+		return nil, err
+	} else if len(queries) == 0 && len(mutations) == 0 {
+		return nil, errors.New("nothing to generate queries")
 	}
 
-	for _, f := range g.req.GetProtoFile() {
-		pkg := f.GetPackage()
-		for _, s := range f.GetService() {
-			for _, m := range s.GetMethod() {
-				if opt := ext.GraphqlQueryOption(m); opt != nil {
-					qs, err := g.AnalyzeQuery(m, s, opt)
-					if err != nil {
-						genError = err
-						return
-					}
-					g.queries.Add(pkg, qs)
+	r := resolver.New(files)
+
+	// to work this line, query=[outdir] argument is required
+	if args.QueryOut != "" {
+		file, err := g.generateSchema(
+			r,
+			args.QueryOut,
+			queries.Collect(),
+			mutations.Collect(),
+		)
+		if err != nil {
+			return nil, err
+		}
+		genFiles = append(genFiles, file)
+	}
+
+	// Generate go program for each query definitions in package
+	for pkg, qs := range queries {
+		var ms []*spec.Method
+		if v, ok := mutations[pkg]; ok {
+			ms = v
+		}
+		file, err := g.generateProgram(r, pkg, qs, ms)
+		if err != nil {
+			return nil, err
+		}
+		genFiles = append(genFiles, file)
+	}
+
+	return genFiles, nil
+}
+
+// analyzeMethods analyze all protobuf and find Query/Mutation definitions.
+func (g *Generator) analyzeMethods(files []*spec.File) (Queries, Mutations, error) {
+	queries := Queries{}
+	mutations := Mutations{}
+
+	for _, f := range files {
+		pkgName := f.GoPackage()
+
+		for _, s := range f.Services() {
+			for _, m := range s.Methods() {
+				if m.Query != nil {
+					queries.Add(pkgName, m)
 				}
-				if opt := ext.GraphqlMutationOption(m); opt != nil {
-					ms, err := g.AnalyzeMutation(m, s, opt)
-					if err != nil {
-						genError = err
-						return
-					}
-					g.mutations.Add(pkg, ms)
+				if m.Mutation != nil {
+					mutations.Add(pkgName, m)
 				}
 			}
 		}
 	}
+	return queries, mutations, nil
+}
 
-	if len(g.queries) == 0 {
-		genError = errors.New("nothing to generate queries")
-		return
-	}
-
-	queries := g.queries.Concat()
-	mutations := g.mutations.Concat()
-	types, err := g.r.ResolveTypes(queries, mutations)
+// generateSchema generates GraphQL schema definition.
+func (g *Generator) generateSchema(
+	r *resolver.Resolver,
+	outDir string,
+	qs []*spec.Method,
+	ms []*spec.Method,
+) (*plugin.CodeGeneratorResponse_File, error) {
+	types, err := r.ResolveTypes(qs, ms)
 	if err != nil {
-		genError = err
-		return
+		return nil, err
 	}
-
-	if args.QueryOut != "" {
-		builders := []builder.Builder{
-			builder.NewQuery(queries),
-			builder.NewMutation(mutations),
-		}
-		builders = append(builders, types...)
-		schema := NewSchema(builders)
-		file, err := schema.Format(filepath.Join(args.QueryOut, "./query.graphql"))
-		if err != nil {
-			genError = err
-			return
-		}
-		resp.File = append(resp.File, file)
+	builders := []builder.Builder{
+		builder.NewQuery(r.Find, r.FindEnum, qs),
+		builder.NewMutation(r.Find, r.FindEnum, ms),
 	}
-
-	if args.ProgramOut != "" {
-		builders := []builder.Builder{
-			builder.NewPackage(args.ProgramPackage),
-			builder.NewImport(queries, mutations),
-		}
-		builders = append(builders, types...)
-		builders = append(
-			builders,
-			builder.NewQuery(queries),
-			builder.NewMutation(mutations),
-			builder.NewHandler(),
-		)
-		program := NewProgram(builders)
-		file, err := program.Format(filepath.Join(args.ProgramOut, "./app/query.grahpql.go"))
-		if err != nil {
-			genError = err
-			return
-		}
-		resp.File = append(resp.File, file)
-	}
+	builders = append(builders, types...)
+	schema := NewSchema(builders)
+	return schema.Format(filepath.Join(outDir, "./schema.graphql"))
 }
 
-func (g *Generator) AnalyzeQuery(
-	m *descriptor.MethodDescriptorProto,
-	s *descriptor.ServiceDescriptorProto,
-	opt *graphql.GraphqlQuery,
-) (*types.QuerySpec, error) {
-	var req, resp *types.Message
-	if req = g.r.FindMessage(strings.TrimPrefix(m.GetInputType(), ".")); req == nil {
-		return nil, errors.New("InputType: " + m.GetInputType() + " not exists")
-	}
-	if resp = g.r.FindMessage(strings.TrimPrefix(m.GetOutputType(), ".")); resp == nil {
-		return nil, errors.New("OutputType: " + m.GetOutputType() + " not exists")
-	}
-
-	return &types.QuerySpec{
-		Input:   req,
-		Output:  resp,
-		Option:  opt,
-		Method:  m,
-		Service: s,
-	}, nil
-}
-
-func (g *Generator) AnalyzeMutation(
-	m *descriptor.MethodDescriptorProto,
-	s *descriptor.ServiceDescriptorProto,
-	opt *graphql.GraphqlMutation,
-) (*types.MutationSpec, error) {
-	var req, resp *types.Message
-	if req = g.r.FindMessage(strings.TrimPrefix(m.GetInputType(), ".")); req == nil {
-		return nil, errors.New("InputType: " + m.GetInputType() + " not exists")
-	}
-	if resp = g.r.FindMessage(strings.TrimPrefix(m.GetOutputType(), ".")); resp == nil {
-		return nil, errors.New("OutputType: " + m.GetOutputType() + " not exists")
+// generateProgram generates Go code.
+func (g *Generator) generateProgram(
+	r *resolver.Resolver,
+	pkgName string,
+	qs []*spec.Method,
+	ms []*spec.Method,
+) (*plugin.CodeGeneratorResponse_File, error) {
+	types, err := r.ResolveTypes(qs, ms)
+	if err != nil {
+		return nil, err
 	}
 
-	return &types.MutationSpec{
-		Input:   req,
-		Output:  resp,
-		Option:  opt,
-		Method:  m,
-		Service: s,
-	}, nil
+	var imports []string
+	packages, err := r.ResolvePackages(qs, ms)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range packages {
+		if p == pkgName {
+			continue
+		}
+		imports = append(imports, p)
+	}
+
+	basename := filepath.Base(pkgName)
+	builders := []builder.Builder{
+		builder.NewPackage(basename),
+		builder.NewImport(imports),
+	}
+	builders = append(builders, types...)
+	builders = append(
+		builders,
+		builder.NewQuery(r.Find, r.FindEnum, qs),
+		builder.NewMutation(r.Find, r.FindEnum, ms),
+		builder.NewHandler(basename),
+	)
+	program := NewProgram(builders)
+	return program.Format(
+		fmt.Sprintf("%s/%s.graphql.go", pkgName, basename),
+	)
 }

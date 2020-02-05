@@ -1,153 +1,203 @@
 package builder
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	ext "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/extension"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/types"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
+// Query builder generates query definition.
 type Query struct {
-	qs []*types.QuerySpec
+	find     func(name string) *spec.Message
+	findEnum func(name string) *spec.Enum
+	ms       []*spec.Method
 }
 
-func NewQuery(qs []*types.QuerySpec) *Query {
+func NewQuery(
+	f func(name string) *spec.Message,
+	fe func(name string) *spec.Enum,
+	ms []*spec.Method,
+) *Query {
 	return &Query{
-		qs: qs,
+		find:     f,
+		findEnum: fe,
+		ms:       ms,
 	}
 }
 
-func (q *Query) BuildQuery() string {
-	if len(q.qs) == 0 {
-		return ""
+func (q *Query) BuildQuery() (string, error) {
+	if len(q.ms) == 0 {
+		return "", nil
 	}
-	lines := []string{`type Query {`}
 
-	for _, v := range q.qs {
-		var fieldName, sign string
-		if f, _ := v.GetExposeField(); f != nil {
-			fieldName = ext.ConvertGraphqlType(f)
-			var optional bool
-			if opts := ext.GraphqlFieldExtension(f); opts != nil {
-				optional = opts.GetOptional()
-			}
-			if !optional {
+	lines := []string{`type Query {`}
+	for _, method := range q.ms {
+		i := method.Input()
+		input := q.find(i)
+		if input == nil {
+			return "", errors.New("input " + i + " is not defined in " + method.Package())
+		}
+		o := method.Output()
+		output := q.find(o)
+		if output == nil {
+			return "", errors.New("output " + o + " is not defined in " + method.Package())
+		}
+
+		var fieldName string
+		if method.ExposeQuery() != "" {
+			field := method.ExposeQueryFields(output)[0]
+			fieldName = field.Name()
+			if !field.IsOptional() {
 				fieldName += "!"
 			}
-			if f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			if field.Label() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 				fieldName = "[" + fieldName + "]"
-				if !v.IsOutputOptional() {
-					sign = "!"
+				if resp := method.QueryResponse(); resp != nil {
+					if !resp.GetOptional() {
+						fieldName += "!"
+					}
 				}
 			}
 		} else {
-			fieldName = v.Output.Descriptor.GetName()
-			if !v.IsOutputOptional() {
-				sign = "!"
+			fieldName = output.Name()
+			if resp := method.QueryResponse(); resp != nil {
+				if resp.GetRepeated() {
+					fieldName = "[" + fieldName + "]"
+				}
+				if !resp.GetOptional() {
+					fieldName += "!"
+				}
 			}
+		}
+
+		if c := method.Comment(spec.GraphqlComment); c != "" {
+			lines = append(lines, c)
 		}
 
 		lines = append(lines, fmt.Sprintf(
-			"  %s(%s): %s%s",
-			v.Option.GetName(),
-			q.ExtractArguments(v.Input),
+			"  %s(%s): %s",
+			method.QueryName(),
+			q.ExtractArguments(input),
 			fieldName,
-			sign,
 		))
 	}
-
-	lines = append(lines, "}\n")
-
-	return strings.Join(lines, "\n")
+	return strings.Join(append(lines, "}\n"), "\n"), nil
 }
 
-func (q *Query) ExtractArguments(input *types.Message) string {
+func (q *Query) ExtractArguments(input *spec.Message) string {
 	var args []string
-	for _, f := range input.Descriptor.GetField() {
-		sign := "!"
-		if opt := ext.GraphqlFieldExtension(f); opt != nil {
-			if opt.GetOptional() {
-				sign = ""
-			}
+
+	for _, f := range input.Fields() {
+		sign := ""
+		if !f.IsOptional() {
+			sign = "!"
 		}
 		args = append(args, fmt.Sprintf(
 			"%s: %s%s",
-			f.GetName(),
-			ext.ConvertGraphqlType(f),
+			f.Name(),
+			f.GraphqlType(),
 			sign,
 		))
 	}
 	return strings.Join(args, ", ")
 }
 
-func (q *Query) BuildProgram() string {
-	fields := make([]string, len(q.qs))
+func (q *Query) BuildProgram() (string, error) {
+	if len(q.ms) == 0 {
+		return "", nil
+	}
+	fields := make([]string, len(q.ms))
+	connections := make(map[string]string)
 
-	for i, v := range q.qs {
-		args := NewArgument(&types.ArgumentSpec{
-			Message: v.Input,
-		}).BuildProgram()
-
-		var argField string
+	for i, method := range q.ms {
+		input := q.find(method.Input())
+		if input == nil {
+			return "", errors.New("failed to resolve input message: " + method.Input())
+		}
+		args, err := NewArgument(input).BuildProgram()
+		if err != nil {
+			return "", errors.New("failed to build program for argument message: " + method.Input())
+		}
 		if args != "" {
-			argField = strings.TrimSpace(fmt.Sprintf(`
+			args = strings.TrimSpace(fmt.Sprintf(`
 				Args: graphql.FieldConfigArgument{
 					%s
 				},`,
 				args,
 			))
 		}
+
+		output := q.find(method.Output())
+		if output == nil {
+			return "", errors.New("failed to resolve output message: " + method.Output())
+		}
+
+		serviceName := method.ServiceName()
+		if _, ok := connections[serviceName]; !ok {
+			c, _ := NewConnection(method.Service).BuildProgram()
+			connections[serviceName] = c
+		}
+
 		var typeName string
-		expose, _ := v.GetExposeField()
-		if expose != nil {
-			typeName = ext.ConvertGoType(expose)
-			if expose.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+		if method.ExposeQuery() != "" {
+			field := method.ExposeQueryFields(output)[0]
+			typeName = field.GraphqlGoType()
+			if field.Label() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 				typeName = "graphql.NewList(" + typeName + ")"
 			}
-			var optional bool
-			if opt := ext.GraphqlFieldExtension(expose); opt != nil {
-				optional = opt.GetOptional()
-			}
-			if !optional {
+			if !field.IsOptional() {
 				typeName = "graphql.NewNonNull(" + typeName + ")"
 			}
 		} else {
-			typeName = ext.MessageName(v.Output.Descriptor.GetName())
-			if v.IsOutputRepeated() {
-				typeName = "graphql.NewList(" + typeName + ")"
-			}
-			if !v.IsOutputOptional() {
-				typeName = "graphql.NewNonNull(" + typeName + ")"
+			typeName = spec.PrefixType(output.Name())
+			if resp := method.QueryResponse(); resp != nil {
+				if resp.GetRepeated() {
+					typeName = "graphql.NewList(" + typeName + ")"
+				}
+				if !resp.GetOptional() {
+					typeName = "graphql.NewNonNull(" + typeName + ")"
+				}
 			}
 		}
 
+		resolve, err := NewQueryResolver(q.find, q.findEnum, method).BuildProgram()
+		if err != nil {
+			return "", errors.New("failed to build resolver function: " + err.Error())
+		}
+
 		fields[i] = strings.TrimSpace(fmt.Sprintf(`
+			%s
 			"%s": &graphql.Field{
 				Type: %s,
 				%s
 				Resolve: %s,
 			},`,
-			v.Option.GetName(),
+			method.Comment(spec.GoComment),
+			method.QueryName(),
 			typeName,
-			argField,
-			NewResolver(v).BuildProgram(),
+			args,
+			resolve,
 		))
 	}
 
+	cns := make([]string, len(connections))
+	for _, v := range connections {
+		cns = append(cns, v)
+	}
+
 	return fmt.Sprintf(`
-func createSchema(c *runtime.Connection) graphql.Schema {
-	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
-		Query: graphql.NewObject(graphql.ObjectConfig{
-			Name: "Query",
-			Fields: graphql.Fields{
-				%s
-			},
-		}),
-	})
-	return schema
+%s
+
+// getQueryFields returns query target fields.
+func getQueryFields(c *grpc.ClientConn) graphql.Fields {
+	return graphql.Fields{
+		%s
+	}
 }`,
+		strings.Join(cns, "\n"),
 		strings.Join(fields, "\n"),
-	)
+	), nil
 }

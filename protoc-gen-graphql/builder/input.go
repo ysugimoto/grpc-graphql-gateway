@@ -7,24 +7,25 @@ import (
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
-// Message builder generates common object definition.
-// type {...} on GraphQL, and Object on Go program.
-type Message struct {
+// Input builder generates input object between GraphQL and Go program.
+// On GraphQL, generates input {...} definition, and on Go,
+// genearates InputObject in order to use on some Muration query.
+type Input struct {
 	m *spec.Message
 }
 
-func NewMessage(m *spec.Message) *Message {
-	return &Message{
+func NewInput(m *spec.Message) *Input {
+	return &Input{
 		m: m,
 	}
 }
 
-func (b *Message) BuildQuery() (string, error) {
+func (b *Input) BuildQuery() (string, error) {
 	lines := []string{}
 	if c := b.m.Comment(spec.GraphqlComment); c != "" {
 		lines = append(lines, c)
 	}
-	lines = append(lines, fmt.Sprintf("type %s {", b.m.Name()))
+	lines = append(lines, fmt.Sprintf("input %s {", b.m.Name()))
 
 	for _, f := range b.m.Fields() {
 		fieldType := f.GraphqlType()
@@ -38,7 +39,6 @@ func (b *Message) BuildQuery() (string, error) {
 		if c := f.Comment(spec.GraphqlComment); c != "" {
 			lines = append(lines, c)
 		}
-
 		lines = append(lines, fmt.Sprintf(
 			"  %s: %s",
 			f.Name(),
@@ -46,11 +46,15 @@ func (b *Message) BuildQuery() (string, error) {
 		))
 	}
 
-	lines = append(lines, fmt.Sprintf("} # message %s in %s\n", b.m.SingleName(), b.m.Filename()))
+	lines = append(lines, fmt.Sprintf(
+		"} # message %s in %s\n",
+		b.m.SingleName(),
+		b.m.Filename(),
+	))
 	return strings.Join(lines, "\n"), nil
 }
 
-func (b *Message) BuildProgram() (string, error) {
+func (b *Input) BuildProgram() (string, error) {
 	var fields []string
 
 	for _, f := range b.m.Fields() {
@@ -64,7 +68,7 @@ func (b *Message) BuildProgram() (string, error) {
 
 		fields = append(fields, strings.TrimSpace(fmt.Sprintf(`
 			%s
-			"%s": &graphql.Field{
+			"%s": &graphql.InputObjectFieldConfig{
 				Type: %s,
 			},`,
 			f.Comment(spec.GoComment),
@@ -75,14 +79,14 @@ func (b *Message) BuildProgram() (string, error) {
 
 	return strings.TrimSpace(fmt.Sprintf(`
 %s
-var %s = graphql.NewObject(graphql.ObjectConfig{
+var %s = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "%s",
-	Fields: graphql.Fields{
+	Fields: graphql.InputObjectConfigFieldMap{
 		%s
 	},
 }) // message %s in %s`,
 		b.m.Comment(spec.GoComment),
-		spec.PrefixType(b.m.Name()),
+		spec.PrefixInput(b.m.Name()),
 		b.m.Name(),
 		strings.TrimSpace(strings.Join(fields, "\n")),
 		b.m.SingleName(),

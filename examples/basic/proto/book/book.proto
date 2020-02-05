@@ -27,6 +27,7 @@ message ListBooksResponse {
 }
 
 message GetBookRequest {
+  // this is example comment for id field
   int64 id = 1;
 }
 
@@ -55,14 +56,15 @@ service BookService {
   rpc GetBook(GetBookRequest) returns (Book) {
     option (graphql.query) = {
       name: "book"
-      autoresolve: true
     };
   }
 
   rpc CreateBook(CreateBookRequest) returns (Book) {
     option (graphql.mutation) = {
       name: "createbook"
-      input_type: true
+      request {
+        name: "input"
+      }
     };
   }
 }

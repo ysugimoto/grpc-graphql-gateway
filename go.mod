@@ -6,6 +6,8 @@ require (
 	github.com/golang/protobuf v1.3.3
 	github.com/graphql-go/graphql v0.7.8
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
+	github.com/k0kubun/pp v3.0.1+incompatible
+	github.com/mattn/go-colorable v0.1.4 // indirect
 	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
 	golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135 // indirect
 	google.golang.org/grpc v1.27.0
