@@ -1,0 +1,60 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+
+definitions:
+  workspace: &workspace
+    #### TEMPLATE_NOTE: go expects specific checkout path representing url
+    #### expecting it in the form of
+    ####   /go/src/github.com/circleci/go-tool
+    ####   /go/src/bitbucket.org/circleci/go-tool
+    working_directory: /go/src/github.com/ysugimoto/grpc-graphql-gateway
+    docker:
+      # specify the version
+      - image: circleci/golang:1.12
+
+  job_presets: &job_presets
+    build:
+      <<: *workspace
+      steps:
+        - checkout
+        - run:
+           command: |
+             cd /go/src/github.com/ysugimoto/grpc-graphql-gateway
+             make
+        - persist_to_workspace:
+           root: /go/src/github.com/ysugimoto/grpc-graphql-gateway
+           paths:
+             - ./*
+    publish:
+      <<: *workspace
+      steps:
+        - attach_workspace:
+            at: /go/src/github.com/ysugimoto/grpc-graphql-gateway
+        - setup_remote_docker
+        - run:
+           command: |
+             sudo apt-get install jq file
+             cd /go/src/github.com/ysugimoto/grpc-graphql-gateway
+             make publish
+
+jobs:
+  <<: *job_presets
+
+workflows:
+  version: 2
+  build_and_publish:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+      - publish:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/

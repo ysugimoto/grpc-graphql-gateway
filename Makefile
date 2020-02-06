@@ -17,3 +17,5 @@ all: plugin
 	cd ${CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${CMD}.darwin
 	cd ${CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${CMD}.linux
 
+publish: all
+	sh ./github-release.sh
