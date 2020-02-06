@@ -15,7 +15,7 @@ definitions:
       steps:
         - checkout
         - run:
-           command:
+           command: |
              PROTOC_ZIP=protoc-3.9.0-linux-x86_64.zip
              curl -OL https://github.com/google/protobuf/releases/download/v3.9.0/$PROTOC_ZIP
              sudo unzip -o $PROTOC_ZIP -d /usr/local/protoc
