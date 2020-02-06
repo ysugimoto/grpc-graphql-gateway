@@ -5,11 +5,6 @@ version: 2
 
 definitions:
   workspace: &workspace
-    #### TEMPLATE_NOTE: go expects specific checkout path representing url
-    #### expecting it in the form of
-    ####   /go/src/github.com/circleci/go-tool
-    ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: /go/src/github.com/ysugimoto/grpc-graphql-gateway
     docker:
       # specify the version
       - image: circleci/golang:1.12
@@ -27,24 +22,19 @@ definitions:
              sudo ln -s /usr/local/protoc/bin/protoc /usr/local/bin
              sudo ln -s /usr/local/protoc/include/google `pwd`/proto/google
              go get -u github.com/golang/protobuf/protoc-gen-go
-        - run:
-           command: |
-             cd /go/src/github.com/ysugimoto/grpc-graphql-gateway
-             make
+        - run: make
         - persist_to_workspace:
-           root: /go/src/github.com/ysugimoto/grpc-graphql-gateway
+           root: .
            paths:
              - ./*
     publish:
       <<: *workspace
       steps:
         - attach_workspace:
-            at: /go/src/github.com/ysugimoto/grpc-graphql-gateway
-        - setup_remote_docker
+            at: .
         - run:
            command: |
              sudo apt-get install jq file
-             cd /go/src/github.com/ysugimoto/grpc-graphql-gateway
              make publish
 
 jobs:
