@@ -13,9 +13,18 @@ plugin:
 	mv graphql/github.com/ysugimoto/grpc-graphql-gateway/graphql/graphql.pb.go graphql/
 	rm -rf graphql/github.com
 
-all: plugin
+build:
+	protoc -I google \
+		-I include/graphql \
+		--go_out=./graphql \
+		include/graphql/graphql.proto
+	mv graphql/github.com/ysugimoto/grpc-graphql-gateway/graphql/graphql.pb.go graphql/
+	rm -rf graphql/github.com
+
+all: build
 	cd ${CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${CMD}.darwin
 	cd ${CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${CMD}.linux
+
 
 publish: all
 	sh ./github-release.sh
