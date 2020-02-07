@@ -2,12 +2,16 @@
 package book
 
 import (
+	"encoding/json"
 	"github.com/graphql-go/graphql"
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
 
 	author "github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/author"
 )
+
+var _ = json.Marshal
+var _ = json.Unmarshal
 
 var gql__type_ListBooksRequest = graphql.NewObject(graphql.ObjectConfig{
 	Name:   "ListBooksRequest",
@@ -146,8 +150,10 @@ func getQueryFields(c *grpc.ClientConn) graphql.Fields {
 					}()
 				}
 				client := NewBookServiceClient(c)
-				req := &GetBookRequest{}
-				req.Id = int64(p.Args["id"].(int))
+				var req *GetBookRequest
+				if err := runtime.MarshalRequest(p.Args, &req); err != nil {
+					return nil, err
+				}
 				resp, err := client.GetBook(p.Context, req)
 				if err != nil {
 					return nil, err
