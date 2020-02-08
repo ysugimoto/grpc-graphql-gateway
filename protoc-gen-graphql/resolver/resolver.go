@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
+	_ "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
@@ -69,101 +69,145 @@ func (r *Resolver) FindEnum(t string) *spec.Enum {
 func (r *Resolver) ResolveTypes(
 	queries []*spec.Method,
 	mutations []*spec.Method,
-) ([]builder.Builder, error) {
-
+) (
+	types []*spec.Message,
+	enums []*spec.Enum,
+	inputs []*spec.Message,
+	packages []*spec.Package,
+	resolveErr error,
+) {
 	var methods []*spec.Method
 	methods = append(methods, queries...)
 	methods = append(methods, mutations...)
 
 	cache := NewCache()
-	var builders []builder.Builder
 
 	for _, m := range methods {
 		input := m.Input()
 		msg := r.Find(input)
 		if msg == nil {
-			return nil, errors.New("input " + input + " is not defined in " + m.Package())
+			resolveErr = errors.New("input " + input + " is not defined in " + m.Package())
+			return
 		}
 		if !cache.Exists("m_" + msg.Name()) {
-			builders = append(builders, builder.NewMessage(msg))
+			if m.Mutation != nil {
+				inputs = append(inputs, msg)
+			} else {
+				types = append(types, msg)
+			}
 			cache.Add("m_" + msg.Name())
 		}
-		fields, err := r.resolveRecursive(msg.Fields(), cache)
-		if err != nil {
-			return nil, err
+		if !cache.Exists("p_" + msg.GoPackage()) {
+			packages = append(packages, spec.NewPackage(msg.GoPackage()))
+			cache.Add("p_" + msg.GoPackage())
 		}
-		builders = append(builders, fields...)
+		ts, es, ps, err := r.resolveRecursive(msg.Fields(), cache)
+		if err != nil {
+			resolveErr = err
+		}
+		types = append(types, ts...)
+		enums = append(enums, es...)
+		packages = append(packages, ps...)
 
 		output := m.Output()
 		msg = r.Find(output)
 		if msg == nil {
-			return nil, errors.New("output " + output + " is not defined in " + m.Package())
+			resolveErr = errors.New("output " + output + " is not defined in " + m.Package())
+			return
 		}
 		if m.ExposeQuery() == "" {
 			if !cache.Exists("m_" + msg.Name()) {
-				builders = append(builders, builder.NewMessage(msg))
+				types = append(types, msg)
 				cache.Add("m_" + msg.Name())
 			}
+			if !cache.Exists("p_" + msg.GoPackage()) {
+				packages = append(packages, spec.NewPackage(msg.GoPackage()))
+				cache.Add("p_" + msg.GoPackage())
+			}
 		}
-		fields, err = r.resolveRecursive(m.ExposeQueryFields(msg), cache)
+		ts, es, ps, err = r.resolveRecursive(m.ExposeQueryFields(msg), cache)
 		if err != nil {
-			return nil, err
+			resolveErr = err
+			return
 		}
-		builders = append(builders, fields...)
+		types = append(types, ts...)
+		enums = append(enums, es...)
+		packages = append(packages, ps...)
 
 		if m.ExposeMutation() == "" {
 			if !cache.Exists("m_" + msg.Name()) {
-				builders = append(builders, builder.NewMessage(msg))
+				types = append(types, msg)
 				cache.Add("m_" + msg.Name())
 			}
+			if !cache.Exists("p_" + msg.GoPackage()) {
+				packages = append(packages, spec.NewPackage(msg.GoPackage()))
+				cache.Add("p_" + msg.GoPackage())
+			}
 		}
-		fields, err = r.resolveRecursive(m.ExposeMutationFields(msg), cache)
+		ts, es, ps, err = r.resolveRecursive(m.ExposeQueryFields(msg), cache)
 		if err != nil {
-			return nil, err
+			resolveErr = err
+			return
 		}
-		builders = append(builders, fields...)
+		types = append(types, ts...)
+		enums = append(enums, es...)
+		packages = append(packages, ps...)
 	}
 
-	return builders, nil
+	return
 }
 
 // resolveRecursive resolves all types in fields recursively.
 func (r *Resolver) resolveRecursive(
 	fields []*spec.Field,
 	c *Cache,
-) ([]builder.Builder, error) {
-
-	var ret []builder.Builder
-
+) (
+	types []*spec.Message,
+	enums []*spec.Enum,
+	packages []*spec.Package,
+	resolveErr error,
+) {
 	for _, f := range fields {
 		switch f.Type() {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			mm, ok := r.messages[strings.TrimPrefix(f.TypeName(), ".")]
 			if !ok {
-				return nil, errors.New("failed to resolve message: " + f.TypeName())
+				resolveErr = errors.New("failed to resolve message: " + f.TypeName())
+				return
 			}
 			if !c.Exists("m_" + mm.Name()) {
-				ret = append(ret, builder.NewMessage(mm))
+				types = append(types, mm)
 				c.Add("m_" + mm.Name())
 			}
-			nested, err := r.resolveRecursive(mm.Fields(), c)
-			if err != nil {
-				return nil, err
+			if !c.Exists("p_" + mm.GoPackage()) {
+				packages = append(packages, spec.NewPackage(mm.GoPackage()))
+				c.Add("p_" + mm.GoPackage())
 			}
-			ret = append(ret, nested...)
+			ts, es, ps, err := r.resolveRecursive(mm.Fields(), c)
+			if err != nil {
+				resolveErr = err
+			}
+			types = append(types, ts...)
+			enums = append(enums, es...)
+			packages = append(packages, ps...)
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			en, ok := r.enums[strings.TrimPrefix(f.TypeName(), ".")]
 			if !ok {
-				return nil, errors.New("failed to resolve enum: " + f.TypeName())
+				resolveErr = errors.New("failed to resolve enum: " + f.TypeName())
+				return
 			}
 			if !c.Exists("e_" + en.Name()) {
-				ret = append(ret, builder.NewEnum(en))
+				enums = append(enums, en)
 				c.Add("e_" + en.Name())
+			}
+			if !c.Exists("p_" + en.GoPackage()) {
+				packages = append(packages, spec.NewPackage(en.GoPackage()))
+				c.Add("p_" + en.GoPackage())
 			}
 		}
 	}
 
-	return ret, nil
+	return
 }
 
 // ResolvePackages resolves all pakcages which is imported only in whole queries and mutations.

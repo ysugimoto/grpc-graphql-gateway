@@ -69,6 +69,17 @@ func (f *Field) IsRepeated() bool {
 	return f.Label() == descriptor.FieldDescriptorProto_LABEL_REPEATED
 }
 
+func (f *Field) FieldType() string {
+	fieldType := f.GraphqlGoType()
+	if f.IsRepeated() {
+		fieldType = "graphql.NewList(" + fieldType + ")"
+	}
+	if !f.IsOptional() {
+		fieldType = "graphql.NewNonNull(" + fieldType + ")"
+	}
+	return fieldType
+}
+
 // GraphqlType returns appropriate GraphQL type
 func (f *Field) GraphqlType() string {
 	switch f.Type() {

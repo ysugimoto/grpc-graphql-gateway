@@ -2,12 +2,8 @@ package generator
 
 import (
 	"errors"
-	"fmt"
-
-	"path/filepath"
 
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/resolver"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
@@ -40,16 +36,16 @@ func (g *Generator) Generate(
 
 	// to work this line, query=[outdir] argument is required
 	if args.QueryOut != "" {
-		file, err := g.generateSchema(
-			r,
-			args.QueryOut,
-			queries.Collect(),
-			mutations.Collect(),
-		)
-		if err != nil {
-			return nil, err
-		}
-		genFiles = append(genFiles, file)
+		// file, err := g.generateSchema(
+		// 	r,
+		// 	args.QueryOut,
+		// 	queries.Collect(),
+		// 	mutations.Collect(),
+		// )
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// genFiles = append(genFiles, file)
 	}
 
 	// Generate go program for each query definitions in package
@@ -58,7 +54,7 @@ func (g *Generator) Generate(
 		if v, ok := mutations[pkg]; ok {
 			ms = v
 		}
-		file, err := g.generateProgram(r, pkg, qs, ms)
+		file, err := NewProgram(pkg, qs, ms).Generate(r)
 		if err != nil {
 			return nil, err
 		}
@@ -90,6 +86,7 @@ func (g *Generator) analyzeMethods(files []*spec.File) (Queries, Mutations, erro
 	return queries, mutations, nil
 }
 
+/*
 // generateSchema generates GraphQL schema definition.
 func (g *Generator) generateSchema(
 	r *resolver.Resolver,
@@ -151,3 +148,4 @@ func (g *Generator) generateProgram(
 		fmt.Sprintf("%s/%s.graphql.go", pkgName, basename),
 	)
 }
+*/
