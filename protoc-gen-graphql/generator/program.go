@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"go/format"
+	"io/ioutil"
 	"text/template"
 
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/resolver"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
@@ -25,15 +25,9 @@ type Program struct {
 	Inputs    []*spec.Message
 	Queries   []*spec.Query
 	Mutations []*spec.Mutation
-
-	qs []*spec.Method
-	ms []*spec.Method
 }
 
-func NewProgram(
-	pkgName string,
-	qs, ms []*spec.Method,
-) *Program {
+func NewProgram(pkgName string) *Program {
 	return &Program{
 		RootPackage: spec.NewPackage(pkgName),
 		Queries:     make([]*spec.Query, 0),
@@ -42,13 +36,14 @@ func NewProgram(
 		Types:       make([]*spec.Message, 0),
 		Enums:       make([]*spec.Enum, 0),
 		Inputs:      make([]*spec.Message, 0),
-		qs:          qs,
-		ms:          ms,
 	}
 }
 
-func (p *Program) Generate(r *resolver.Resolver) (*plugin.CodeGeneratorResponse_File, error) {
-	if err := p.generateTemplateParams(r); err != nil {
+func (p *Program) Generate(
+	r *resolver.Resolver,
+	qs, ms []*spec.Method,
+) (*plugin.CodeGeneratorResponse_File, error) {
+	if err := p.generateTemplateParams(r, qs, ms); err != nil {
 		return nil, err
 	}
 
@@ -58,6 +53,8 @@ func (p *Program) Generate(r *resolver.Resolver) (*plugin.CodeGeneratorResponse_
 	} else if err := t.Execute(buf, p); err != nil {
 		return nil, err
 	}
+
+	ioutil.WriteFile("/tmp/"+p.RootPackage.Name+".go", buf.Bytes(), 0666)
 
 	out, err := format.Source(buf.Bytes())
 	if err != nil {
@@ -74,9 +71,12 @@ func (p *Program) Generate(r *resolver.Resolver) (*plugin.CodeGeneratorResponse_
 	}, nil
 }
 
-func (p *Program) generateTemplateParams(r *resolver.Resolver) (err error) {
+func (p *Program) generateTemplateParams(
+	r *resolver.Resolver,
+	qs, ms []*spec.Method,
+) (err error) {
 	var pkgs []*spec.Package
-	p.Types, p.Enums, p.Inputs, pkgs, err = r.ResolveTypes(p.Queries, p.Mutations)
+	p.Types, p.Enums, p.Inputs, pkgs, err = r.ResolveTypes(qs, ms)
 	if err != nil {
 		return err
 	}
@@ -88,10 +88,28 @@ func (p *Program) generateTemplateParams(r *resolver.Resolver) (err error) {
 		p.Packages = append(p.Packages, pkg)
 	}
 
-	if len(p.Queries) > 0 {
-		p.Service = p.Queries[0].Service
-	} else if len(p.Mutations) > 0 {
-		p.Service = p.Mutations[0].Service
+	if len(qs) > 0 {
+		m := qs[0]
+		p.Service = m.Service
+	} else if len(ms) > 0 {
+		m := ms[0]
+		p.Service = m.Service
+	}
+
+	for _, q := range qs {
+		p.Queries = append(p.Queries, spec.NewQuery(
+			q,
+			r.Find(q.Input()),
+			r.Find(q.Output()),
+		))
+	}
+
+	for _, m := range ms {
+		p.Mutations = append(p.Mutations, spec.NewMutation(
+			m,
+			r.Find(m.Input()),
+			r.Find(m.Output()),
+		))
 	}
 
 	return nil
@@ -108,7 +126,7 @@ import (
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
 
-{{ range .Packages }}
+{{- range .Packages }}
 	{{ .Name }} "{{ .Path }}"
 {{ end }}
 )
@@ -119,28 +137,32 @@ var _ = json.Unmarshal
 {{ range .Types -}}
 var gql__type_{{ .Name }} = graphql.NewObject(graphql.ObjectConfig{
 	Name: "{{ .Name }}",
-	Fields: graphql.Field {
-{{ range .Fields }}
-		{{ if .Comment 1 -}}
-		Description: "{{ .Comment }}",
-		{{ end }}
+	Fields: graphql.Fields {
+{{- range .Fields }}
 		"{{ .Name }}": &graphql.Field{
 			Type: {{ .FieldType }},
+			{{- if .Comment 1 }}
+			Description: "{{ .Comment 1 }}",
+			{{- end }}
 		},
-{{ end }}
+{{- end }}
 	},
 }) // message {{ .Name }} in {{ .Filename }}
+
 {{ end }}
 
 {{ range .Enums -}}
 var gql__enum_{{ .Name }} = graphql.NewEnum(graphql.EnumConfig{
 	Name: "{{ .Name }}",
 	Values: graphql.EnumValueConfigMap{
-{{ range .Values }}
+{{- range .Values }}
 		"{{ .Name }}": &graphql.EnumValueConfig{
+			{{- if .Comment 1 }}
+			Description: "{{ .Comment 1 }}",
+			{{- end }}
 			Value: {{ .Number }},
 		},
-{{ end }}
+{{- end }}
 	},
 }) // enum {{ .Name }} in {{ .Filename }}
 {{ end }}
@@ -149,14 +171,14 @@ var gql__enum_{{ .Name }} = graphql.NewEnum(graphql.EnumConfig{
 var gql__input_{{ .Name }} = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "{{ .Name }}",
 	Fields: graphql.InputObjectConfigFieldMap{
-{{ range .Fields }}
+{{- range .Fields }}
 		"{{ .Name }}": &graphql.InputObjectFieldConfig{
-			{{ if .Comment -}}
-			Description: "{{ .Comment }}",
-			{{ end }}
+			{{- if .Comment 1 }}
+			Description: "{{ .Comment 1 }}",
+			{{- end }}
 			Type: {{ .FieldType }},
 		},
-{{ end }}
+{{- end }}
 	},
 }) // message {{ .Name }} in {{ .Filename }}
 {{ end }}
@@ -170,67 +192,65 @@ type gql__resolver_{{ .Service.Name }} struct {
 // GetQueries returns acceptable graphql.Fields for Query.
 func (x *gql__resolver_{{ .Service.Name }}) GetQueries() graphql.Fields {
 	return graphql.Fields{
-{{ range .Queries }}
-		"{{ .Name }}": &graphql.Field{
-			Type: {{ .FieldType }},
-			{{ if .Comment -}}
-			Description: "{{ .Comment }}",
-			{{ end }}
-			{{- if .Args -}}
+{{- range .Queries }}
+		"{{ .QueryName }}": &graphql.Field{
+			Type: {{ .QueryType }},
+			{{- if .Comment 1 -}}
+			Description: "{{ .Comment 1 }}",
+			{{- end }}
+			{{- if .Args }}
 			Args: graphql.FieldConfigArgument{
 			{{- range .Args }}
-				{{ .Comment }}
 				"{{ .Name }}": &graphql.ArgumentConfig{
 					Type: {{ .FieldType }},
+					{{- if .Comment 1 }}
+					Description: "{{ .Comment 1 }}",
+					{{- end }}
 				},
+			{{- end }}
 			},
-			{{- end -}}
-			{{- end -}}
+			{{- end }}
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				return nil, nil
 			},
 		},
-{{ end }}
+{{- end }}
+	}
 }
 
 // GetMutations returns acceptable graphql.Fields for Mutation.
 func (x *gql__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
 	return graphql.Fields{
-{{ range .Mutations }}
-		"{{ .Name }}": &graphql.Field{
-			Type: {{ .FieldType }},
-			{{ if .Comment -}}
-			Description: "{{ .Comment }}",
+{{- range .Mutations }}
+		"{{ .MutationName }}": &graphql.Field{
+			Type: {{ .MutationType }},
+			{{- if .Comment 1 -}}
+			Description: "{{ .Comment 1 }}",
 			{{ end }}
-			{{- if .Args -}}
 			Args: graphql.FieldConfigArgument{
-			{{- range .Args }}
-				{{ .Comment }}
-				"{{ .Name }}": &graphql.ArgumentConfig{
-					Type: {{ .FieldType }},
+				"{{ .InputName }}": &graphql.ArgumentConfig{
+					Type: gql__input_{{ .Input.Name }},
 				},
 			},
-			{{- end -}}
-			{{- end -}}
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				var req *{{ .RequestType }}
 				if err := runtime.MarshalRequest(p.Args, req); err != nil {
 					return nil, err
 				}
-				client, err := {{ .Package }}New{{ .Service.Name }}Client(x.conn)
-				resp, err := client.{{ .Method }}(p.Context, req)
+				client := {{ .Package }}New{{ .Service.Name }}Client(x.conn)
+				resp, err := client.{{ .Method.Name }}(p.Context, req)
 				if err != nil {
 					return nil, err
 				}
-				{{ if .Expose }}
-				return resp{{ .Expose }}(), nil
-				{{ else }}
+				{{- if .Expose }}
+				return resp.Get{{ .Expose }}(), nil
+				{{- else }}
 				return resp, nil
-				{{ end }}
+				{{- end }}
 			},
 		},
 {{ end }}
-	},
+	}
 }
 
 // Register package divided graphql handler "without" *grpc.ClientConn,
@@ -238,13 +258,14 @@ func (x *gql__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
 // Occasionally you worried about open/close performance for each handling graphql request,
 // then you can call RegisterBookHandler with *grpc.ClientConn manually.
 func RegisterBookGraphql(mux *runtime.ServeMux) error {
-	RegisterBookGraphqlHandler(mux, nil)
+	return RegisterBookGraphqlHandler(mux, nil)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
 // this function accepts your defined grpc connection, so that we reuse that and never close connection inside.
 // You need to close it maunally when appication will terminate.
 // Otherwise, the resolver opens connection automatically, but then you need to define host with ServiceOption like:
+//
 // service XXXService {
 //    option (graphql.service) = {
 //        host: "localhost:50051"
@@ -256,8 +277,9 @@ func RegisterBookGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (e
 	if conn == nil {
 		conn, err = grpc.Dial("{{ .Service.Host }}"{{ if .Service.Insecure }}, grpc.WithInsecure(){{ end }})
 		if err != nil {
-			return err
+			return
 		}
 	}
 	mux.AddHandler(&gql__resolver_{{ .Service.Name }}{conn})
+	return
 }`

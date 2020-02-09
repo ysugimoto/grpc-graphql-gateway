@@ -9,35 +9,29 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
+type SchemaBuilder interface {
+	GetMutations() graphql.Fields
+	GetQueries() graphql.Fields
+}
+
 // ServeMux is struct can execute graphql request via incoming HTTP request.
 // This is inspired from grpc-gateway implementation, thanks!
 type ServeMux struct {
 	middlewares  []MiddlewareFunc
 	ErrorHandler GraphqlErrorHandler
 
-	queries   graphql.Fields
-	mutations graphql.Fields
+	handlers []SchemaBuilder
 }
 
 func NewServeMux(ms ...MiddlewareFunc) *ServeMux {
 	return &ServeMux{
 		middlewares: ms,
-
-		queries:   graphql.Fields{},
-		mutations: graphql.Fields{},
+		handlers:    []SchemaBuilder{},
 	}
 }
 
-func (s *ServeMux) AddQueryField(fields graphql.Fields) {
-	for k, v := range fields {
-		s.queries[k] = v
-	}
-}
-
-func (s *ServeMux) AddMutationField(fields graphql.Fields) {
-	for k, v := range fields {
-		s.mutations[k] = v
-	}
+func (s *ServeMux) AddHandler(h SchemaBuilder) {
+	s.handlers = append(s.handlers, h)
 }
 
 // Use adds more middlwares which user defined
@@ -55,14 +49,25 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	queries := graphql.Fields{}
+	mutations := graphql.Fields{}
+	for _, h := range s.handlers {
+		for k, v := range h.GetQueries() {
+			queries[k] = v
+		}
+		for k, v := range h.GetMutations() {
+			mutations[k] = v
+		}
+	}
+
 	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
 		Query: graphql.NewObject(graphql.ObjectConfig{
 			Name:   "Query",
-			Fields: s.queries,
+			Fields: queries,
 		}),
 		Mutation: graphql.NewObject(graphql.ObjectConfig{
 			Name:   "Mutation",
-			Fields: s.mutations,
+			Fields: mutations,
 		}),
 	})
 

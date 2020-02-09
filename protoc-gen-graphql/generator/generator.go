@@ -54,7 +54,7 @@ func (g *Generator) Generate(
 		if v, ok := mutations[pkg]; ok {
 			ms = v
 		}
-		file, err := NewProgram(pkg, qs, ms).Generate(r)
+		file, err := NewProgram(pkg).Generate(r, qs, ms)
 		if err != nil {
 			return nil, err
 		}

@@ -79,7 +79,7 @@ func (f *File) getComment(paths []int, t CommentType) string {
 		case GraphqlComment:
 			return `"""` + "\n" + strings.TrimSpace(v) + "\n" + `"""`
 		case GoComment:
-			return "// " + strings.TrimSpace(v)
+			return strings.TrimSpace(v)
 		default:
 			// probably common comment sign for several program language
 			return "#" + strings.TrimSpace(v)
