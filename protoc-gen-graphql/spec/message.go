@@ -13,17 +13,20 @@ type Message struct {
 	descriptor *descriptor.DescriptorProto
 	*File
 
-	paths []int
+	prefix []string
+	paths  []int
 }
 
 func NewMessage(
 	m *descriptor.DescriptorProto,
 	f *File,
+	prefix []string,
 	paths ...int,
 ) *Message {
 	return &Message{
 		descriptor: m,
 		File:       f,
+		prefix:     prefix,
 		paths:      paths,
 	}
 }
@@ -43,7 +46,11 @@ func (m *Message) Comment() string {
 }
 
 func (m *Message) Name() string {
-	return m.descriptor.GetName()
+	var p string
+	if len(m.prefix) > 0 {
+		p = strings.Join(m.prefix, "_") + "_"
+	}
+	return p + m.descriptor.GetName()
 }
 
 func (m *Message) SingleName() string {
@@ -63,4 +70,8 @@ func (m *Message) StructName(ptr bool) string {
 		sign = "*"
 	}
 	return sign + gopkg + m.Name()
+}
+
+func (m *Message) IsSamePackage(rootPackage string) bool {
+	return m.GoPackage() == rootPackage
 }

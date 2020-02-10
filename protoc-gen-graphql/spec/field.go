@@ -1,10 +1,13 @@
 package spec
 
 import (
+	"strings"
+
+	"path/filepath"
+
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
-	"strings"
 )
 
 // Field spec wraps FieldDescriptorProto with keeping file info
@@ -69,8 +72,8 @@ func (f *Field) IsRepeated() bool {
 	return f.Label() == descriptor.FieldDescriptorProto_LABEL_REPEATED
 }
 
-func (f *Field) FieldType() string {
-	fieldType := f.GraphqlGoType()
+func (f *Field) FieldType(rootPackage string) string {
+	fieldType := f.GraphqlGoType(filepath.Base(rootPackage))
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
 	}
@@ -133,16 +136,15 @@ func (f *Field) GraphqlType() string {
 		return "String"
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE,
 		descriptor.FieldDescriptorProto_TYPE_ENUM:
-		spec := strings.Split(f.TypeName(), ".")
-		name := spec[len(spec)-1]
-		return name
+		spec := strings.Split(FormatTypePath(f.TypeName()), "_")
+		return strings.Join(spec[1:], "_")
 	default:
 		return "Unknown"
 	}
 }
 
 // GraphqlGoType returns appropriate graphql-go type
-func (f *Field) GraphqlGoType() string {
+func (f *Field) GraphqlGoType(rootPackage string) string {
 	switch f.Type() {
 	case descriptor.FieldDescriptorProto_TYPE_BOOL:
 		return "graphql.Bool"
@@ -159,13 +161,19 @@ func (f *Field) GraphqlGoType() string {
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
 		return "graphql.String"
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		spec := strings.Split(f.TypeName(), ".")
-		name := spec[len(spec)-1]
-		return PrefixType(name)
+		spec := strings.Split(FormatTypePath(f.TypeName()), "_")
+		var pkgPrefix string
+		if spec[0] != rootPackage {
+			pkgPrefix = spec[0] + "."
+		}
+		return pkgPrefix + PrefixType(strings.Join(spec[1:], "_"))
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
-		spec := strings.Split(f.TypeName(), ".")
-		name := spec[len(spec)-1]
-		return PrefixEnum(name)
+		spec := strings.Split(FormatTypePath(f.TypeName()), "_")
+		var pkgPrefix string
+		if spec[0] != rootPackage {
+			pkgPrefix = spec[0] + "."
+		}
+		return pkgPrefix + PrefixEnum(strings.Join(spec[1:], "_"))
 	default:
 		return "interface{}"
 	}

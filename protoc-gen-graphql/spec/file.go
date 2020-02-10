@@ -34,9 +34,29 @@ func (f *File) Services() []*Service {
 func (f *File) Messages() []*Message {
 	var messages []*Message
 	for i, m := range f.descriptor.GetMessageType() {
-		messages = append(messages, NewMessage(m, f, 4, i))
+		messages = append(
+			messages,
+			f.messagesRecursive(m, []string{}, 4, i)...,
+		)
 	}
 
+	return messages
+}
+
+func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string, paths ...int) []*Message {
+	messages := []*Message{
+		NewMessage(d, f, prefix, paths...),
+	}
+
+	prefix = append(prefix, d.GetName())
+	for i, m := range d.GetNestedType() {
+		p := make([]int, len(paths))
+		copy(p, paths)
+		messages = append(
+			messages,
+			f.messagesRecursive(m, prefix, append(p, 3, i)...)...,
+		)
+	}
 	return messages
 }
 

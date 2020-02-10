@@ -22,19 +22,20 @@ func NewMutation(m *Method, input, output *Message) *Mutation {
 }
 
 func (m *Mutation) MutationType() string {
+	var pkgPrefix string
+
 	if m.Method.ExposeMutation() != "" {
 		field := m.Method.ExposeMutationFields(m.Output)[0]
-		fieldName := field.GraphqlGoType()
-		if field.IsRepeated() {
-			fieldName = "graphql.NewList(" + fieldName + ")"
-		}
-		if field.IsOptional() {
-			fieldName = "graphql.NewNonNull(" + fieldName + ")"
-		}
-		return fieldName
+		return field.FieldType(m.Method.GoPackage())
 	}
 
-	typeName := PrefixType(m.Output.Name())
+	if m.Method.GoPackage() != m.Output.GoPackage() {
+		pkgPrefix = m.Output.GoPackage()
+		if pkgPrefix != "main" {
+			pkgPrefix += "."
+		}
+	}
+	typeName := pkgPrefix + PrefixType(m.Output.Name())
 	if resp := m.Method.MutationResponse(); resp != nil {
 		if resp.GetRepeated() {
 			typeName = "graphql.NewList(" + typeName + ")"

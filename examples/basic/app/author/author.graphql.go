@@ -12,11 +12,12 @@ import (
 var _ = json.Marshal
 var _ = json.Unmarshal
 
-var gql__type_ListAuthorsRequest = graphql.NewObject(graphql.ObjectConfig{
+var Gql__type_ListAuthorsRequest = graphql.NewObject(graphql.ObjectConfig{
 	Name:   "ListAuthorsRequest",
 	Fields: graphql.Fields{},
 }) // message ListAuthorsRequest in author/author.proto
-var gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
+
+var Gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Author",
 	Fields: graphql.Fields{
 		"name": &graphql.Field{
@@ -24,15 +25,17 @@ var gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 }) // message Author in author/author.proto
-var gql__type_ListAuthorsResponse = graphql.NewObject(graphql.ObjectConfig{
+
+var Gql__type_ListAuthorsResponse = graphql.NewObject(graphql.ObjectConfig{
 	Name: "ListAuthorsResponse",
 	Fields: graphql.Fields{
 		"authors": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.NewList(gql__type_Author)),
+			Type: graphql.NewNonNull(graphql.NewList(Gql__type_Author)),
 		},
 	},
 }) // message ListAuthorsResponse in author/author.proto
-var gql__type_GetAuthorRequest = graphql.NewObject(graphql.ObjectConfig{
+
+var Gql__type_GetAuthorRequest = graphql.NewObject(graphql.ObjectConfig{
 	Name: "GetAuthorRequest",
 	Fields: graphql.Fields{
 		"name": &graphql.Field{
@@ -41,17 +44,17 @@ var gql__type_GetAuthorRequest = graphql.NewObject(graphql.ObjectConfig{
 	},
 }) // message GetAuthorRequest in author/author.proto
 
-// gql__resolver_AuthorService is a struct for making query, mutation and resolve fields.
+// xxx__resolver_AuthorService is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.Resolver interface.
-type gql__resolver_AuthorService struct {
+type xxx__resolver_AuthorService struct {
 	conn *grpc.ClientConn
 }
 
 // GetQueries returns acceptable graphql.Fields for Query.
-func (x *gql__resolver_AuthorService) GetQueries() graphql.Fields {
+func (x *xxx__resolver_AuthorService) GetQueries() graphql.Fields {
 	return graphql.Fields{
 		"authors": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.NewList(gql__type_Author)),
+			Type: graphql.NewNonNull(graphql.NewList(Gql__type_Author)),
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				var req *ListAuthorsRequest
 				if err := runtime.MarshalRequest(p.Args, req); err != nil {
@@ -66,7 +69,7 @@ func (x *gql__resolver_AuthorService) GetQueries() graphql.Fields {
 			},
 		},
 		"author": &graphql.Field{
-			Type: gql__type_Author,
+			Type: Gql__type_Author,
 			Args: graphql.FieldConfigArgument{
 				"name": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
@@ -89,7 +92,7 @@ func (x *gql__resolver_AuthorService) GetQueries() graphql.Fields {
 }
 
 // GetMutations returns acceptable graphql.Fields for Mutation.
-func (x *gql__resolver_AuthorService) GetMutations() graphql.Fields {
+func (x *xxx__resolver_AuthorService) GetMutations() graphql.Fields {
 	return graphql.Fields{}
 }
 
@@ -97,8 +100,8 @@ func (x *gql__resolver_AuthorService) GetMutations() graphql.Fields {
 // therefore gRPC connection will be opened and closed automatically.
 // Occasionally you worried about open/close performance for each handling graphql request,
 // then you can call RegisterBookHandler with *grpc.ClientConn manually.
-func RegisterBookGraphql(mux *runtime.ServeMux) error {
-	return RegisterBookGraphqlHandler(mux, nil)
+func RegisterAuthorServiceGraphql(mux *runtime.ServeMux) error {
+	return RegisterAuthorServiceGraphqlHandler(mux, nil)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
@@ -113,13 +116,13 @@ func RegisterBookGraphql(mux *runtime.ServeMux) error {
 //
 //    ...with RPC definitions
 // }
-func RegisterBookGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
+func RegisterAuthorServiceGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
 	if conn == nil {
 		conn, err = grpc.Dial("localhost:8080", grpc.WithInsecure())
 		if err != nil {
 			return
 		}
 	}
-	mux.AddHandler(&gql__resolver_AuthorService{conn})
+	mux.AddHandler(&xxx__resolver_AuthorService{conn})
 	return
 }

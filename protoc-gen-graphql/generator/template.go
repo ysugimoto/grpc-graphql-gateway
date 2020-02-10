@@ -13,13 +13,6 @@ import (
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
-type TemplateType int
-
-const (
-	TemplateTypeSchema TemplateType = iota
-	TemplateTypeGo
-)
-
 // Program generator is used for generating Go code.
 type Template struct {
 	RootPackage *spec.Package
@@ -31,9 +24,19 @@ type Template struct {
 	Inputs    []*spec.Message
 	Queries   []*spec.Query
 	Mutations []*spec.Mutation
+
+	r  *Resolver
+	qs []*spec.Method
+	ms []*spec.Method
+	gt GenerationType
 }
 
-func NewTemplate(pkgName string) *Template {
+func NewTemplate(
+	gt GenerationType,
+	pkgName string,
+	r *Resolver,
+	qs, ms []*spec.Method,
+) *Template {
 	return &Template{
 		RootPackage: spec.NewPackage(pkgName),
 		Queries:     make([]*spec.Query, 0),
@@ -42,23 +45,27 @@ func NewTemplate(pkgName string) *Template {
 		Types:       make([]*spec.Message, 0),
 		Enums:       make([]*spec.Enum, 0),
 		Inputs:      make([]*spec.Message, 0),
+
+		r:  r,
+		qs: qs,
+		ms: ms,
+		gt: gt,
 	}
 }
 
-func (t *Template) Generate(
-	outputType TemplateType,
-	r *Resolver,
-	qs, ms []*spec.Method,
+func (t *Template) Execute(
+	tmplString string,
 ) (*plugin.CodeGeneratorResponse_File, error) {
 
-	if err := t.generateTemplateParams(r, qs, ms); err != nil {
+	if err := t.generateTemplateParams(); err != nil {
 		return nil, err
 	}
 
 	buf := new(bytes.Buffer)
-	switch outputType {
-	case TemplateTypeGo:
-		if tmpl, err := template.New("program").Parse(goTemplate); err != nil {
+	switch t.gt {
+	case GenerationTypeGo:
+		t.filterSamePackages()
+		if tmpl, err := template.New("program").Parse(tmplString); err != nil {
 			return nil, err
 		} else if err := tmpl.Execute(buf, t); err != nil {
 			return nil, err
@@ -76,8 +83,8 @@ func (t *Template) Generate(
 			)),
 			Content: proto.String(string(out)),
 		}, nil
-	case TemplateTypeSchema:
-		if tmpl, err := template.New("schema").Parse(schemaTemplate); err != nil {
+	case GenerationTypeSchema:
+		if tmpl, err := template.New("schema").Parse(tmplString); err != nil {
 			return nil, err
 		} else if err := tmpl.Execute(buf, t); err != nil {
 			return nil, err
@@ -95,12 +102,9 @@ func (t *Template) Generate(
 
 }
 
-func (t *Template) generateTemplateParams(
-	r *Resolver,
-	qs, ms []*spec.Method,
-) (err error) {
+func (t *Template) generateTemplateParams() (err error) {
 	var pkgs []*spec.Package
-	t.Types, t.Enums, t.Inputs, pkgs, err = r.ResolveTypes(qs, ms)
+	t.Types, t.Enums, t.Inputs, pkgs, err = t.r.ResolveTypes(t.qs, t.ms)
 	if err != nil {
 		return err
 	}
@@ -112,29 +116,55 @@ func (t *Template) generateTemplateParams(
 		t.Packages = append(t.Packages, pkg)
 	}
 
-	if len(qs) > 0 {
-		m := qs[0]
+	if len(t.qs) > 0 {
+		m := t.qs[0]
 		t.Service = m.Service
-	} else if len(ms) > 0 {
-		m := ms[0]
+	} else if len(t.ms) > 0 {
+		m := t.ms[0]
 		t.Service = m.Service
 	}
 
-	for _, q := range qs {
+	for _, q := range t.qs {
 		t.Queries = append(t.Queries, spec.NewQuery(
 			q,
-			r.Find(q.Input()),
-			r.Find(q.Output()),
+			t.r.Find(q.Input()),
+			t.r.Find(q.Output()),
 		))
 	}
 
-	for _, m := range ms {
+	for _, m := range t.ms {
 		t.Mutations = append(t.Mutations, spec.NewMutation(
 			m,
-			r.Find(m.Input()),
-			r.Find(m.Output()),
+			t.r.Find(m.Input()),
+			t.r.Find(m.Output()),
 		))
 	}
 
 	return nil
+}
+
+func (t *Template) filterSamePackages() {
+	var types, inputs []*spec.Message
+	var enums []*spec.Enum
+
+	for _, v := range t.Types {
+		if v.GoPackage() == t.RootPackage.Path {
+			types = append(types, v)
+		}
+	}
+	t.Types = types
+
+	for _, v := range t.Enums {
+		if v.GoPackage() == t.RootPackage.Path {
+			enums = append(enums, v)
+		}
+	}
+	t.Enums = enums
+
+	for _, v := range t.Inputs {
+		if v.GoPackage() == t.RootPackage.Path {
+			inputs = append(inputs, v)
+		}
+	}
+	t.Inputs = inputs
 }

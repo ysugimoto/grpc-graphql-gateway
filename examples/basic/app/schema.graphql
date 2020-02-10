@@ -36,7 +36,12 @@ type Book {
   title: String!
   type: BookType!
   author: Author!
+  description: Book_Description!
 } # message Book in book/book.proto
+
+type Book_Description {
+  value: String!
+} # message Book_Description in book/book.proto
 
 type ListBooksRequest {
 } # message ListBooksRequest in book/book.proto
@@ -44,6 +49,10 @@ type ListBooksRequest {
 type ListBooksResponse {
   books: [Book]!
 } # message ListBooksResponse in book/book.proto
+
+type CreateBookRequest_NestedOne {
+  id: Int!
+} # message CreateBookRequest_NestedOne in book/book.proto
 
 enum BookType {
   JAVASCRIPT
@@ -56,4 +65,5 @@ input CreateBookRequest {
   title: String!
   type: BookType!
   author: Author!
+  nested: CreateBookRequest_NestedOne!
 } # message CreateBookRequest in book/book.proto

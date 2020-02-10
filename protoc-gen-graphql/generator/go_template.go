@@ -20,7 +20,7 @@ var _ = json.Marshal
 var _ = json.Unmarshal
 
 {{ range .Types -}}
-var gql__type_{{ .Name }} = graphql.NewObject(graphql.ObjectConfig{
+var Gql__type_{{ .Name }} = graphql.NewObject(graphql.ObjectConfig{
 	Name: "{{ .Name }}",
 	{{- if .Comment }}
 	Description: "{{ .Comment }}",
@@ -28,7 +28,7 @@ var gql__type_{{ .Name }} = graphql.NewObject(graphql.ObjectConfig{
 	Fields: graphql.Fields {
 {{- range .Fields }}
 		"{{ .Name }}": &graphql.Field{
-			Type: {{ .FieldType }},
+			Type: {{ .FieldType $.RootPackage.Path }},
 			{{- if .Comment }}
 			Description: "{{ .Comment }}",
 			{{- end }}
@@ -36,10 +36,11 @@ var gql__type_{{ .Name }} = graphql.NewObject(graphql.ObjectConfig{
 {{- end }}
 	},
 }) // message {{ .Name }} in {{ .Filename }}
+
 {{ end }}
 
 {{ range .Enums -}}
-var gql__enum_{{ .Name }} = graphql.NewEnum(graphql.EnumConfig{
+var Gql__enum_{{ .Name }} = graphql.NewEnum(graphql.EnumConfig{
 	Name: "{{ .Name }}",
 	Values: graphql.EnumValueConfigMap{
 {{- range .Values }}
@@ -55,7 +56,7 @@ var gql__enum_{{ .Name }} = graphql.NewEnum(graphql.EnumConfig{
 {{ end }}
 
 {{ range .Inputs -}}
-var gql__input_{{ .Name }} = graphql.NewInputObject(graphql.InputObjectConfig{
+var Gql__input_{{ .Name }} = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "{{ .Name }}",
 	Fields: graphql.InputObjectConfigFieldMap{
 {{- range .Fields }}
@@ -63,21 +64,21 @@ var gql__input_{{ .Name }} = graphql.NewInputObject(graphql.InputObjectConfig{
 			{{- if .Comment }}
 			Description: "{{ .Comment }}",
 			{{- end }}
-			Type: {{ .FieldType }},
+			Type: {{ .FieldType $.RootPackage.Path }},
 		},
 {{- end }}
 	},
 }) // message {{ .Name }} in {{ .Filename }}
 {{ end }}
 
-// gql__resolver_{{ .Service.Name }} is a struct for making query, mutation and resolve fields.
+// xxx__resolver_{{ .Service.Name }} is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.Resolver interface.
-type gql__resolver_{{ .Service.Name }} struct {
+type xxx__resolver_{{ .Service.Name }} struct {
 	conn *grpc.ClientConn
 }
 
 // GetQueries returns acceptable graphql.Fields for Query.
-func (x *gql__resolver_{{ .Service.Name }}) GetQueries() graphql.Fields {
+func (x *xxx__resolver_{{ .Service.Name }}) GetQueries() graphql.Fields {
 	return graphql.Fields{
 {{- range .Queries }}
 		"{{ .QueryName }}": &graphql.Field{
@@ -89,7 +90,7 @@ func (x *gql__resolver_{{ .Service.Name }}) GetQueries() graphql.Fields {
 			Args: graphql.FieldConfigArgument{
 			{{- range .Args }}
 				"{{ .Name }}": &graphql.ArgumentConfig{
-					Type: {{ .FieldType }},
+					Type: {{ .FieldType $.RootPackage.Path }},
 					{{- if .Comment }}
 					Description: "{{ .Comment }}",
 					{{- end }}
@@ -122,7 +123,7 @@ func (x *gql__resolver_{{ .Service.Name }}) GetQueries() graphql.Fields {
 }
 
 // GetMutations returns acceptable graphql.Fields for Mutation.
-func (x *gql__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
+func (x *xxx__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
 	return graphql.Fields{
 {{- range .Mutations }}
 		"{{ .MutationName }}": &graphql.Field{
@@ -132,7 +133,7 @@ func (x *gql__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
 			{{ end }}
 			Args: graphql.FieldConfigArgument{
 				"{{ .InputName }}": &graphql.ArgumentConfig{
-					Type: gql__input_{{ .Input.Name }},
+					Type: Gql__input_{{ .Input.Name }},
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -160,8 +161,8 @@ func (x *gql__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
 // therefore gRPC connection will be opened and closed automatically.
 // Occasionally you worried about open/close performance for each handling graphql request,
 // then you can call RegisterBookHandler with *grpc.ClientConn manually.
-func RegisterBookGraphql(mux *runtime.ServeMux) error {
-	return RegisterBookGraphqlHandler(mux, nil)
+func Register{{ .Service.Name }}Graphql(mux *runtime.ServeMux) error {
+	return Register{{ .Service.Name }}GraphqlHandler(mux, nil)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
@@ -176,13 +177,13 @@ func RegisterBookGraphql(mux *runtime.ServeMux) error {
 //
 //    ...with RPC definitions
 // }
-func RegisterBookGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
+func Register{{ .Service.Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
 	if conn == nil {
 		conn, err = grpc.Dial("{{ .Service.Host }}"{{ if .Service.Insecure }}, grpc.WithInsecure(){{ end }})
 		if err != nil {
 			return
 		}
 	}
-	mux.AddHandler(&gql__resolver_{{ .Service.Name }}{conn})
+	mux.AddHandler(&xxx__resolver_{{ .Service.Name }}{conn})
 	return
 }`

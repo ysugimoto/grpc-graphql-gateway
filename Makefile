@@ -1,9 +1,11 @@
-.PHONY: command
+.PHONY: command clean
 
-CMD=protoc-gen-graphql
+GRAPHQL_CMD=protoc-gen-graphql
+SCHEMA_CMD=protoc-gen-graphql-schema
 
-command: plugin
-	cd ${CMD} && go build -o ../dist/${CMD}
+command: plugin clean
+	cd ${GRAPHQL_CMD} && go build -o ../dist/${GRAPHQL_CMD}
+	cd ${SCHEMA_CMD} && go build -o ../dist/${SCHEMA_CMD}
 
 plugin:
 	protoc -I $(shell brew --prefix protobuf)/include/google \
@@ -21,6 +23,11 @@ build:
 	mv graphql/github.com/ysugimoto/grpc-graphql-gateway/graphql/graphql.pb.go graphql/
 	rm -rf graphql/github.com
 
-all: build
-	cd ${CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${CMD}.darwin
-	cd ${CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${CMD}.linux
+clean:
+	rm -rf ./dist/*
+
+all: clean build
+	cd ${GRAPHQL_CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${GRAPHQL_CMD}.darwin
+	cd ${GRAPHQL_CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${GRAPHQL_CMD}.linux
+	cd ${SCHEMA_CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${SCHEMA_CMD}.darwin
+	cd ${SCHEMA_CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${SCHEMA_CMD}.linux

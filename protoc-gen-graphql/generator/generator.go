@@ -3,26 +3,33 @@ package generator
 import (
 	"errors"
 
-	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
+)
+
+type GenerationType int
+
+const (
+	GenerationTypeSchema GenerationType = iota
+	GenerationTypeGo
 )
 
 // Generator is struct for analyzing protobuf definition
 // and factory graphql definition in protobuf to generate,
 // and collect builders with expected order.
 type Generator struct {
+	gt GenerationType
 }
 
-func New() *Generator {
-	return &Generator{}
+func New(gt GenerationType) *Generator {
+	return &Generator{
+		gt: gt,
+	}
 }
 
 func (g *Generator) Generate(
 	files []*spec.File,
 	args *spec.Params,
-) ([]*plugin.CodeGeneratorResponse_File, error) {
-
-	var genFiles []*plugin.CodeGeneratorResponse_File
+) ([]*Template, error) {
 
 	queries, mutations, err := g.analyzeMethods(files)
 	if err != nil {
@@ -32,40 +39,37 @@ func (g *Generator) Generate(
 	}
 
 	r := NewResolver(files)
-
-	// to work this line, query=[outdir] argument is required
-	if args.QueryOut != "" {
-		file, err := NewTemplate("").Generate(
-			TemplateTypeSchema,
-			r,
-			queries.Collect(),
-			mutations.Collect(),
-		)
-		if err != nil {
-			return nil, err
+	switch g.gt {
+	case GenerationTypeSchema:
+		return []*Template{
+			NewTemplate(
+				g.gt,
+				"",
+				r,
+				queries.Collect(),
+				mutations.Collect(),
+			),
+		}, nil
+	case GenerationTypeGo:
+		// Generate go program for each query definitions in package
+		var ts []*Template
+		for pkg, qs := range queries {
+			ms := []*spec.Method{}
+			if v, ok := mutations[pkg]; ok {
+				ms = v
+			}
+			ts = append(ts, NewTemplate(
+				g.gt,
+				pkg,
+				r,
+				qs,
+				ms,
+			))
 		}
-		genFiles = append(genFiles, file)
+		return ts, nil
+	default:
+		return nil, errors.New("Unecpected GenerationType supplied")
 	}
-
-	// Generate go program for each query definitions in package
-	for pkg, qs := range queries {
-		var ms []*spec.Method
-		if v, ok := mutations[pkg]; ok {
-			ms = v
-		}
-		file, err := NewTemplate(pkg).Generate(
-			TemplateTypeGo,
-			r,
-			qs,
-			ms,
-		)
-		if err != nil {
-			return nil, err
-		}
-		genFiles = append(genFiles, file)
-	}
-
-	return genFiles, nil
 }
 
 // analyzeMethods analyze all protobuf and find Query/Mutation definitions.

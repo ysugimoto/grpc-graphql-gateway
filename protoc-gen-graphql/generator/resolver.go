@@ -31,10 +31,10 @@ func NewResolver(files []*spec.File) *Resolver {
 			continue
 		}
 		for _, m := range f.Messages() {
-			messages[pkgName+"."+m.Name()] = m
+			messages[pkgName+"_"+m.Name()] = m
 		}
 		for _, e := range f.Enums() {
-			enums[pkgName+"."+e.Name()] = e
+			enums[pkgName+"_"+e.Name()] = e
 		}
 	}
 
@@ -82,10 +82,9 @@ func (r *Resolver) ResolveTypes(
 	cache := NewCache()
 
 	for _, m := range methods {
-		input := m.Input()
-		msg := r.Find(input)
+		msg := r.Find(m.Input())
 		if msg == nil {
-			resolveErr = errors.New("input " + input + " is not defined in " + m.Package())
+			resolveErr = errors.New("input " + m.Input() + " is not defined in " + m.Package())
 			return
 		}
 		if !cache.Exists("m_" + msg.Name()) {
@@ -108,10 +107,9 @@ func (r *Resolver) ResolveTypes(
 		enums = append(enums, es...)
 		packages = append(packages, ps...)
 
-		output := m.Output()
-		msg = r.Find(output)
+		msg = r.Find(m.Output())
 		if msg == nil {
-			resolveErr = errors.New("output " + output + " is not defined in " + m.Package())
+			resolveErr = errors.New("output " + m.Output() + " is not defined in " + m.Package())
 			return
 		}
 		if m.ExposeQuery() == "" {
@@ -169,7 +167,7 @@ func (r *Resolver) resolveRecursive(
 	for _, f := range fields {
 		switch f.Type() {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-			mm, ok := r.messages[strings.TrimPrefix(f.TypeName(), ".")]
+			mm, ok := r.messages[spec.FormatTypePath(f.TypeName())]
 			if !ok {
 				resolveErr = errors.New("failed to resolve message: " + f.TypeName())
 				return
@@ -190,7 +188,7 @@ func (r *Resolver) resolveRecursive(
 			enums = append(enums, es...)
 			packages = append(packages, ps...)
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			en, ok := r.enums[strings.TrimPrefix(f.TypeName(), ".")]
+			en, ok := r.enums[spec.FormatTypePath(f.TypeName())]
 			if !ok {
 				resolveErr = errors.New("failed to resolve enum: " + f.TypeName())
 				return

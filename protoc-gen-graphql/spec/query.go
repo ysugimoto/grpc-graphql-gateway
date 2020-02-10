@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iancoleman/strcase"
 	"path/filepath"
+
+	"github.com/iancoleman/strcase"
 )
 
 // Query spec wraps MethodDescriptorProto.
@@ -24,12 +25,21 @@ func NewQuery(m *Method, input, output *Message) *Query {
 }
 
 func (q *Query) QueryType() string {
+	var pkgPrefix string
+
 	if q.Method.ExposeQuery() != "" {
 		field := q.Method.ExposeQueryFields(q.Output)[0]
-		return field.FieldType()
+		return field.FieldType(q.Method.GoPackage())
+
 	}
 
-	typeName := PrefixType(q.Output.Name())
+	if q.Method.GoPackage() != q.Output.GoPackage() {
+		pkgPrefix = filepath.Base(q.Output.GoPackage())
+		if pkgPrefix != "main" {
+			pkgPrefix += "."
+		}
+	}
+	typeName := pkgPrefix + PrefixType(q.Output.Name())
 	if resp := q.Method.QueryResponse(); resp != nil {
 		if resp.GetRepeated() {
 			typeName = "graphql.NewList(" + typeName + ")"

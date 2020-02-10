@@ -48,3 +48,7 @@ func (e *Enum) Values() []*EnumValue {
 	}
 	return values
 }
+
+func (e *Enum) IsSamePackage(rootPackage string) bool {
+	return e.GoPackage() == rootPackage
+}
