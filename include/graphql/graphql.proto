@@ -51,4 +51,5 @@ message GraphqlMutation {
 message GraphqlField {
   bool optional = 1;
   string name = 2;
+  string default = 3;
 }

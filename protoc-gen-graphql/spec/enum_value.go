@@ -24,8 +24,8 @@ func NewEnumValue(
 	}
 }
 
-func (e *EnumValue) Comment(t CommentType) string {
-	return e.File.getComment(e.paths, t)
+func (e *EnumValue) Comment() string {
+	return e.File.getComment(e.paths)
 }
 
 func (e *EnumValue) Number() int32 {

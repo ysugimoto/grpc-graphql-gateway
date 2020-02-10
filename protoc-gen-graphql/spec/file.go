@@ -68,22 +68,14 @@ func (f *File) Filename() string {
 	return f.descriptor.GetName()
 }
 
-func (f *File) getComment(paths []int, t CommentType) string {
+func (f *File) getComment(paths []int) string {
 	b := new(bytes.Buffer)
 	for _, p := range paths {
 		b.WriteString(fmt.Sprint(p))
 	}
 
 	if v, ok := f.comments[b.String()]; ok {
-		switch t {
-		case GraphqlComment:
-			return `"""` + "\n" + strings.TrimSpace(v) + "\n" + `"""`
-		case GoComment:
-			return strings.TrimSpace(v)
-		default:
-			// probably common comment sign for several program language
-			return "#" + strings.TrimSpace(v)
-		}
+		return strings.TrimSpace(v)
 	}
 	return ""
 }

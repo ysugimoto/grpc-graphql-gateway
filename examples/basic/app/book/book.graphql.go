@@ -17,7 +17,6 @@ var gql__type_ListBooksRequest = graphql.NewObject(graphql.ObjectConfig{
 	Name:   "ListBooksRequest",
 	Fields: graphql.Fields{},
 }) // message ListBooksRequest in book/book.proto
-
 var gql__type_Book = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Book",
 	Fields: graphql.Fields{
@@ -35,7 +34,6 @@ var gql__type_Book = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 }) // message Book in book/book.proto
-
 var gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Author",
 	Fields: graphql.Fields{
@@ -44,7 +42,6 @@ var gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 }) // message Author in author/author.proto
-
 var gql__type_ListBooksResponse = graphql.NewObject(graphql.ObjectConfig{
 	Name: "ListBooksResponse",
 	Fields: graphql.Fields{
@@ -53,7 +50,6 @@ var gql__type_ListBooksResponse = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 }) // message ListBooksResponse in book/book.proto
-
 var gql__type_GetBookRequest = graphql.NewObject(graphql.ObjectConfig{
 	Name: "GetBookRequest",
 	Fields: graphql.Fields{
@@ -109,19 +105,38 @@ func (x *gql__resolver_BookService) GetQueries() graphql.Fields {
 		"books": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.NewList(gql__type_Book)),
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return nil, nil
+				var req *ListBooksRequest
+				if err := runtime.MarshalRequest(p.Args, req); err != nil {
+					return nil, err
+				}
+				client := NewBookServiceClient(x.conn)
+				resp, err := client.ListBooks(p.Context, req)
+				if err != nil {
+					return nil, err
+				}
+				return resp.GetBooks(), nil
 			},
 		},
 		"book": &graphql.Field{
 			Type: gql__type_Book,
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
-					Type:        graphql.NewNonNull(graphql.Int),
-					Description: "this is example comment for id field",
+					Type:         graphql.NewNonNull(graphql.Int),
+					Description:  "this is example comment for id field",
+					DefaultValue: 10,
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return nil, nil
+				var req *GetBookRequest
+				if err := runtime.MarshalRequest(p.Args, req); err != nil {
+					return nil, err
+				}
+				client := NewBookServiceClient(x.conn)
+				resp, err := client.GetBook(p.Context, req)
+				if err != nil {
+					return nil, err
+				}
+				return resp, nil
 			},
 		},
 	}

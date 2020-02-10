@@ -38,8 +38,8 @@ func (m *Message) Fields() []*Field {
 	return fields
 }
 
-func (m *Message) Comment(t CommentType) string {
-	return m.File.getComment(m.paths, t)
+func (m *Message) Comment() string {
+	return m.File.getComment(m.paths)
 }
 
 func (m *Message) Name() string {

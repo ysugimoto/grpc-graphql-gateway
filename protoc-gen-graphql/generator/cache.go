@@ -1,4 +1,4 @@
-package resolver
+package generator
 
 // Cache is struct for checking key in stacks but never keep its value.
 type Cache struct {

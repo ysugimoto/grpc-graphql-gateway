@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/resolver"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
@@ -32,20 +31,20 @@ func (g *Generator) Generate(
 		return nil, errors.New("nothing to generate queries")
 	}
 
-	r := resolver.New(files)
+	r := NewResolver(files)
 
 	// to work this line, query=[outdir] argument is required
 	if args.QueryOut != "" {
-		// file, err := g.generateSchema(
-		// 	r,
-		// 	args.QueryOut,
-		// 	queries.Collect(),
-		// 	mutations.Collect(),
-		// )
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// genFiles = append(genFiles, file)
+		file, err := NewTemplate("").Generate(
+			TemplateTypeSchema,
+			r,
+			queries.Collect(),
+			mutations.Collect(),
+		)
+		if err != nil {
+			return nil, err
+		}
+		genFiles = append(genFiles, file)
 	}
 
 	// Generate go program for each query definitions in package
@@ -54,7 +53,12 @@ func (g *Generator) Generate(
 		if v, ok := mutations[pkg]; ok {
 			ms = v
 		}
-		file, err := NewProgram(pkg).Generate(r, qs, ms)
+		file, err := NewTemplate(pkg).Generate(
+			TemplateTypeGo,
+			r,
+			qs,
+			ms,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -85,67 +89,3 @@ func (g *Generator) analyzeMethods(files []*spec.File) (Queries, Mutations, erro
 	}
 	return queries, mutations, nil
 }
-
-/*
-// generateSchema generates GraphQL schema definition.
-func (g *Generator) generateSchema(
-	r *resolver.Resolver,
-	outDir string,
-	qs []*spec.Method,
-	ms []*spec.Method,
-) (*plugin.CodeGeneratorResponse_File, error) {
-	types, err := r.ResolveTypes(qs, ms)
-	if err != nil {
-		return nil, err
-	}
-	builders := []builder.Builder{
-		builder.NewQuery(r.Find, r.FindEnum, qs),
-		builder.NewMutation(r.Find, r.FindEnum, ms),
-	}
-	builders = append(builders, types...)
-	schema := NewSchema(builders)
-	return schema.Format(filepath.Join(outDir, "./schema.graphql"))
-}
-
-// generateProgram generates Go code.
-func (g *Generator) generateProgram(
-	r *resolver.Resolver,
-	pkgName string,
-	qs []*spec.Method,
-	ms []*spec.Method,
-) (*plugin.CodeGeneratorResponse_File, error) {
-	types, err := r.ResolveTypes(qs, ms)
-	if err != nil {
-		return nil, err
-	}
-
-	var imports []string
-	packages, err := r.ResolvePackages(qs, ms)
-	if err != nil {
-		return nil, err
-	}
-	for _, p := range packages {
-		if p == pkgName {
-			continue
-		}
-		imports = append(imports, p)
-	}
-
-	basename := filepath.Base(pkgName)
-	builders := []builder.Builder{
-		builder.NewPackage(basename),
-		builder.NewImport(imports),
-	}
-	builders = append(builders, types...)
-	builders = append(
-		builders,
-		builder.NewQuery(r.Find, r.FindEnum, qs),
-		builder.NewMutation(r.Find, r.FindEnum, ms),
-		builder.NewHandler(basename),
-	)
-	program := NewProgram(builders)
-	return program.Format(
-		fmt.Sprintf("%s/%s.graphql.go", pkgName, basename),
-	)
-}
-*/

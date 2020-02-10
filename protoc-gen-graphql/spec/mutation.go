@@ -24,7 +24,14 @@ func NewMutation(m *Method, input, output *Message) *Mutation {
 func (m *Mutation) MutationType() string {
 	if m.Method.ExposeMutation() != "" {
 		field := m.Method.ExposeMutationFields(m.Output)[0]
-		return field.GraphqlGoType()
+		fieldName := field.GraphqlGoType()
+		if field.IsRepeated() {
+			fieldName = "graphql.NewList(" + fieldName + ")"
+		}
+		if field.IsOptional() {
+			fieldName = "graphql.NewNonNull(" + fieldName + ")"
+		}
+		return fieldName
 	}
 
 	typeName := PrefixType(m.Output.Name())
@@ -35,6 +42,33 @@ func (m *Mutation) MutationType() string {
 		if !resp.GetOptional() {
 			typeName = "graphql.NewNonNull(" + typeName + ")"
 		}
+	}
+	return typeName
+}
+
+func (m *Mutation) OutputName() string {
+	if m.Method.ExposeMutation() != "" {
+		field := m.Method.ExposeMutationFields(m.Output)[0]
+		fieldType := field.GraphqlType()
+		if field.IsRepeated() {
+			fieldType = "[" + fieldType + "]"
+		}
+		if !field.IsOptional() {
+			fieldType += "!"
+		}
+		return fieldType
+	}
+
+	typeName := m.Output.Name()
+	if resp := m.Method.MutationResponse(); resp != nil {
+		if resp.GetRepeated() {
+			typeName = "[" + typeName + "]"
+		}
+		if !resp.GetOptional() {
+			typeName += "!"
+		}
+	} else {
+		typeName += "!"
 	}
 	return typeName
 }

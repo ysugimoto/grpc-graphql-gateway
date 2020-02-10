@@ -49,8 +49,8 @@ func NewMethod(
 	}
 }
 
-func (m *Method) Comment(t CommentType) string {
-	return m.File.getComment(m.paths, t)
+func (m *Method) Comment() string {
+	return m.File.getComment(m.paths)
 }
 
 func (m *Method) ServiceName() string {

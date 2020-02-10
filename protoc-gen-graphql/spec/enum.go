@@ -26,8 +26,8 @@ func NewEnum(
 	}
 }
 
-func (e *Enum) Comment(t CommentType) string {
-	return e.File.getComment(e.paths, t)
+func (e *Enum) Comment() string {
+	return e.File.getComment(e.paths)
 }
 
 func (e *Enum) Name() string {

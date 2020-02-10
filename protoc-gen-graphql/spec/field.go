@@ -24,7 +24,7 @@ func NewField(
 	var o *graphql.GraphqlField
 	if opts := d.GetOptions(); opts != nil {
 		if ext, err := proto.GetExtension(opts, graphql.E_Field); err == nil {
-			if field, ok := ext.(*graphql.GraphqlField); !ok {
+			if field, ok := ext.(*graphql.GraphqlField); ok {
 				o = field
 			}
 		}
@@ -38,8 +38,8 @@ func NewField(
 	}
 }
 
-func (f *Field) Comment(t CommentType) string {
-	return f.File.getComment(f.paths, t)
+func (f *Field) Comment() string {
+	return f.File.getComment(f.paths)
 }
 
 func (f *Field) Name() string {
@@ -78,6 +78,40 @@ func (f *Field) FieldType() string {
 		fieldType = "graphql.NewNonNull(" + fieldType + ")"
 	}
 	return fieldType
+}
+
+func (f *Field) SchemaType() string {
+	fieldType := f.GraphqlType()
+	if f.IsRepeated() {
+		fieldType = "[" + fieldType + "]"
+	}
+	if !f.IsOptional() {
+		fieldType += "!"
+	}
+	return fieldType
+}
+
+func (f *Field) DefaultValue() string {
+	if f.Option == nil {
+		return ""
+	}
+	switch f.Type() {
+	case descriptor.FieldDescriptorProto_TYPE_BOOL,
+		descriptor.FieldDescriptorProto_TYPE_DOUBLE,
+		descriptor.FieldDescriptorProto_TYPE_FLOAT,
+		descriptor.FieldDescriptorProto_TYPE_INT32,
+		descriptor.FieldDescriptorProto_TYPE_INT64,
+		descriptor.FieldDescriptorProto_TYPE_SFIXED32,
+		descriptor.FieldDescriptorProto_TYPE_SFIXED64,
+		descriptor.FieldDescriptorProto_TYPE_UINT32,
+		descriptor.FieldDescriptorProto_TYPE_UINT64,
+		descriptor.FieldDescriptorProto_TYPE_ENUM:
+		return f.Option.GetDefault()
+	case descriptor.FieldDescriptorProto_TYPE_STRING:
+		return `"` + f.Option.GetDefault() + `"`
+	default:
+		return ""
+	}
 }
 
 // GraphqlType returns appropriate GraphQL type
@@ -132,33 +166,6 @@ func (f *Field) GraphqlGoType() string {
 		spec := strings.Split(f.TypeName(), ".")
 		name := spec[len(spec)-1]
 		return PrefixEnum(name)
-	default:
-		return "interface{}"
-	}
-}
-
-// GoType returns appropriate go type
-// but message and enum is special value -- it should be treated in each builder
-func (f *Field) GoType() string {
-	switch f.Type() {
-	case descriptor.FieldDescriptorProto_TYPE_BOOL:
-		return "bool"
-	case descriptor.FieldDescriptorProto_TYPE_DOUBLE,
-		descriptor.FieldDescriptorProto_TYPE_FLOAT:
-		return "float64"
-	case descriptor.FieldDescriptorProto_TYPE_INT32,
-		descriptor.FieldDescriptorProto_TYPE_INT64,
-		descriptor.FieldDescriptorProto_TYPE_SFIXED32,
-		descriptor.FieldDescriptorProto_TYPE_SFIXED64,
-		descriptor.FieldDescriptorProto_TYPE_UINT32,
-		descriptor.FieldDescriptorProto_TYPE_UINT64:
-		return "int64"
-	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		return "message"
-	case descriptor.FieldDescriptorProto_TYPE_ENUM:
-		return "enum"
-	case descriptor.FieldDescriptorProto_TYPE_STRING:
-		return "string"
 	default:
 		return "interface{}"
 	}

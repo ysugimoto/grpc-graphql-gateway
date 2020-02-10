@@ -28,7 +28,7 @@ message ListBooksResponse {
 
 message GetBookRequest {
   // this is example comment for id field
-  int64 id = 1;
+  int64 id = 1 [(graphql.field) = {default: "10"}];
 }
 
 message CreateBookRequest {

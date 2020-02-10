@@ -1,11 +1,10 @@
-package resolver
+package generator
 
 import (
 	"errors"
 	"strings"
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	_ "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/builder"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
@@ -22,7 +21,7 @@ type Resolver struct {
 
 // Create all stacks on constructing,
 // so we should instantiate only once.
-func New(files []*spec.File) *Resolver {
+func NewResolver(files []*spec.File) *Resolver {
 	messages := make(map[string]*spec.Message)
 	enums := make(map[string]*spec.Enum)
 

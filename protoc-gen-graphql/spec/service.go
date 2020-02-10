@@ -35,8 +35,8 @@ func NewService(
 	}
 }
 
-func (s *Service) Comment(t CommentType) string {
-	return s.File.getComment(s.paths, t)
+func (s *Service) Comment() string {
+	return s.File.getComment(s.paths)
 }
 
 func (s *Service) Name() string {

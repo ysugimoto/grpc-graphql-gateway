@@ -16,7 +16,6 @@ var gql__type_ListAuthorsRequest = graphql.NewObject(graphql.ObjectConfig{
 	Name:   "ListAuthorsRequest",
 	Fields: graphql.Fields{},
 }) // message ListAuthorsRequest in author/author.proto
-
 var gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Author",
 	Fields: graphql.Fields{
@@ -25,7 +24,6 @@ var gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 }) // message Author in author/author.proto
-
 var gql__type_ListAuthorsResponse = graphql.NewObject(graphql.ObjectConfig{
 	Name: "ListAuthorsResponse",
 	Fields: graphql.Fields{
@@ -34,7 +32,6 @@ var gql__type_ListAuthorsResponse = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 }) // message ListAuthorsResponse in author/author.proto
-
 var gql__type_GetAuthorRequest = graphql.NewObject(graphql.ObjectConfig{
 	Name: "GetAuthorRequest",
 	Fields: graphql.Fields{
@@ -56,7 +53,16 @@ func (x *gql__resolver_AuthorService) GetQueries() graphql.Fields {
 		"authors": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.NewList(gql__type_Author)),
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return nil, nil
+				var req *ListAuthorsRequest
+				if err := runtime.MarshalRequest(p.Args, req); err != nil {
+					return nil, err
+				}
+				client := NewAuthorServiceClient(x.conn)
+				resp, err := client.ListAuthors(p.Context, req)
+				if err != nil {
+					return nil, err
+				}
+				return resp.GetAuthors(), nil
 			},
 		},
 		"author": &graphql.Field{
@@ -67,7 +73,16 @@ func (x *gql__resolver_AuthorService) GetQueries() graphql.Fields {
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return nil, nil
+				var req *GetAuthorRequest
+				if err := runtime.MarshalRequest(p.Args, req); err != nil {
+					return nil, err
+				}
+				client := NewAuthorServiceClient(x.conn)
+				resp, err := client.GetAuthor(p.Context, req)
+				if err != nil {
+					return nil, err
+				}
+				return resp, nil
 			},
 		},
 	}
