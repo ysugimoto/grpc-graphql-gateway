@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/author";
 
-package author;
+package some.app.v1.author;
 
 import "graphql/graphql.proto";
 
