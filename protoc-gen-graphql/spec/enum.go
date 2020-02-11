@@ -49,6 +49,6 @@ func (e *Enum) Values() []*EnumValue {
 	return values
 }
 
-func (e *Enum) IsSamePackage(rootPackage string) bool {
-	return e.GoPackage() == rootPackage
+func (e *Enum) FullPath() string {
+	return e.File.Package() + "." + e.Name()
 }

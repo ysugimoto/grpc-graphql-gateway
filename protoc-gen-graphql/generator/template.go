@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"go/format"
-	_ "io/ioutil"
+	"io/ioutil"
 	"text/template"
 
 	"github.com/golang/protobuf/proto"
@@ -70,9 +70,9 @@ func (t *Template) Execute(
 		} else if err := tmpl.Execute(buf, t); err != nil {
 			return nil, err
 		}
-		// ioutil.WriteFile("/tmp/"+.RootPackage.Name+".go", buf.Bytes(), 0666)
 		out, err := format.Source(buf.Bytes())
 		if err != nil {
+			ioutil.WriteFile("/tmp/"+t.RootPackage.Name+".go", buf.Bytes(), 0666)
 			return nil, err
 		}
 		return &plugin.CodeGeneratorResponse_File{

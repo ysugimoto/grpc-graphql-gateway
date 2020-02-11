@@ -94,7 +94,7 @@ var _ = json.Marshal
 var _ = json.Unmarshal
 
 {{ range .Types -}}
-var Gql__type_{{ .Name }} = graphql.NewObject(graphql.ObjectConfig{
+var Gql__type_{{ .TypeName }} = graphql.NewObject(graphql.ObjectConfig{
 	Name: "{{ .Name }}",
 	{{- if .Comment }}
 	Description: "{{ .Comment }}",

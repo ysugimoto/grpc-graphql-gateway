@@ -48,6 +48,14 @@ func (m *Message) Comment() string {
 func (m *Message) Name() string {
 	var p string
 	if len(m.prefix) > 0 {
+		p = strings.Join(m.prefix, ".") + "."
+	}
+	return p + m.descriptor.GetName()
+}
+
+func (m *Message) TypeName() string {
+	var p string
+	if len(m.prefix) > 0 {
 		p = strings.Join(m.prefix, "_") + "_"
 	}
 	return p + m.descriptor.GetName()
@@ -72,6 +80,6 @@ func (m *Message) StructName(ptr bool) string {
 	return sign + gopkg + m.Name()
 }
 
-func (m *Message) IsSamePackage(rootPackage string) bool {
-	return m.GoPackage() == rootPackage
+func (m *Message) FullPath() string {
+	return m.File.Package() + "." + m.Name()
 }

@@ -26,15 +26,11 @@ func NewResolver(files []*spec.File) *Resolver {
 	enums := make(map[string]*spec.Enum)
 
 	for _, f := range files {
-		pkgName := f.Package()
-		if strings.HasPrefix(pkgName, "google.protobuf") {
-			continue
-		}
 		for _, m := range f.Messages() {
-			messages[pkgName+"_"+m.Name()] = m
+			messages[m.FullPath()] = m
 		}
 		for _, e := range f.Enums() {
-			enums[pkgName+"_"+e.Name()] = e
+			enums[e.FullPath()] = e
 		}
 	}
 
@@ -167,10 +163,9 @@ func (r *Resolver) resolveRecursive(
 	for _, f := range fields {
 		switch f.Type() {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-			mm, ok := r.messages[spec.FormatTypePath(f.TypeName())]
+			mm, ok := r.messages[f.TypeName()]
 			if !ok {
 				resolveErr = errors.New("failed to resolve message: " + f.TypeName())
-				return
 			}
 			if !c.Exists("m_" + mm.Name()) {
 				types = append(types, mm)
@@ -188,11 +183,12 @@ func (r *Resolver) resolveRecursive(
 			enums = append(enums, es...)
 			packages = append(packages, ps...)
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			en, ok := r.enums[spec.FormatTypePath(f.TypeName())]
+			en, ok := r.enums[f.TypeName()]
 			if !ok {
 				resolveErr = errors.New("failed to resolve enum: " + f.TypeName())
 				return
 			}
+			f.TypeEnum = en
 			if !c.Exists("e_" + en.Name()) {
 				enums = append(enums, en)
 				c.Add("e_" + en.Name())

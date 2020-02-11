@@ -1,6 +1,8 @@
 package spec
 
 import (
+	"strings"
+
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
@@ -74,11 +76,11 @@ func (m *Method) MutationName() string {
 }
 
 func (m *Method) Input() string {
-	return FormatTypePath(m.descriptor.GetInputType())
+	return strings.TrimPrefix(m.descriptor.GetInputType(), ".")
 }
 
 func (m *Method) Output() string {
-	return FormatTypePath(m.descriptor.GetOutputType())
+	return strings.TrimPrefix(m.descriptor.GetOutputType(), ".")
 }
 
 func (m *Method) QueryResponse() *graphql.GraphqlResponse {

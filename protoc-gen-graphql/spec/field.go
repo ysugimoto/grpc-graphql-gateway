@@ -12,8 +12,10 @@ import (
 
 // Field spec wraps FieldDescriptorProto with keeping file info
 type Field struct {
-	descriptor *descriptor.FieldDescriptorProto
-	Option     *graphql.GraphqlField
+	descriptor  *descriptor.FieldDescriptorProto
+	Option      *graphql.GraphqlField
+	TypeMessage *Message
+	TypeEnum    *Enum
 	*File
 
 	paths []int
@@ -54,7 +56,7 @@ func (f *Field) Type() descriptor.FieldDescriptorProto_Type {
 }
 
 func (f *Field) TypeName() string {
-	return f.descriptor.GetTypeName()
+	return strings.TrimPrefix(f.descriptor.GetTypeName(), ".")
 }
 
 func (f *Field) Label() descriptor.FieldDescriptorProto_Label {
