@@ -81,7 +81,7 @@ type Query {
   {{- if .Comment }}
   """ {{ .Comment }} """
   {{- end }}
-  {{ .QueryName }}({{ .SchemaArgs }}): {{ .OutputName }}
+  {{ .QueryName }}{{ if .SchemaArgs }}({{ .SchemaArgs }}){{ end }}: {{ .OutputName }}
 {{- end }}
 }
 
@@ -97,7 +97,7 @@ type Mutation {
 {{- if .Comment }}
 # {{ .Comment }}
 {{- end }}
-type {{ .Name }} {
+type {{ .TypeName }} {
 {{- range .Fields }}
   {{- if .Comment }}
   """ {{ .Comment }} """

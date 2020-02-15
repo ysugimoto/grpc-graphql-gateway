@@ -12,6 +12,7 @@ import (
 type SchemaBuilder interface {
 	GetMutations() graphql.Fields
 	GetQueries() graphql.Fields
+	Close() error
 }
 
 // ServeMux is struct can execute graphql request via incoming HTTP request.
@@ -28,6 +29,16 @@ func NewServeMux(ms ...MiddlewareFunc) *ServeMux {
 		middlewares: ms,
 		handlers:    []SchemaBuilder{},
 	}
+}
+
+// Close() closes all grpc connection inside
+func (s *ServeMux) Close() error {
+	for _, h := range s.handlers {
+		if err := h.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *ServeMux) AddHandler(h SchemaBuilder) {

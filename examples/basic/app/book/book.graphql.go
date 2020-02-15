@@ -13,11 +13,6 @@ import (
 var _ = json.Marshal
 var _ = json.Unmarshal
 
-var Gql__type_ListBooksRequest = graphql.NewObject(graphql.ObjectConfig{
-	Name:   "ListBooksRequest",
-	Fields: graphql.Fields{},
-}) // message ListBooksRequest in book/book.proto
-
 var Gql__type_Book = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Book",
 	Fields: graphql.Fields{
@@ -40,7 +35,7 @@ var Gql__type_Book = graphql.NewObject(graphql.ObjectConfig{
 }) // message Book in book/book.proto
 
 var Gql__type_Book_Description = graphql.NewObject(graphql.ObjectConfig{
-	Name: "Book.Description",
+	Name: "Book_Description",
 	Fields: graphql.Fields{
 		"value": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.String),
@@ -48,27 +43,8 @@ var Gql__type_Book_Description = graphql.NewObject(graphql.ObjectConfig{
 	},
 }) // message Book.Description in book/book.proto
 
-var Gql__type_ListBooksResponse = graphql.NewObject(graphql.ObjectConfig{
-	Name: "ListBooksResponse",
-	Fields: graphql.Fields{
-		"books": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.NewList(Gql__type_Book)),
-		},
-	},
-}) // message ListBooksResponse in book/book.proto
-
-var Gql__type_GetBookRequest = graphql.NewObject(graphql.ObjectConfig{
-	Name: "GetBookRequest",
-	Fields: graphql.Fields{
-		"id": &graphql.Field{
-			Type:        graphql.NewNonNull(graphql.Int),
-			Description: "this is example comment for id field",
-		},
-	},
-}) // message GetBookRequest in book/book.proto
-
 var Gql__type_CreateBookRequest_NestedOne = graphql.NewObject(graphql.ObjectConfig{
-	Name: "CreateBookRequest.NestedOne",
+	Name: "CreateBookRequest_NestedOne",
 	Fields: graphql.Fields{
 		"id": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.Int),
@@ -116,21 +92,55 @@ var Gql__input_CreateBookRequest = graphql.NewInputObject(graphql.InputObjectCon
 			Type: graphql.NewNonNull(Gql__enum_BookType),
 		},
 		"author": &graphql.InputObjectFieldConfig{
-			Type: graphql.NewNonNull(author.Gql__type_Author),
+			Type: graphql.NewNonNull(author.Gql__input_Author),
 		},
 		"nested": &graphql.InputObjectFieldConfig{
-			Type: graphql.NewNonNull(Gql__type_CreateBookRequest_NestedOne),
+			Type: graphql.NewNonNull(Gql__input_CreateBookRequest_NestedOne),
 		},
 		"created_at": &graphql.InputObjectFieldConfig{
-			Type: graphql.NewNonNull(Gql__type_Timestamp),
+			Type: graphql.NewNonNull(Gql__input_Timestamp),
 		},
 	},
 }) // message CreateBookRequest in book/book.proto
+var Gql__input_CreateBookRequest_NestedOne = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "CreateBookRequest_NestedOne",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"id": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+	},
+}) // message CreateBookRequest.NestedOne in book/book.proto
+var Gql__input_Timestamp = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "Timestamp",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"seconds": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+		"nanos": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+	},
+}) // message Timestamp in google/protobuf/timestamp.proto
 
 // graphql__resolver_BookService is a struct for making query, mutation and resolve fields.
-// This struct must be implemented runtime.Resolver interface.
+// This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_BookService struct {
+	// grpc client connection.
+	// this connection may provided by user, then isAutoConnection should be false
 	conn *grpc.ClientConn
+
+	// isAutoConnection indicates that the grpc connection is opened by this handler.
+	// If true, this handler opens connection automatically, and it should be closed on Close() method.
+	isAutoConnection bool
+}
+
+// Close() closes grpc connection if it is opened automatically
+func (x *graphql__resolver_BookService) Close() error {
+	// nothing to do because the connection is supplied by user, and it should be closed user themselves.
+	if !x.isAutoConnection {
+		return nil
+	}
+	return x.conn.Close()
 }
 
 // GetQueries returns acceptable graphql.Fields for Query.
@@ -223,12 +233,14 @@ func RegisterBookServiceGraphql(mux *runtime.ServeMux) error {
 //    ...with RPC definitions
 // }
 func RegisterBookServiceGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
+	var isAutoConnection bool
 	if conn == nil {
+		isAutoConnection = true
 		conn, err = grpc.Dial("localhost:8080", grpc.WithInsecure())
 		if err != nil {
 			return
 		}
 	}
-	mux.AddHandler(&graphql__resolver_BookService{conn})
+	mux.AddHandler(&graphql__resolver_BookService{conn, isAutoConnection})
 	return
 }

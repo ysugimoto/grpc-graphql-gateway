@@ -42,13 +42,7 @@ func (g *Generator) Generate(
 	switch g.gt {
 	case GenerationTypeSchema:
 		return []*Template{
-			NewTemplate(
-				g.gt,
-				"",
-				r,
-				queries.Collect(),
-				mutations.Collect(),
-			),
+			NewTemplate(g.gt, "", r, queries.Collect(), mutations.Collect()),
 		}, nil
 	case GenerationTypeGo:
 		// Generate go program for each query definitions in package
@@ -58,13 +52,7 @@ func (g *Generator) Generate(
 			if v, ok := mutations[pkg]; ok {
 				ms = v
 			}
-			ts = append(ts, NewTemplate(
-				g.gt,
-				pkg,
-				r,
-				qs,
-				ms,
-			))
+			ts = append(ts, NewTemplate(g.gt, pkg, r, qs, ms))
 		}
 		return ts, nil
 	default:

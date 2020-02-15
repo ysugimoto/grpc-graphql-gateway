@@ -78,7 +78,18 @@ func (f *Field) IsRepeated() bool {
 }
 
 func (f *Field) FieldType(rootPackage string) string {
-	fieldType := f.GraphqlGoType(filepath.Base(rootPackage))
+	fieldType := f.GraphqlGoType(filepath.Base(rootPackage), false)
+	if f.IsRepeated() {
+		fieldType = "graphql.NewList(" + fieldType + ")"
+	}
+	if !f.IsOptional() {
+		fieldType = "graphql.NewNonNull(" + fieldType + ")"
+	}
+	return fieldType
+}
+
+func (f *Field) FieldTypeInput(rootPackage string) string {
+	fieldType := f.GraphqlGoType(filepath.Base(rootPackage), true)
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
 	}
@@ -151,7 +162,7 @@ func (f *Field) GraphqlType() string {
 }
 
 // GraphqlGoType returns appropriate graphql-go type
-func (f *Field) GraphqlGoType(rootPackage string) string {
+func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 	switch f.Type() {
 	case descriptor.FieldDescriptorProto_TYPE_BOOL:
 		return "graphql.Bool"
@@ -175,7 +186,11 @@ func (f *Field) GraphqlGoType(rootPackage string) string {
 				pkgPrefix = filepath.Base(f.TypeMessage.GoPackage()) + "."
 			}
 		}
-		return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
+		if isInput {
+			return pkgPrefix + PrefixInput(strings.ReplaceAll(tn, ".", "_"))
+		} else {
+			return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
+		}
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
 		var pkgPrefix string
 		tn := strings.TrimPrefix(f.TypeName(), f.TypeEnum.Package()+".")

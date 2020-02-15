@@ -12,11 +12,6 @@ import (
 var _ = json.Marshal
 var _ = json.Unmarshal
 
-var Gql__type_ListAuthorsRequest = graphql.NewObject(graphql.ObjectConfig{
-	Name:   "ListAuthorsRequest",
-	Fields: graphql.Fields{},
-}) // message ListAuthorsRequest in author/author.proto
-
 var Gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Author",
 	Fields: graphql.Fields{
@@ -26,28 +21,25 @@ var Gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 	},
 }) // message Author in author/author.proto
 
-var Gql__type_ListAuthorsResponse = graphql.NewObject(graphql.ObjectConfig{
-	Name: "ListAuthorsResponse",
-	Fields: graphql.Fields{
-		"authors": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.NewList(Gql__type_Author)),
-		},
-	},
-}) // message ListAuthorsResponse in author/author.proto
-
-var Gql__type_GetAuthorRequest = graphql.NewObject(graphql.ObjectConfig{
-	Name: "GetAuthorRequest",
-	Fields: graphql.Fields{
-		"name": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.String),
-		},
-	},
-}) // message GetAuthorRequest in author/author.proto
-
 // graphql__resolver_AuthorService is a struct for making query, mutation and resolve fields.
-// This struct must be implemented runtime.Resolver interface.
+// This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_AuthorService struct {
+	// grpc client connection.
+	// this connection may provided by user, then isAutoConnection should be false
 	conn *grpc.ClientConn
+
+	// isAutoConnection indicates that the grpc connection is opened by this handler.
+	// If true, this handler opens connection automatically, and it should be closed on Close() method.
+	isAutoConnection bool
+}
+
+// Close() closes grpc connection if it is opened automatically
+func (x *graphql__resolver_AuthorService) Close() error {
+	// nothing to do because the connection is supplied by user, and it should be closed user themselves.
+	if !x.isAutoConnection {
+		return nil
+	}
+	return x.conn.Close()
 }
 
 // GetQueries returns acceptable graphql.Fields for Query.
@@ -117,12 +109,14 @@ func RegisterAuthorServiceGraphql(mux *runtime.ServeMux) error {
 //    ...with RPC definitions
 // }
 func RegisterAuthorServiceGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
+	var isAutoConnection bool
 	if conn == nil {
+		isAutoConnection = true
 		conn, err = grpc.Dial("localhost:8080", grpc.WithInsecure())
 		if err != nil {
 			return
 		}
 	}
-	mux.AddHandler(&graphql__resolver_AuthorService{conn})
+	mux.AddHandler(&graphql__resolver_AuthorService{conn, isAutoConnection})
 	return
 }

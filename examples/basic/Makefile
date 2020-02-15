@@ -9,6 +9,8 @@ ifeq ($(UNAME), Linux)
 	LINKCMD := ln -s /usr/local/include/protobuf/google ./proto/google
 endif
 
+all: schema build
+
 build: init
 	rm -rf ./app/book
 	rm -rf ./app/author
@@ -22,8 +24,6 @@ build: init
 	done
 	mv app/github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/* ./app
 	rm -rf app/github.com
-
-all: schema build
 
 schema: init
 	if [ -f "./schema.graphql" ]; then rm ./schema.graphql; fi

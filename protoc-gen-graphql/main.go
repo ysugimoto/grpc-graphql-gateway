@@ -95,7 +95,7 @@ var _ = json.Unmarshal
 
 {{ range .Types -}}
 var Gql__type_{{ .TypeName }} = graphql.NewObject(graphql.ObjectConfig{
-	Name: "{{ .Name }}",
+	Name: "{{ .TypeName }}",
 	{{- if .Comment }}
 	Description: "{{ .Comment }}",
 	{{- end }}
@@ -130,15 +130,15 @@ var Gql__enum_{{ .Name }} = graphql.NewEnum(graphql.EnumConfig{
 {{ end }}
 
 {{ range .Inputs -}}
-var Gql__input_{{ .Name }} = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "{{ .Name }}",
+var Gql__input_{{ .TypeName }} = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "{{ .TypeName }}",
 	Fields: graphql.InputObjectConfigFieldMap{
 {{- range .Fields }}
 		"{{ .Name }}": &graphql.InputObjectFieldConfig{
 			{{- if .Comment }}
 			Description: "{{ .Comment }}",
 			{{- end }}
-			Type: {{ .FieldType $.RootPackage.Path }},
+			Type: {{ .FieldTypeInput $.RootPackage.Path }},
 		},
 {{- end }}
 	},
@@ -146,9 +146,24 @@ var Gql__input_{{ .Name }} = graphql.NewInputObject(graphql.InputObjectConfig{
 {{ end }}
 
 // graphql__resolver_{{ .Service.Name }} is a struct for making query, mutation and resolve fields.
-// This struct must be implemented runtime.Resolver interface.
+// This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_{{ .Service.Name }} struct {
+	// grpc client connection.
+	// this connection may provided by user, then isAutoConnection should be false
 	conn *grpc.ClientConn
+
+	// isAutoConnection indicates that the grpc connection is opened by this handler.
+	// If true, this handler opens connection automatically, and it should be closed on Close() method.
+	isAutoConnection bool
+}
+
+// Close() closes grpc connection if it is opened automatically
+func (x *graphql__resolver_{{ .Service.Name }}) Close() error {
+	// nothing to do because the connection is supplied by user, and it should be closed user themselves.
+	if !x.isAutoConnection {
+		return nil
+	}
+	return x.conn.Close()
 }
 
 // GetQueries returns acceptable graphql.Fields for Query.
@@ -252,12 +267,14 @@ func Register{{ .Service.Name }}Graphql(mux *runtime.ServeMux) error {
 //    ...with RPC definitions
 // }
 func Register{{ .Service.Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
+	var isAutoConnection bool
 	if conn == nil {
+		isAutoConnection = true
 		conn, err = grpc.Dial("{{ .Service.Host }}"{{ if .Service.Insecure }}, grpc.WithInsecure(){{ end }})
 		if err != nil {
 			return
 		}
 	}
-	mux.AddHandler(&graphql__resolver_{{ .Service.Name }}{conn})
+	mux.AddHandler(&graphql__resolver_{{ .Service.Name }}{conn, isAutoConnection})
 	return
 }`
