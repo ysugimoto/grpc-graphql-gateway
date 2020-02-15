@@ -11,16 +11,17 @@ type Service struct {
 	descriptor *descriptor.ServiceDescriptorProto
 	Option     *graphql.GraphqlService
 	*File
-	paths []int
+	paths   []int
+	methods []*Method
 }
 
 func NewService(
-	s *descriptor.ServiceDescriptorProto,
+	d *descriptor.ServiceDescriptorProto,
 	f *File,
 	paths ...int,
 ) *Service {
 	var o *graphql.GraphqlService
-	if opts := s.GetOptions(); opts != nil {
+	if opts := d.GetOptions(); opts != nil {
 		if ext, err := proto.GetExtension(opts, graphql.E_Service); err == nil {
 			if service, ok := ext.(*graphql.GraphqlService); ok {
 				o = service
@@ -28,11 +29,19 @@ func NewService(
 		}
 	}
 
-	return &Service{
-		descriptor: s,
+	s := &Service{
+		descriptor: d,
 		Option:     o,
 		File:       f,
+		paths:      paths,
+		methods:    make([]*Method, 0),
 	}
+	for i, m := range d.GetMethod() {
+		ps := make([]int, len(paths))
+		copy(ps, paths)
+		s.methods = append(s.methods, NewMethod(m, s, append(ps, 4, i)...))
+	}
+	return s
 }
 
 func (s *Service) Comment() string {
@@ -44,13 +53,7 @@ func (s *Service) Name() string {
 }
 
 func (s *Service) Methods() []*Method {
-	var methods []*Method
-	for i, m := range s.descriptor.GetMethod() {
-		paths := make([]int, len(s.paths))
-		copy(paths, s.paths)
-		methods = append(methods, NewMethod(m, s, append(paths, 4, i)...))
-	}
-	return methods
+	return s.methods
 }
 
 func (s *Service) Host() string {

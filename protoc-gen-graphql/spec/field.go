@@ -1,6 +1,7 @@
 package spec
 
 import (
+	_ "log"
 	"strings"
 
 	"path/filepath"
@@ -136,10 +137,12 @@ func (f *Field) GraphqlType() string {
 		return "Int"
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
 		return "String"
-	case descriptor.FieldDescriptorProto_TYPE_MESSAGE,
-		descriptor.FieldDescriptorProto_TYPE_ENUM:
-		spec := strings.Split(FormatTypePath(f.TypeName()), "_")
-		return strings.Join(spec[1:], "_")
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		tn := strings.TrimPrefix(f.TypeName(), f.TypeMessage.Package()+".")
+		return strings.ReplaceAll(tn, ".", "_")
+	case descriptor.FieldDescriptorProto_TYPE_ENUM:
+		tn := strings.TrimPrefix(f.TypeName(), f.TypeEnum.Package()+".")
+		return strings.ReplaceAll(tn, ".", "_")
 	default:
 		return "Unknown"
 	}
@@ -163,19 +166,19 @@ func (f *Field) GraphqlGoType(rootPackage string) string {
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
 		return "graphql.String"
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		spec := strings.Split(FormatTypePath(f.TypeName()), "_")
 		var pkgPrefix string
-		if spec[0] != rootPackage {
-			pkgPrefix = spec[0] + "."
+		tn := strings.TrimPrefix(f.TypeName(), f.TypeMessage.Package()+".")
+		if filepath.Base(f.TypeMessage.GoPackage()) != rootPackage {
+			pkgPrefix = filepath.Base(f.TypeMessage.GoPackage()) + "."
 		}
-		return pkgPrefix + PrefixType(strings.Join(spec[1:], "_"))
+		return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
-		spec := strings.Split(FormatTypePath(f.TypeName()), "_")
 		var pkgPrefix string
-		if spec[0] != rootPackage {
-			pkgPrefix = spec[0] + "."
+		tn := strings.TrimPrefix(f.TypeName(), f.TypeEnum.Package()+".")
+		if filepath.Base(f.TypeEnum.GoPackage()) != rootPackage {
+			pkgPrefix = filepath.Base(f.TypeEnum.GoPackage()) + "."
 		}
-		return pkgPrefix + PrefixEnum(strings.Join(spec[1:], "_"))
+		return pkgPrefix + PrefixEnum(strings.ReplaceAll(tn, ".", "_"))
 	default:
 		return "interface{}"
 	}

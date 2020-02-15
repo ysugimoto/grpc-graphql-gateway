@@ -167,6 +167,7 @@ func (r *Resolver) resolveRecursive(
 			if !ok {
 				resolveErr = errors.New("failed to resolve message: " + f.TypeName())
 			}
+			f.TypeMessage = mm
 			if !c.Exists("m_" + mm.Name()) {
 				types = append(types, mm)
 				c.Add("m_" + mm.Name())

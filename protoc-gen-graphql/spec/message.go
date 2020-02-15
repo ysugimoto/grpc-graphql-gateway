@@ -15,30 +15,32 @@ type Message struct {
 
 	prefix []string
 	paths  []int
+	fields []*Field
 }
 
 func NewMessage(
-	m *descriptor.DescriptorProto,
+	d *descriptor.DescriptorProto,
 	f *File,
 	prefix []string,
 	paths ...int,
 ) *Message {
-	return &Message{
-		descriptor: m,
+	m := &Message{
+		descriptor: d,
 		File:       f,
 		prefix:     prefix,
 		paths:      paths,
+		fields:     make([]*Field, 0),
 	}
+	for i, field := range d.GetField() {
+		ps := make([]int, len(paths))
+		copy(ps, paths)
+		m.fields = append(m.fields, NewField(field, f, append(ps, 2, i)...))
+	}
+	return m
 }
 
 func (m *Message) Fields() []*Field {
-	var fields []*Field
-	for i, f := range m.descriptor.GetField() {
-		paths := make([]int, len(m.paths))
-		copy(paths, m.paths)
-		fields = append(fields, NewField(f, m.File, append(paths, 2, i)...))
-	}
-	return fields
+	return m.fields
 }
 
 func (m *Message) Comment() string {

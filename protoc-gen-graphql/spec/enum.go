@@ -11,19 +11,27 @@ type Enum struct {
 	descriptor *descriptor.EnumDescriptorProto
 	*File
 
-	paths []int
+	paths  []int
+	values []*EnumValue
 }
 
 func NewEnum(
-	e *descriptor.EnumDescriptorProto,
+	d *descriptor.EnumDescriptorProto,
 	f *File,
 	paths ...int,
 ) *Enum {
-	return &Enum{
-		descriptor: e,
+	e := &Enum{
+		descriptor: d,
 		File:       f,
 		paths:      paths,
+		values:     make([]*EnumValue, 0),
 	}
+	for i, v := range d.GetValue() {
+		ps := make([]int, len(paths))
+		copy(ps, paths)
+		e.values = append(e.values, NewEnumValue(v, f, append(ps, 2, i)...))
+	}
+	return e
 }
 
 func (e *Enum) Comment() string {
@@ -40,13 +48,7 @@ func (e *Enum) SingleName() string {
 }
 
 func (e *Enum) Values() []*EnumValue {
-	var values []*EnumValue
-	for i, v := range e.descriptor.GetValue() {
-		paths := make([]int, len(e.paths))
-		copy(paths, e.paths)
-		values = append(values, NewEnumValue(v, e.File, append(paths, 2, i)...))
-	}
-	return values
+	return e.values
 }
 
 func (e *Enum) FullPath() string {

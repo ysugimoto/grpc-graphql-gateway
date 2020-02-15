@@ -14,33 +14,43 @@ import (
 type File struct {
 	descriptor *descriptor.FileDescriptorProto
 	comments   Comments
+
+	messages []*Message
+	services []*Service
+	enums    []*Enum
 }
 
 func NewFile(d *descriptor.FileDescriptorProto) *File {
-	return &File{
+	f := &File{
 		descriptor: d,
 		comments:   makeComments(d),
+
+		services: make([]*Service, 0),
+		messages: make([]*Message, 0),
+		enums:    make([]*Enum, 0),
 	}
+	for i, s := range d.GetService() {
+		f.services = append(f.services, NewService(s, f, 6, i))
+	}
+	for i, m := range d.GetMessageType() {
+		f.messages = append(f.messages, f.messagesRecursive(m, []string{}, 4, i)...)
+	}
+	for i, e := range d.GetEnumType() {
+		f.enums = append(f.enums, NewEnum(e, f, 5, i))
+	}
+	return f
 }
 
 func (f *File) Services() []*Service {
-	var services []*Service
-	for i, s := range f.descriptor.GetService() {
-		services = append(services, NewService(s, f, 6, i))
-	}
-	return services
+	return f.services
 }
 
 func (f *File) Messages() []*Message {
-	var messages []*Message
-	for i, m := range f.descriptor.GetMessageType() {
-		messages = append(
-			messages,
-			f.messagesRecursive(m, []string{}, 4, i)...,
-		)
-	}
+	return f.messages
+}
 
-	return messages
+func (f *File) Enums() []*Enum {
+	return f.enums
 }
 
 func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string, paths ...int) []*Message {
@@ -58,14 +68,6 @@ func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string,
 		)
 	}
 	return messages
-}
-
-func (f *File) Enums() []*Enum {
-	var enums []*Enum
-	for i, e := range f.descriptor.GetEnumType() {
-		enums = append(enums, NewEnum(e, f, 5, i))
-	}
-	return enums
 }
 
 func (f *File) Package() string {

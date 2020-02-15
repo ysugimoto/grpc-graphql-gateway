@@ -145,14 +145,14 @@ var Gql__input_{{ .Name }} = graphql.NewInputObject(graphql.InputObjectConfig{
 }) // message {{ .Name }} in {{ .Filename }}
 {{ end }}
 
-// xxx__resolver_{{ .Service.Name }} is a struct for making query, mutation and resolve fields.
+// graphql__resolver_{{ .Service.Name }} is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.Resolver interface.
-type xxx__resolver_{{ .Service.Name }} struct {
+type graphql__resolver_{{ .Service.Name }} struct {
 	conn *grpc.ClientConn
 }
 
 // GetQueries returns acceptable graphql.Fields for Query.
-func (x *xxx__resolver_{{ .Service.Name }}) GetQueries() graphql.Fields {
+func (x *graphql__resolver_{{ .Service.Name }}) GetQueries() graphql.Fields {
 	return graphql.Fields{
 {{- range .Queries }}
 		"{{ .QueryName }}": &graphql.Field{
@@ -197,7 +197,7 @@ func (x *xxx__resolver_{{ .Service.Name }}) GetQueries() graphql.Fields {
 }
 
 // GetMutations returns acceptable graphql.Fields for Mutation.
-func (x *xxx__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
+func (x *graphql__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
 	return graphql.Fields{
 {{- range .Mutations }}
 		"{{ .MutationName }}": &graphql.Field{
@@ -258,6 +258,6 @@ func Register{{ .Service.Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc
 			return
 		}
 	}
-	mux.AddHandler(&xxx__resolver_{{ .Service.Name }}{conn})
+	mux.AddHandler(&graphql__resolver_{{ .Service.Name }}{conn})
 	return
 }`
