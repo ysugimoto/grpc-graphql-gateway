@@ -1,7 +1,6 @@
 package spec
 
 import (
-	_ "log"
 	"strings"
 
 	"path/filepath"
@@ -45,6 +44,9 @@ func NewField(
 }
 
 func (f *Field) Comment() string {
+	if strings.HasPrefix(f.Package(), "google.protobuf") {
+		return ""
+	}
 	return f.File.getComment(f.paths)
 }
 
@@ -169,14 +171,18 @@ func (f *Field) GraphqlGoType(rootPackage string) string {
 		var pkgPrefix string
 		tn := strings.TrimPrefix(f.TypeName(), f.TypeMessage.Package()+".")
 		if filepath.Base(f.TypeMessage.GoPackage()) != rootPackage {
-			pkgPrefix = filepath.Base(f.TypeMessage.GoPackage()) + "."
+			if !strings.HasPrefix(f.TypeMessage.Package(), "google.protobuf") {
+				pkgPrefix = filepath.Base(f.TypeMessage.GoPackage()) + "."
+			}
 		}
 		return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
 		var pkgPrefix string
 		tn := strings.TrimPrefix(f.TypeName(), f.TypeEnum.Package()+".")
 		if filepath.Base(f.TypeEnum.GoPackage()) != rootPackage {
-			pkgPrefix = filepath.Base(f.TypeEnum.GoPackage()) + "."
+			if !strings.HasPrefix(f.TypeEnum.Package(), "google.protobuf") {
+				pkgPrefix = filepath.Base(f.TypeEnum.GoPackage()) + "."
+			}
 		}
 		return pkgPrefix + PrefixEnum(strings.ReplaceAll(tn, ".", "_"))
 	default:

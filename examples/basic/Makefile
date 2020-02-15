@@ -9,7 +9,9 @@ ifeq ($(UNAME), Linux)
 	LINKCMD := ln -s /usr/local/include/protobuf/google ./proto/google
 endif
 
-all: schema
+build: init
+	rm -rf ./app/book
+	rm -rf ./app/author
 	for file in `find ./proto -name '*.proto'`; do \
 		protoc \
 			-Iproto \
@@ -21,17 +23,15 @@ all: schema
 	mv app/github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/* ./app
 	rm -rf app/github.com
 
-schema: clean init
+all: schema build
+
+schema: init
+	if [ -f "./schema.graphql" ]; then rm ./schema.graphql; fi
 	protoc \
 		-Iproto \
 		--plugin=../../dist/protoc-gen-graphql-schema \
 		--graphql-schema_out=:. \
 		$(shell find ./proto -name '*.proto')
-
-clean:
-	if [ -f "./schema.graphql" ]; then rm ./schema.graphql; fi
-	rm -rf ./app/book
-	rm -rf ./app/author
 
 init:
 	if [ -L "./proto/google" ]; then rm ./proto/google; fi

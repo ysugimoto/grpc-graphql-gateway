@@ -76,6 +76,18 @@ var Gql__type_CreateBookRequest_NestedOne = graphql.NewObject(graphql.ObjectConf
 	},
 }) // message CreateBookRequest.NestedOne in book/book.proto
 
+var Gql__type_Timestamp = graphql.NewObject(graphql.ObjectConfig{
+	Name: "Timestamp",
+	Fields: graphql.Fields{
+		"seconds": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+		"nanos": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+	},
+}) // message Timestamp in google/protobuf/timestamp.proto
+
 var Gql__enum_BookType = graphql.NewEnum(graphql.EnumConfig{
 	Name: "BookType",
 	Values: graphql.EnumValueConfigMap{
@@ -108,6 +120,9 @@ var Gql__input_CreateBookRequest = graphql.NewInputObject(graphql.InputObjectCon
 		},
 		"nested": &graphql.InputObjectFieldConfig{
 			Type: graphql.NewNonNull(Gql__type_CreateBookRequest_NestedOne),
+		},
+		"created_at": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(Gql__type_Timestamp),
 		},
 	},
 }) // message CreateBookRequest in book/book.proto

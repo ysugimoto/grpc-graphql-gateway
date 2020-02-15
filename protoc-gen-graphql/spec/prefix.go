@@ -1,5 +1,9 @@
 package spec
 
+import (
+	"strings"
+)
+
 // PrefixType adds prefix to avoid conflicting name
 func PrefixType(name string) string {
 	return "Gql__type_" + name
@@ -13,4 +17,12 @@ func PrefixEnum(name string) string {
 // PrefixInput adds prefix to avoid conflicting name
 func PrefixInput(name string) string {
 	return "Gql__input_" + name
+}
+
+type PackageGetter interface {
+	Package() string
+}
+
+func IsGooglePackage(p PackageGetter) bool {
+	return strings.HasPrefix(p.Package(), "google.protobuf")
 }

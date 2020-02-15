@@ -44,6 +44,9 @@ func (m *Message) Fields() []*Field {
 }
 
 func (m *Message) Comment() string {
+	if strings.HasPrefix(m.Package(), "google.protobuf") {
+		return ""
+	}
 	return m.File.getComment(m.paths)
 }
 

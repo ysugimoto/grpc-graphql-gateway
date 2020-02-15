@@ -6,6 +6,7 @@ package book;
 
 import "author/author.proto";
 import "graphql/graphql.proto";
+import "google/protobuf/timestamp.proto";
 
 enum BookType {
   JAVASCRIPT  = 0;
@@ -43,6 +44,7 @@ message CreateBookRequest {
   BookType type = 2;
   some.app.v1.author.Author author = 3;
   NestedOne nested = 4;
+  google.protobuf.Timestamp created_at = 5;
 }
 
 service BookService {

@@ -3,6 +3,7 @@ package generator
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"go/format"
 	"io/ioutil"
@@ -148,21 +149,24 @@ func (t *Template) filterSamePackages() {
 	var enums []*spec.Enum
 
 	for _, v := range t.Types {
-		if v.GoPackage() == t.RootPackage.Path {
+		if v.GoPackage() == t.RootPackage.Path ||
+			strings.HasPrefix(v.Package(), "google.protobuf") {
 			types = append(types, v)
 		}
 	}
 	t.Types = types
 
 	for _, v := range t.Enums {
-		if v.GoPackage() == t.RootPackage.Path {
+		if v.GoPackage() == t.RootPackage.Path ||
+			strings.HasPrefix(v.Package(), "google.protobuf") {
 			enums = append(enums, v)
 		}
 	}
 	t.Enums = enums
 
 	for _, v := range t.Inputs {
-		if v.GoPackage() == t.RootPackage.Path {
+		if v.GoPackage() == t.RootPackage.Path ||
+			strings.HasPrefix(v.Package(), "google.protobuf") {
 			inputs = append(inputs, v)
 		}
 	}
