@@ -16,6 +16,9 @@ type Message struct {
 	prefix []string
 	paths  []int
 	fields []*Field
+
+	DependType  bool
+	DependInput bool
 }
 
 func NewMessage(

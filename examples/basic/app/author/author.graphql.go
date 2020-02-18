@@ -21,6 +21,27 @@ var Gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 	},
 }) // message Author in author/author.proto
 
+var Gql__enum_AuthorType = graphql.NewEnum(graphql.EnumConfig{
+	Name: "AuthorType",
+	Values: graphql.EnumValueConfigMap{
+		"NORMAL": &graphql.EnumValueConfig{
+			Value: 0,
+		},
+		"SPECIAL": &graphql.EnumValueConfig{
+			Value: 1,
+		},
+	},
+}) // enum AuthorType in author/author.proto
+
+var Gql__input_Author = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "Author",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"name": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+	},
+}) // message Author in author/author.proto
+
 // graphql__resolver_AuthorService is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_AuthorService struct {
@@ -90,20 +111,21 @@ func (x *graphql__resolver_AuthorService) GetMutations() graphql.Fields {
 
 // Register package divided graphql handler "without" *grpc.ClientConn,
 // therefore gRPC connection will be opened and closed automatically.
-// Occasionally you worried about open/close performance for each handling graphql request,
-// then you can call RegisterBookHandler with *grpc.ClientConn manually.
+// Occasionally you may worry about open/close performance for each handling graphql request,
+// then you can call RegisterAuthorServiceGraphqlHandler with *grpc.ClientConn manually.
 func RegisterAuthorServiceGraphql(mux *runtime.ServeMux) error {
 	return RegisterAuthorServiceGraphqlHandler(mux, nil)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
 // this function accepts your defined grpc connection, so that we reuse that and never close connection inside.
-// You need to close it maunally when appication will terminate.
-// Otherwise, the resolver opens connection automatically, but then you need to define host with ServiceOption like:
+// You need to close it maunally when application will terminate.
+// Otherwise, the resolver opens connection automatically and then you need to define host with ServiceOption like:
 //
-// service XXXService {
+// service SomeServiceName {
 //    option (graphql.service) = {
-//        host: "localhost:50051"
+//        host: "localhost:50051";
+//        insecure: true or false;
 //    };
 //
 //    ...with RPC definitions

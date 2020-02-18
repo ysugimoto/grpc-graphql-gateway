@@ -13,6 +13,8 @@ type Enum struct {
 
 	paths  []int
 	values []*EnumValue
+
+	DependEnum bool
 }
 
 func NewEnum(

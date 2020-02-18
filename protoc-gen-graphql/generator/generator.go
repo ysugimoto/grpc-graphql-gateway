@@ -45,6 +45,7 @@ func (g *Generator) Generate(
 			NewTemplate(g.gt, "", r, queries.Collect(), mutations.Collect()),
 		}, nil
 	case GenerationTypeGo:
+		r.ResolveDependencies(queries, mutations)
 		// Generate go program for each query definitions in package
 		var ts []*Template
 		for pkg, qs := range queries {

@@ -110,6 +110,24 @@ func (f *Field) SchemaType() string {
 	return fieldType
 }
 
+func (f *Field) SchemaInputType() string {
+	var prefix string
+	if f.Type() == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+		if f.Package() == f.TypeMessage.Package() || IsGooglePackage(f) {
+			prefix = "Input_"
+		}
+	}
+
+	fieldType := prefix + f.GraphqlType()
+	if f.IsRepeated() {
+		fieldType = "[" + fieldType + "]"
+	}
+	if !f.IsOptional() {
+		fieldType += "!"
+	}
+	return fieldType
+}
+
 func (f *Field) DefaultValue() string {
 	if f.Option == nil {
 		return ""

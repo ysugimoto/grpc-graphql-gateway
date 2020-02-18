@@ -10,6 +10,11 @@ message Author {
   string name = 2;
 }
 
+enum AuthorType {
+  NORMAL = 0;
+  SPECIAL = 1;
+}
+
 message ListAuthorsRequest {}
 message ListAuthorsResponse {
   repeated Author authors = 1;

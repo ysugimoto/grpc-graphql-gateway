@@ -100,6 +100,7 @@ func (r *Resolver) ResolveTypes(
 			packages = append(packages, ps...)
 		}
 	}
+
 	return
 }
 
@@ -278,4 +279,54 @@ func (r *Resolver) resolveRecursive(
 	}
 
 	return
+}
+
+func (r *Resolver) ResolveDependencies(qs Queries, ms Mutations) {
+	for pkg, query := range qs {
+		for _, q := range query {
+			m := r.Find(q.Input())
+			if m == nil {
+				continue
+			}
+			r.ResolveDependency(pkg, m, false)
+		}
+	}
+	for pkg, mutation := range ms {
+		for _, mu := range mutation {
+			m := r.Find(mu.Input())
+			if m == nil {
+				continue
+			}
+			r.ResolveDependency(pkg, m, true)
+		}
+	}
+}
+
+func (r *Resolver) ResolveDependency(pkg string, m *spec.Message, asInput bool) {
+	if pkg != m.GoPackage() {
+		if asInput {
+			m.DependInput = true
+		} else {
+			m.DependType = true
+		}
+	}
+
+	for _, f := range m.Fields() {
+		switch f.Type() {
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			fm := r.Find(f.TypeName())
+			if fm == nil {
+				continue
+			}
+			r.ResolveDependency(pkg, fm, asInput)
+		case descriptor.FieldDescriptorProto_TYPE_ENUM:
+			fe := r.FindEnum(f.TypeName())
+			if fe == nil {
+				continue
+			}
+			if pkg != fe.GoPackage() {
+				fe.DependEnum = true
+			}
+		}
+	}
 }

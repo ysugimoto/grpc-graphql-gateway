@@ -43,8 +43,9 @@ message CreateBookRequest {
   string title = 1;
   BookType type = 2;
   some.app.v1.author.Author author = 3;
-  NestedOne nested = 4;
-  google.protobuf.Timestamp created_at = 5;
+  some.app.v1.author.AuthorType author_type = 4;
+  NestedOne nested = 5;
+  google.protobuf.Timestamp created_at = 6;
 }
 
 service BookService {

@@ -143,13 +143,14 @@ var Gql__input_{{ .TypeName }} = graphql.NewInputObject(graphql.InputObjectConfi
 {{- end }}
 	},
 }) // message {{ .Name }} in {{ .Filename }}
+
 {{ end }}
 
 // graphql__resolver_{{ .Service.Name }} is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_{{ .Service.Name }} struct {
 	// grpc client connection.
-	// this connection may provided by user, then isAutoConnection should be false
+	// this connection may be provided by user, then isAutoConnection should be false
 	conn *grpc.ClientConn
 
 	// isAutoConnection indicates that the grpc connection is opened by this handler.
@@ -157,7 +158,7 @@ type graphql__resolver_{{ .Service.Name }} struct {
 	isAutoConnection bool
 }
 
-// Close() closes grpc connection if it is opened automatically
+// Close() closes grpc connection if it is opened automatically.
 func (x *graphql__resolver_{{ .Service.Name }}) Close() error {
 	// nothing to do because the connection is supplied by user, and it should be closed user themselves.
 	if !x.isAutoConnection {
@@ -248,20 +249,21 @@ func (x *graphql__resolver_{{ .Service.Name }}) GetMutations() graphql.Fields {
 
 // Register package divided graphql handler "without" *grpc.ClientConn,
 // therefore gRPC connection will be opened and closed automatically.
-// Occasionally you worried about open/close performance for each handling graphql request,
-// then you can call RegisterBookHandler with *grpc.ClientConn manually.
+// Occasionally you may worry about open/close performance for each handling graphql request,
+// then you can call Register{{ .Service.Name }}GraphqlHandler with *grpc.ClientConn manually.
 func Register{{ .Service.Name }}Graphql(mux *runtime.ServeMux) error {
 	return Register{{ .Service.Name }}GraphqlHandler(mux, nil)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
 // this function accepts your defined grpc connection, so that we reuse that and never close connection inside.
-// You need to close it maunally when appication will terminate.
-// Otherwise, the resolver opens connection automatically, but then you need to define host with ServiceOption like:
+// You need to close it maunally when application will terminate.
+// Otherwise, the resolver opens connection automatically and then you need to define host with ServiceOption like:
 //
-// service XXXService {
+// service SomeServiceName {
 //    option (graphql.service) = {
-//        host: "localhost:50051"
+//        host: "localhost:50051";
+//        insecure: true or false;
 //    };
 //
 //    ...with RPC definitions

@@ -3,7 +3,6 @@ package generator
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
 	"go/format"
 	"io/ioutil"
@@ -147,28 +146,76 @@ func (t *Template) generateTemplateParams() (err error) {
 func (t *Template) filterSamePackages() {
 	var types, inputs []*spec.Message
 	var enums []*spec.Enum
+	c := NewCache()
 
 	for _, v := range t.Types {
-		if v.GoPackage() == t.RootPackage.Path ||
-			strings.HasPrefix(v.Package(), "google.protobuf") {
-			types = append(types, v)
+		if v.GoPackage() == t.RootPackage.Path || spec.IsGooglePackage(v) {
+			if !c.Exists("t_" + v.FullPath()) {
+				types = append(types, v)
+				c.Add("t_" + v.FullPath())
+			}
+			if v.DependInput {
+				if !c.Exists("i_" + v.FullPath()) {
+					inputs = append(inputs, v)
+					c.Add("i_" + v.FullPath())
+				}
+			}
+		}
+	}
+
+	for _, v := range t.Enums {
+		if v.GoPackage() == t.RootPackage.Path || spec.IsGooglePackage(v) {
+			if !c.Exists("e_" + v.FullPath()) {
+				enums = append(enums, v)
+				c.Add("e_" + v.FullPath())
+			}
+		}
+	}
+
+	for _, v := range t.Inputs {
+		if v.GoPackage() == t.RootPackage.Path || spec.IsGooglePackage(v) {
+			if !c.Exists("i_" + v.FullPath()) {
+				inputs = append(inputs, v)
+				c.Add("i_" + v.FullPath())
+			}
+			if v.DependType {
+				if !c.Exists("t_" + v.FullPath()) {
+					types = append(types, v)
+					c.Add("t_" + v.FullPath())
+				}
+			}
+		}
+	}
+
+	for _, m := range t.r.messages {
+		if t.RootPackage.Path != m.GoPackage() {
+			continue
+		}
+		if m.DependType {
+			if !c.Exists("t_" + m.FullPath()) {
+				types = append(types, m)
+				c.Add("t_" + m.FullPath())
+			}
+		}
+		if m.DependInput {
+			if !c.Exists("i_" + m.FullPath()) {
+				inputs = append(inputs, m)
+				c.Add("i_" + m.FullPath())
+			}
+		}
+	}
+	for _, e := range t.r.enums {
+		if t.RootPackage.Path != e.GoPackage() {
+			continue
+		}
+		if e.DependEnum {
+			if !c.Exists("e_" + e.FullPath()) {
+				enums = append(enums, e)
+				c.Add("e_" + e.FullPath())
+			}
 		}
 	}
 	t.Types = types
-
-	for _, v := range t.Enums {
-		if v.GoPackage() == t.RootPackage.Path ||
-			strings.HasPrefix(v.Package(), "google.protobuf") {
-			enums = append(enums, v)
-		}
-	}
 	t.Enums = enums
-
-	for _, v := range t.Inputs {
-		if v.GoPackage() == t.RootPackage.Path ||
-			strings.HasPrefix(v.Package(), "google.protobuf") {
-			inputs = append(inputs, v)
-		}
-	}
 	t.Inputs = inputs
 }

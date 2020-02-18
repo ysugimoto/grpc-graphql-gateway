@@ -125,12 +125,12 @@ enum {{ .Name }} {
 {{- if .Comment }}
 # {{ .Comment }}
 {{- end }}
-input {{ .Name }} {
+input {{ .TypeName }} {
 {{- range .Fields }}
   {{- if .Comment }}
   """ {{ .Comment }} """
   {{- end }}
-  {{ .Name }}: {{ .SchemaType }}
+  {{ .Name }}: {{ .SchemaInputType }}
 {{- end }}
 } # message {{ .Name }} in {{ .Filename }}
 {{ end }}`
