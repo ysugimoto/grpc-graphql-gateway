@@ -20,6 +20,7 @@ var Gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 }) // message Author in author/author.proto
+// depended input
 
 var Gql__enum_AuthorType = graphql.NewEnum(graphql.EnumConfig{
 	Name: "AuthorType",
@@ -32,6 +33,7 @@ var Gql__enum_AuthorType = graphql.NewEnum(graphql.EnumConfig{
 		},
 	},
 }) // enum AuthorType in author/author.proto
+// depended enum
 
 var Gql__input_Author = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "Author",
@@ -46,7 +48,7 @@ var Gql__input_Author = graphql.NewInputObject(graphql.InputObjectConfig{
 // This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_AuthorService struct {
 	// grpc client connection.
-	// this connection may provided by user, then isAutoConnection should be false
+	// this connection may be provided by user, then isAutoConnection should be false
 	conn *grpc.ClientConn
 
 	// isAutoConnection indicates that the grpc connection is opened by this handler.
@@ -54,7 +56,7 @@ type graphql__resolver_AuthorService struct {
 	isAutoConnection bool
 }
 
-// Close() closes grpc connection if it is opened automatically
+// Close() closes grpc connection if it is opened automatically.
 func (x *graphql__resolver_AuthorService) Close() error {
 	// nothing to do because the connection is supplied by user, and it should be closed user themselves.
 	if !x.isAutoConnection {

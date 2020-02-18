@@ -110,6 +110,7 @@ var Gql__type_{{ .TypeName }} = graphql.NewObject(graphql.ObjectConfig{
 {{- end }}
 	},
 }) // message {{ .Name }} in {{ .Filename }}
+{{ if .DependInput }} // depended input {{ end }}
 
 {{ end }}
 
@@ -127,6 +128,7 @@ var Gql__enum_{{ .Name }} = graphql.NewEnum(graphql.EnumConfig{
 {{- end }}
 	},
 }) // enum {{ .Name }} in {{ .Filename }}
+{{ if .DependEnum }} // depended enum {{ end }}
 {{ end }}
 
 {{ range .Inputs -}}
@@ -143,6 +145,7 @@ var Gql__input_{{ .TypeName }} = graphql.NewInputObject(graphql.InputObjectConfi
 {{- end }}
 	},
 }) // message {{ .Name }} in {{ .Filename }}
+{{ if .DependType }} // depended type {{ end }}
 
 {{ end }}
 

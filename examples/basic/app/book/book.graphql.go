@@ -63,6 +63,7 @@ var Gql__type_Timestamp = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 }) // message Timestamp in google/protobuf/timestamp.proto
+// depended input
 
 var Gql__enum_BookType = graphql.NewEnum(graphql.EnumConfig{
 	Name: "BookType",
@@ -131,7 +132,7 @@ var Gql__input_CreateBookRequest_NestedOne = graphql.NewInputObject(graphql.Inpu
 // This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_BookService struct {
 	// grpc client connection.
-	// this connection may provided by user, then isAutoConnection should be false
+	// this connection may be provided by user, then isAutoConnection should be false
 	conn *grpc.ClientConn
 
 	// isAutoConnection indicates that the grpc connection is opened by this handler.
@@ -139,7 +140,7 @@ type graphql__resolver_BookService struct {
 	isAutoConnection bool
 }
 
-// Close() closes grpc connection if it is opened automatically
+// Close() closes grpc connection if it is opened automatically.
 func (x *graphql__resolver_BookService) Close() error {
 	// nothing to do because the connection is supplied by user, and it should be closed user themselves.
 	if !x.isAutoConnection {
