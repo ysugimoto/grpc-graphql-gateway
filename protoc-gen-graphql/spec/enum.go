@@ -14,7 +14,7 @@ type Enum struct {
 	paths  []int
 	values []*EnumValue
 
-	DependEnum bool
+	*Dependencies
 }
 
 func NewEnum(
@@ -27,6 +27,8 @@ func NewEnum(
 		File:       f,
 		paths:      paths,
 		values:     make([]*EnumValue, 0),
+
+		Dependencies: NewDependencies(),
 	}
 	for i, v := range d.GetValue() {
 		ps := make([]int, len(paths))

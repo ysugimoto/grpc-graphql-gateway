@@ -14,7 +14,8 @@ all: schema build
 build: init
 	rm -rf ./app/book
 	rm -rf ./app/author
-	for file in `find ./proto -name '*.proto'`; do \
+	for file in `find ./proto -name 'author.proto'`; do \
+		echo $$file; \
 		protoc \
 			-Iproto \
 			--plugin=../../dist/protoc-gen-graphql \

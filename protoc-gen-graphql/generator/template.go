@@ -154,12 +154,12 @@ func (t *Template) filterSamePackages() {
 				types = append(types, v)
 				c.Add("t_" + v.FullPath())
 			}
-			if v.DependInput {
-				if !c.Exists("i_" + v.FullPath()) {
-					inputs = append(inputs, v)
-					c.Add("i_" + v.FullPath())
-				}
-			}
+			// if v.DependInput {
+			// 	if !c.Exists("i_" + v.FullPath()) {
+			// 		inputs = append(inputs, v)
+			// 		c.Add("i_" + v.FullPath())
+			// 	}
+			// }
 		}
 	}
 
@@ -178,12 +178,12 @@ func (t *Template) filterSamePackages() {
 				inputs = append(inputs, v)
 				c.Add("i_" + v.FullPath())
 			}
-			if v.DependType {
-				if !c.Exists("t_" + v.FullPath()) {
-					types = append(types, v)
-					c.Add("t_" + v.FullPath())
-				}
-			}
+			// if v.DependType {
+			// 	if !c.Exists("t_" + v.FullPath()) {
+			// 		types = append(types, v)
+			// 		c.Add("t_" + v.FullPath())
+			// 	}
+			// }
 		}
 	}
 
@@ -191,29 +191,29 @@ func (t *Template) filterSamePackages() {
 		if t.RootPackage.Path != m.GoPackage() {
 			continue
 		}
-		if m.DependType {
-			if !c.Exists("t_" + m.FullPath()) {
-				types = append(types, m)
-				c.Add("t_" + m.FullPath())
-			}
-		}
-		if m.DependInput {
-			if !c.Exists("i_" + m.FullPath()) {
-				inputs = append(inputs, m)
-				c.Add("i_" + m.FullPath())
-			}
-		}
+		// if m.DependType {
+		// 	if !c.Exists("t_" + m.FullPath()) {
+		// 		types = append(types, m)
+		// 		c.Add("t_" + m.FullPath())
+		// 	}
+		// }
+		// if m.DependInput {
+		// 	if !c.Exists("i_" + m.FullPath()) {
+		// 		inputs = append(inputs, m)
+		// 		c.Add("i_" + m.FullPath())
+		// 	}
+		// }
 	}
 	for _, e := range t.r.enums {
 		if t.RootPackage.Path != e.GoPackage() {
 			continue
 		}
-		if e.DependEnum {
-			if !c.Exists("e_" + e.FullPath()) {
-				enums = append(enums, e)
-				c.Add("e_" + e.FullPath())
-			}
-		}
+		// if e.DependEnum {
+		// 	if !c.Exists("e_" + e.FullPath()) {
+		// 		enums = append(enums, e)
+		// 		c.Add("e_" + e.FullPath())
+		// 	}
+		// }
 	}
 	t.Types = types
 	t.Enums = enums

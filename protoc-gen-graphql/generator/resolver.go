@@ -305,9 +305,9 @@ func (r *Resolver) ResolveDependencies(qs Queries, ms Mutations) {
 func (r *Resolver) ResolveDependency(pkg string, m *spec.Message, asInput bool) {
 	if pkg != m.GoPackage() {
 		if asInput {
-			m.DependInput = true
+			//m.DependInput = true
 		} else {
-			m.DependType = true
+			// m.DependType = true
 		}
 	}
 
@@ -325,7 +325,7 @@ func (r *Resolver) ResolveDependency(pkg string, m *spec.Message, asInput bool) 
 				continue
 			}
 			if pkg != fe.GoPackage() {
-				fe.DependEnum = true
+				// fe.DependEnum = true
 			}
 		}
 	}

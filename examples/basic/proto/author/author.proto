@@ -30,19 +30,19 @@ service AuthorService {
     insecure: true
   };
 
-  rpc ListAuthors(ListAuthorsRequest) returns (ListAuthorsResponse) {
-    option (graphql.query) = {
-      name: "authors"
-      response {
-        expose: "authors"
-      }
-    };
-  }
-  rpc GetAuthor(GetAuthorRequest) returns (Author) {
-    option (graphql.query) = {
-      name: "author"
-    };
-  }
+  // rpc ListAuthors(ListAuthorsRequest) returns (ListAuthorsResponse) {
+  //   option (graphql.query) = {
+  //     name: "authors"
+  //     response {
+  //       expose: "authors"
+  //     }
+  //   };
+  // }
+  // rpc GetAuthor(GetAuthorRequest) returns (Author) {
+  //   option (graphql.query) = {
+  //     name: "author"
+  //   };
+  // }
 }
 
 

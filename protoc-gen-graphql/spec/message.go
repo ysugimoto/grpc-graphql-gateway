@@ -17,8 +17,7 @@ type Message struct {
 	paths  []int
 	fields []*Field
 
-	DependType  bool
-	DependInput bool
+	*Dependencies
 }
 
 func NewMessage(
@@ -33,6 +32,8 @@ func NewMessage(
 		prefix:     prefix,
 		paths:      paths,
 		fields:     make([]*Field, 0),
+
+		Dependencies: NewDependencies(),
 	}
 	for i, field := range d.GetField() {
 		ps := make([]int, len(paths))
