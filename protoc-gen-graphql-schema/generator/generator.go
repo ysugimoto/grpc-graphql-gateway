@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
-	"go/format"
-	"io/ioutil"
 	"text/template"
 
 	"github.com/golang/protobuf/proto"
@@ -47,10 +46,7 @@ func New(files []*spec.File, args *spec.Params) *Generator {
 	}
 }
 
-func (g *Generator) Generate(
-	tmpl string,
-	fs []string,
-) (
+func (g *Generator) Generate(tmpl string) (
 	[]*plugin.CodeGeneratorResponse_File,
 	error,
 ) {
@@ -60,93 +56,79 @@ func (g *Generator) Generate(
 	}
 
 	var outFiles []*plugin.CodeGeneratorResponse_File
-	for _, f := range g.files {
-		for _, v := range fs {
-			if f.Filename() != v {
-				continue
-			}
-			s, ok := services[f.Package()]
-			if !ok {
-				continue
-			}
-			// mark as same package defininition in file
-			g.analyzeEnum(f)
-			if err := g.analyzeMessage(f); err != nil {
-				return nil, err
-			}
+	var queries []*spec.Query
+	var mutations []*spec.Mutation
 
-			file, err := g.generateFile(f, tmpl, s)
-			if err != nil {
-				return nil, err
-			}
-			outFiles = append(outFiles, file)
+	for _, f := range g.files {
+		if _, ok := services[f.Package()]; !ok {
+			continue
+		}
+		// mark as same package defininition in file
+		g.analyzeEnum(f)
+		if err := g.analyzeMessage(f); err != nil {
+			return nil, err
 		}
 	}
+
+	for _, s := range services {
+		for _, v := range s {
+			queries = append(queries, v.Queries...)
+			mutations = append(mutations, v.Mutations...)
+		}
+	}
+
+	file, err := g.generateFile(tmpl, queries, mutations)
+	if err != nil {
+		return nil, err
+	}
+	outFiles = append(outFiles, file)
 	return outFiles, nil
 }
 
 func (g *Generator) generateFile(
-	file *spec.File,
 	tmpl string,
-	services []*spec.Service,
+	queries []*spec.Query,
+	mutations []*spec.Mutation,
 ) (
 	*plugin.CodeGeneratorResponse_File,
 	error,
 ) {
 	var types, inputs []*spec.Message
 	var enums []*spec.Enum
-	var packages []*spec.Package
-	stack := make(map[string]struct{})
 
 	for _, m := range g.messages {
-		if m.IsDepended(spec.DependTypeMessage, file.Package()) {
-			if file.Package() == m.Package() || spec.IsGooglePackage(m) {
-				types = append(types, m)
-			} else if _, ok := stack[m.Package()]; !ok {
-				packages = append(packages, spec.NewPackage(m.GoPackage()))
-				stack[m.Package()] = struct{}{}
-			}
+		deps := m.GetDependendencies()
+		if len(deps["message"]) > 0 {
+			types = append(types, m)
 		}
-		if m.IsDepended(spec.DependTypeInput, file.Package()) {
+		if len(deps["input"]) > 0 {
 			inputs = append(inputs, m)
 		}
 	}
 
 	for _, e := range g.enums {
-		if e.IsDepended(spec.DependTypeEnum, file.Package()) {
-			if file.Package() == e.Package() || spec.IsGooglePackage(e) {
-				enums = append(enums, e)
-			} else if _, ok := stack[e.Package()]; !ok {
-				packages = append(packages, spec.NewPackage(e.GoPackage()))
-				stack[e.Package()] = struct{}{}
-			}
+		deps := e.GetDependendencies()
+		if len(deps["enum"]) > 0 {
+			enums = append(enums, e)
 		}
 	}
 
-	root := spec.NewPackage(file.GoPackage())
 	t := &tpl.Template{
-		RootPackage: root,
-		Packages:    packages,
-		Types:       types,
-		Enums:       enums,
-		Inputs:      inputs,
-		Services:    services,
+		Types:     types,
+		Enums:     enums,
+		Inputs:    inputs,
+		Queries:   queries,
+		Mutations: mutations,
 	}
 	buf := new(bytes.Buffer)
-	if tmpl, err := template.New("go").Parse(tmpl); err != nil {
+	if tmpl, err := template.New("schema").Parse(tmpl); err != nil {
 		return nil, err
 	} else if err := tmpl.Execute(buf, t); err != nil {
 		return nil, err
 	}
-	out, err := format.Source(buf.Bytes())
-	if err != nil {
-		log.Println(buf.String())
-		ioutil.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666)
-		return nil, err
-	}
 	return &plugin.CodeGeneratorResponse_File{
-		Name:    proto.String(fmt.Sprintf("%s/%s.graphql.go", root.Path, root.Name)),
-		Content: proto.String(string(out)),
+		Name:    proto.String(fmt.Sprintf("%s/schema.graphql", strings.TrimSuffix(g.args.QueryOut, "/"))),
+		Content: proto.String(buf.String()),
 	}, nil
 }
 

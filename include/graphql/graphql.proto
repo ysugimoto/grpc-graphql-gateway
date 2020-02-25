@@ -1,3 +1,9 @@
+// graphql.proto
+//
+// Copyright (c) 2020 ysugimoto
+//
+// Released under the MIT license.
+// see https://opensource.org/licenses/MIT
 syntax = "proto3";
 
 package graphql;
@@ -6,50 +12,178 @@ option go_package = "github.com/ysugimoto/grpc-graphql-gateway/graphql";
 
 import "google/protobuf/descriptor.proto";
 
+// Extend ServiceOptions in order to define grpc connection setting.
+// User can use this option as following:
+//
+// service Greeter {
+//    option (graphql.service) = {
+//      host: "localhost:50051" -- define grpc connection host and port
+//      insecure: true          -- set true if connect to insecure grpc server
+//    };
+//
+//    ... some rpc definitions
+// }
 extend google.protobuf.ServiceOptions {
   GraphqlService service = 50001;
 }
 
+// Service Option Declaration
+message GraphqlService {
+  // gRPC default connection host.
+  // This value should include host and port, say localhost:50051.
+  string host = 1;
+  // If true, automatic connection with insecure option.
+  bool insecure = 2;
+}
+
+// Extend MethodOptions in order to define GraphQL Query.
+// User can use this option as following:
+//
+// service Greeter {
+//    rpc SayHello(HelloRequest) returns (HelloReply) {
+//      option (graphql.query) = { -- declare as Query
+//        name: "hello"            -- query name
+//      }
+//    }
+// }
+//
+// Since gRPC has limitation that the response could not be repeated.
+// it's hard to respond array response, so that we accept "response.expose"
+// in order to expose repeated fields in response message.
+//
+// For instance:
+//
+// message Member {
+//   string name = 1;
+// }
+//
+// message ListMembersResponse {
+//   repeated Member members = 1; -- could be array response
+// }
+//
+// message ListMembersRequest {
+// }
+//
+// service MemberService {
+//    rpc ListMembers(ListMembersRequest) returns (ListMembersResponse) {
+//      option (graphql.query) = {
+//        name: "members"
+//        response {
+//          expose: "members" -- Query will respond [Member] instead of ListMembersResponse
+//        }
+//      }
+//    }
+// }
+//
+// Finally, user can access this query via /graphql?query={members{name}}
+//
 extend google.protobuf.MethodOptions {
   GraphqlQuery query = 50001;
+}
+
+// Query Declaration
+message GraphqlQuery {
+  // query name. this field is required
+  string name = 1;
+  // Query request object configuration
+  GraphqlRequest request = 2;
+  // Query response object configuration
+  GraphqlResponse response = 3;
+}
+
+// Extend MethodOptions in order to define GraphQL Mutation.
+// User can use this option as following:
+//
+// service MemberService {
+//    rpc CreateMember(CreateMemberRequest) returns (Member) {
+//      option (graphql.mutation) = { -- declare as Mutation
+//        name: "cretemember"         -- mutation name
+//      }
+//    }
+// }
+//
+// The Mutation's input always becomes an input object, so you need to declare argument name.
+
+// message Member {
+//   string name = 1;
+// }
+//
+// message CreateMemberRequest {
+//   string name = 1;
+// }
+//
+// service MemberService {
+//    rpc CreateMember(CreateMemberRequest) returns (Member) {
+//      option (graphql.mutation) = {
+//        name: "createmember"
+//        request {
+//          name: "member" -- this is equivalent to createbook(member: Member): Member in GraphQL
+//        }
+//      }
+//    }
+// }
+extend google.protobuf.MethodOptions {
   GraphqlMutation mutation = 50002;
 }
 
+// Mutation Declaration
+message GraphqlMutation {
+  // query name. this field is required
+  string name = 1;
+  // Mutation request object configuration
+  GraphqlRequest request = 2;
+  // Query response object configuration
+  GraphqlResponse response = 3;
+}
+
+// configuration option for request
+message GraphqlRequest {
+  // Define input name.
+  // This field enables only for mutation and note that if this field is specified,
+  // the gRPC request message will be dealt with an input.
+  string name = 1;
+
+  // Define pluck message fields
+  repeated string plucks = 2;
+}
+
+// configuration option for response
+message GraphqlResponse {
+  // If true, this response object is required
+  // But when you declare "expose", we respect expose field definition.
+  bool required = 1;
+
+  // Define pluck message field.
+  // Note that this field IS NOT repeated, just single string field.
+  // It means the response could only be single.
+  string pluck = 2;
+}
+
+// Query response declaration
+// Extend FieldOptions in order to define type field.
+// User can use this option as following:
+//
+// message Member {
+//   string name = 1 [(graphql.field) = {required: true}]; -- this field is required, it equivalent to String! on GraphQL
+// }
+//
+// message CreateMemberRequest {
+//   string name = 1; [(grahpql.field) = {default: "anonymous"}]; -- use default value on input
+// }
+//
+// Note that in protobuf, all fields are dealt with optional
+// so the same as it, all GraphQL fields are optional as default.
+// If you need to be required, use 'required: true' option
 extend google.protobuf.FieldOptions {
   GraphqlField field = 50004;
 }
 
-message GraphqlService {
-  string host = 1;
-  bool insecure = 2;
-}
-
-message GraphqlRequest {
-  string name = 1;
-  string expose = 2;
-}
-
-message GraphqlResponse {
-  bool repeated = 1;
-  bool optional = 2;
-  string expose = 3;
-}
-
-message GraphqlQuery {
-  string name = 1;
-  string field = 2;
-  GraphqlResponse response = 4;
-}
-
-message GraphqlMutation {
-  string name = 1;
-  string field = 2;
-  GraphqlRequest request = 3;
-  GraphqlResponse response = 4;
-}
-
+// Field Option Declaration
 message GraphqlField {
-  bool optional = 1;
+  // If true, this field is required.
+  bool required = 1;
+  // Use as other field name (not recommend)
   string name = 2;
+  // Define default value on input
   string default = 3;
 }

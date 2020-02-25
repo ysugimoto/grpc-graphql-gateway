@@ -18,6 +18,7 @@ type Message struct {
 	fields []*Field
 
 	*Dependencies
+	PluckFields []*Field
 }
 
 func NewMessage(
@@ -45,6 +46,13 @@ func NewMessage(
 
 func (m *Message) Fields() []*Field {
 	return m.fields
+}
+
+func (m *Message) TypeFields() []*Field {
+	if m.PluckFields == nil {
+		return m.Fields()
+	}
+	return m.PluckFields
 }
 
 func (m *Message) Comment() string {

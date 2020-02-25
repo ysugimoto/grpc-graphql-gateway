@@ -42,11 +42,6 @@ func main() {
 		return
 	}
 
-	log.Println(req.GetFileToGenerate())
-	for _, f := range req.GetProtoFile() {
-		log.Println(f.GetName())
-	}
-
 	var args *spec.Params
 	if req.Parameter != nil {
 		args, err = spec.NewParams(req.GetParameter())
@@ -63,7 +58,7 @@ func main() {
 		files = append(files, spec.NewFile(f))
 	}
 
-	g := generator.New(generator.GenerationTypeGo, files, args)
+	g := generator.New(files, args)
 	genFiles, err := g.Generate(goTemplate, req.GetFileToGenerate())
 	if err != nil {
 		genError = err
@@ -80,10 +75,10 @@ import (
 	"encoding/json"
 
 	"github.com/graphql-go/graphql"
-{{- if .Queries }}{{ if .Mutations }}
+{{- if .Services }}
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
-{{- end }}{{ end }}
+{{- end }}
 
 {{- range .Packages }}
 	{{ .Name }} "{{ .Path }}"
@@ -146,10 +141,10 @@ var Gql__input_{{ .TypeName }} = graphql.NewInputObject(graphql.InputObjectConfi
 
 {{ end }}
 
-{{- if .Queries }}{{ if .Mutations }}
-// graphql__resolver_{{ .RootPackage.CamelName }} is a struct for making query, mutation and resolve fields.
+{{ range $_, $service := .Services -}}
+// graphql__resolver_{{ $service.Name }} is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.SchemaBuilder interface.
-type graphql__resolver_{{ .RootPackage.CamelName }} struct {
+type graphql__resolver_{{ $service.Name }} struct {
 	// grpc client connection.
 	// this connection may be provided by user, then isAutoConnection should be false
 	conn *grpc.ClientConn
@@ -160,7 +155,7 @@ type graphql__resolver_{{ .RootPackage.CamelName }} struct {
 }
 
 // Close() closes grpc connection if it is opened automatically.
-func (x *graphql__resolver_{{ .RootPackage.CamelName }}) Close() error {
+func (x *graphql__resolver_{{ $service.Name }}) Close() error {
 	// nothing to do because the connection is supplied by user, and it should be closed user themselves.
 	if !x.isAutoConnection {
 		return nil
@@ -169,7 +164,7 @@ func (x *graphql__resolver_{{ .RootPackage.CamelName }}) Close() error {
 }
 
 // GetQueries returns acceptable graphql.Fields for Query.
-func (x *graphql__resolver_{{ .RootPackage.CamelName }}) GetQueries() graphql.Fields {
+func (x *graphql__resolver_{{ $service.Name }}) GetQueries() graphql.Fields {
 	return graphql.Fields{
 {{- range .Queries }}
 		"{{ .QueryName }}": &graphql.Field{
@@ -177,7 +172,6 @@ func (x *graphql__resolver_{{ .RootPackage.CamelName }}) GetQueries() graphql.Fi
 			{{- if .Comment }}
 			Description: "{{ .Comment }}",
 			{{- end }}
-			{{- if .Args }}
 			Args: graphql.FieldConfigArgument{
 			{{- range .Args }}
 				"{{ .Name }}": &graphql.ArgumentConfig{
@@ -191,19 +185,18 @@ func (x *graphql__resolver_{{ .RootPackage.CamelName }}) GetQueries() graphql.Fi
 				},
 			{{- end }}
 			},
-			{{- end }}
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *{{ .RequestType }}
-				if err := runtime.MarshalRequest(p.Args, req); err != nil {
+				var req *{{ .InputType }}
+				if err := runtime.MarshalRequest(p.Args, &req); err != nil {
 					return nil, err
 				}
-				client := {{ .Package }}New{{ .Service.Name }}Client(x.conn)
+				client := {{ .Package }}New{{ $service.Name }}Client(x.conn)
 				resp, err := client.{{ .Method.Name }}(p.Context, req)
 				if err != nil {
 					return nil, err
 				}
-				{{- if .Expose }}
-				return resp.Get{{ .Expose }}(), nil
+				{{- if .IsPluckResponse }}
+				return resp.Get{{ .PluckResponseFieldName }}(), nil
 				{{- else }}
 				return resp, nil
 				{{- end }}
@@ -214,7 +207,7 @@ func (x *graphql__resolver_{{ .RootPackage.CamelName }}) GetQueries() graphql.Fi
 }
 
 // GetMutations returns acceptable graphql.Fields for Mutation.
-func (x *graphql__resolver_{{ .RootPackage.CamelName }}) GetMutations() graphql.Fields {
+func (x *graphql__resolver_{{ $service.Name }}) GetMutations() graphql.Fields {
 	return graphql.Fields{
 {{- range .Mutations }}
 		"{{ .MutationName }}": &graphql.Field{
@@ -223,22 +216,30 @@ func (x *graphql__resolver_{{ .RootPackage.CamelName }}) GetMutations() graphql.
 			Description: "{{ .Comment }}",
 			{{ end }}
 			Args: graphql.FieldConfigArgument{
-				"{{ .InputName }}": &graphql.ArgumentConfig{
-					Type: Gql__input_{{ .Input.Name }},
+			{{- range .Args }}
+				"{{ .Name }}": &graphql.ArgumentConfig{
+					Type: {{ .FieldTypeInput $.RootPackage.Path }},
+					{{- if .Comment }}
+					Description: "{{ .Comment }}",
+					{{- end }}
+					{{- if .DefaultValue }}
+					DefaultValue: {{ .DefaultValue }},
+					{{- end }}
 				},
+			{{- end }}
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *{{ .RequestType }}
-				if err := runtime.MarshalRequest(p.Args, req); err != nil {
+				var req *{{ .InputType }}
+				if err := runtime.MarshalRequest(p.Args, &req); err != nil {
 					return nil, err
 				}
-				client := {{ .Package }}New{{ .Service.Name }}Client(x.conn)
+				client := {{ .Package }}New{{ $service.Name }}Client(x.conn)
 				resp, err := client.{{ .Method.Name }}(p.Context, req)
 				if err != nil {
 					return nil, err
 				}
-				{{- if .Expose }}
-				return resp.Get{{ .Expose }}(), nil
+				{{- if .IsPluckResponse }}
+				return resp.Get{{ .PluckResponseFieldName }}(), nil
 				{{- else }}
 				return resp, nil
 				{{- end }}
@@ -251,9 +252,9 @@ func (x *graphql__resolver_{{ .RootPackage.CamelName }}) GetMutations() graphql.
 // Register package divided graphql handler "without" *grpc.ClientConn,
 // therefore gRPC connection will be opened and closed automatically.
 // Occasionally you may worry about open/close performance for each handling graphql request,
-// then you can call Register{{ .RootPackage.CamelName }}GraphqlHandler with *grpc.ClientConn manually.
-func Register{{ .RootPackage.CamelName }}Graphql(mux *runtime.ServeMux) error {
-	return Register{{ .RootPackage.CamelName }}GraphqlHandler(mux, nil)
+// then you can call Register{{ .Name }}GraphqlHandler with *grpc.ClientConn manually.
+func Register{{ .Name }}Graphql(mux *runtime.ServeMux) error {
+	return Register{{ .Name }}GraphqlHandler(mux, nil)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
@@ -261,27 +262,26 @@ func Register{{ .RootPackage.CamelName }}Graphql(mux *runtime.ServeMux) error {
 // You need to close it maunally when application will terminate.
 // Otherwise, the resolver opens connection automatically and then you need to define host with FileOption like:
 //
-// syntax = "proto3";
-// package example;
+// service {{ .Name }} {
+//    option (graphql.service) = {
+//        host: "your default host like localhost:50051";
+//        insecure: true or false;
+//    };
 //
-// option (graphql.service) = {
-//   host: "localhost:50051";
-//   insecure: true or false;
-// };
+//    ...with RPC definitions
+// }
 //
-// ...some definitions
-//
-func Register{{ .RootPackage.CamelName }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
+func Register{{ .Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
 	var isAutoConnection bool
 	if conn == nil {
 		isAutoConnection = true
-		conn, err = grpc.Dial("localhost:50051", grpc.WithInsecure())
+		conn, err = grpc.Dial("{{ if .Host }}{{ .Host }}{{ else }}localhost:50051{{ end }}"{{ if .Insecure }}, grpc.WithInsecure(){{ end }})
 		if err != nil {
 			return
 		}
 	}
-	mux.AddHandler(&graphql__resolver_{{ .RootPackage.CamelName }}{conn, isAutoConnection})
+	mux.AddHandler(&graphql__resolver_{{ .Name }}{conn, isAutoConnection})
 	return
 }
-{{ end }}{{ end }}
+{{ end }}
 `

@@ -13,6 +13,9 @@ type Service struct {
 	*File
 	paths   []int
 	methods []*Method
+
+	Queries   []*Query
+	Mutations []*Mutation
 }
 
 func NewService(
@@ -35,7 +38,10 @@ func NewService(
 		File:       f,
 		paths:      paths,
 		methods:    make([]*Method, 0),
+		Queries:    make([]*Query, 0),
+		Mutations:  make([]*Mutation, 0),
 	}
+
 	for i, m := range d.GetMethod() {
 		ps := make([]int, len(paths))
 		copy(ps, paths)

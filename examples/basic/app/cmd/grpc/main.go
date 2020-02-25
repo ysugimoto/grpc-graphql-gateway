@@ -34,6 +34,7 @@ func init() {
 type App struct{}
 
 func (a *App) ListBooks(ctx context.Context, req *book.ListBooksRequest) (*book.ListBooksResponse, error) {
+	log.Println("handle ListBooks")
 	return &book.ListBooksResponse{
 		Books: localData.Books,
 	}, nil

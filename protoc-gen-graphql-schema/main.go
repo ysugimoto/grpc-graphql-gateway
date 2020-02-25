@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/generator"
+	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql-schema/generator"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
@@ -42,7 +42,9 @@ func main() {
 		return
 	}
 
-	var args *spec.Params
+	args := &spec.Params{
+		QueryOut: ".",
+	}
 	if req.Parameter != nil {
 		args, err = spec.NewParams(req.GetParameter())
 		if err != nil {
@@ -58,8 +60,8 @@ func main() {
 		files = append(files, spec.NewFile(f))
 	}
 
-	g := generator.New(generator.GenerationTypeSchema, files, args)
-	genFiles, err := g.Generate(schemaTemplate, []string{})
+	g := generator.New(files, args)
+	genFiles, err := g.Generate(schemaTemplate)
 	if err != nil {
 		genError = err
 		return
@@ -86,6 +88,7 @@ type Mutation {
   {{ .MutationName }}({{ .InputName }}: {{ .Input.Name }}): {{ .OutputName }}
 {{- end }}
 }
+
 {{ range .Types -}}
 {{- if .Comment }}
 # {{ .Comment }}

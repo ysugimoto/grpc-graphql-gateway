@@ -12,13 +12,13 @@ import (
 
 // Field spec wraps FieldDescriptorProto with keeping file info
 type Field struct {
-	descriptor  *descriptor.FieldDescriptorProto
-	Option      *graphql.GraphqlField
-	TypeMessage *Message
-	TypeEnum    *Enum
+	descriptor *descriptor.FieldDescriptorProto
+	Option     *graphql.GraphqlField
 	*File
 
 	paths []int
+
+	DependType interface{}
 }
 
 func NewField(
@@ -66,11 +66,11 @@ func (f *Field) Label() descriptor.FieldDescriptorProto_Label {
 	return f.descriptor.GetLabel()
 }
 
-func (f *Field) IsOptional() bool {
+func (f *Field) IsRequired() bool {
 	if f.Option == nil {
 		return false
 	}
-	return f.Option.GetOptional()
+	return f.Option.GetRequired()
 }
 
 func (f *Field) IsRepeated() bool {
@@ -82,7 +82,7 @@ func (f *Field) FieldType(rootPackage string) string {
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
 	}
-	if !f.IsOptional() {
+	if f.IsRequired() {
 		fieldType = "graphql.NewNonNull(" + fieldType + ")"
 	}
 	return fieldType
@@ -93,7 +93,7 @@ func (f *Field) FieldTypeInput(rootPackage string) string {
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
 	}
-	if !f.IsOptional() {
+	if f.IsRequired() {
 		fieldType = "graphql.NewNonNull(" + fieldType + ")"
 	}
 	return fieldType
@@ -104,7 +104,7 @@ func (f *Field) SchemaType() string {
 	if f.IsRepeated() {
 		fieldType = "[" + fieldType + "]"
 	}
-	if !f.IsOptional() {
+	if f.IsRequired() {
 		fieldType += "!"
 	}
 	return fieldType
@@ -113,7 +113,8 @@ func (f *Field) SchemaType() string {
 func (f *Field) SchemaInputType() string {
 	var prefix string
 	if f.Type() == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-		if f.Package() == f.TypeMessage.Package() || IsGooglePackage(f) {
+		m := f.DependType.(*Message)
+		if f.Package() == m.Package() || IsGooglePackage(f) {
 			prefix = "Input_"
 		}
 	}
@@ -122,7 +123,7 @@ func (f *Field) SchemaInputType() string {
 	if f.IsRepeated() {
 		fieldType = "[" + fieldType + "]"
 	}
-	if !f.IsOptional() {
+	if f.IsRequired() {
 		fieldType += "!"
 	}
 	return fieldType
@@ -169,10 +170,12 @@ func (f *Field) GraphqlType() string {
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
 		return "String"
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		tn := strings.TrimPrefix(f.TypeName(), f.TypeMessage.Package()+".")
+		m := f.DependType.(*Message)
+		tn := strings.TrimPrefix(f.TypeName(), m.Package()+".")
 		return strings.ReplaceAll(tn, ".", "_")
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
-		tn := strings.TrimPrefix(f.TypeName(), f.TypeEnum.Package()+".")
+		e := f.DependType.(*Enum)
+		tn := strings.TrimPrefix(f.TypeName(), e.Package()+".")
 		return strings.ReplaceAll(tn, ".", "_")
 	default:
 		return "Unknown"
@@ -197,24 +200,26 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
 		return "graphql.String"
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		m := f.DependType.(*Message)
+		tn := strings.TrimPrefix(f.TypeName(), m.Package()+".")
+		if isInput {
+			// If get as input type, if should be unprefixed
+			return PrefixInput(strings.ReplaceAll(tn, ".", "_"))
+		}
 		var pkgPrefix string
-		tn := strings.TrimPrefix(f.TypeName(), f.TypeMessage.Package()+".")
-		if filepath.Base(f.TypeMessage.GoPackage()) != rootPackage {
-			if !strings.HasPrefix(f.TypeMessage.Package(), "google.protobuf") {
-				pkgPrefix = filepath.Base(f.TypeMessage.GoPackage()) + "."
+		if filepath.Base(m.GoPackage()) != rootPackage {
+			if !IsGooglePackage(m) {
+				pkgPrefix = filepath.Base(m.GoPackage()) + "."
 			}
 		}
-		if isInput {
-			return pkgPrefix + PrefixInput(strings.ReplaceAll(tn, ".", "_"))
-		} else {
-			return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
-		}
+		return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
+		e := f.DependType.(*Enum)
 		var pkgPrefix string
-		tn := strings.TrimPrefix(f.TypeName(), f.TypeEnum.Package()+".")
-		if filepath.Base(f.TypeEnum.GoPackage()) != rootPackage {
-			if !strings.HasPrefix(f.TypeEnum.Package(), "google.protobuf") {
-				pkgPrefix = filepath.Base(f.TypeEnum.GoPackage()) + "."
+		tn := strings.TrimPrefix(f.TypeName(), e.Package()+".")
+		if filepath.Base(e.GoPackage()) != rootPackage {
+			if !IsGooglePackage(e) {
+				pkgPrefix = filepath.Base(e.GoPackage()) + "."
 			}
 		}
 		return pkgPrefix + PrefixEnum(strings.ReplaceAll(tn, ".", "_"))

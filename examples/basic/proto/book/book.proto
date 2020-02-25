@@ -58,9 +58,7 @@ service BookService {
     option (graphql.query) = {
       name: "books"
       response {
-        repeated: true
-        optional: true
-        expose: "books"
+        pluck: "books"
       }
     };
   }

@@ -33,8 +33,8 @@ func NewMethod(
 			}
 		}
 		if ext, err := proto.GetExtension(opts, graphql.E_Mutation); err == nil {
-			if query, ok := ext.(*graphql.GraphqlMutation); ok {
-				mt = query
+			if mutation, ok := ext.(*graphql.GraphqlMutation); ok {
+				mt = mutation
 			}
 		}
 	}
@@ -49,6 +49,8 @@ func NewMethod(
 	}
 }
 
+// -- common functions
+
 func (m *Method) Comment() string {
 	return m.File.getComment(m.paths)
 }
@@ -61,93 +63,10 @@ func (m *Method) Name() string {
 	return m.descriptor.GetName()
 }
 
-func (m *Method) QueryName() string {
-	if m.Query == nil {
-		return ""
-	}
-	return m.Query.GetName()
-}
-
-func (m *Method) MutationName() string {
-	if m.Mutation == nil {
-		return ""
-	}
-	return m.Mutation.GetName()
-}
-
 func (m *Method) Input() string {
 	return strings.TrimPrefix(m.descriptor.GetInputType(), ".")
 }
 
 func (m *Method) Output() string {
 	return strings.TrimPrefix(m.descriptor.GetOutputType(), ".")
-}
-
-func (m *Method) QueryResponse() *graphql.GraphqlResponse {
-	if m.Query == nil {
-		return nil
-	}
-	return m.Query.GetResponse()
-}
-
-func (m *Method) MutationResponse() *graphql.GraphqlResponse {
-	if m.Mutation == nil {
-		return nil
-	}
-	return m.Mutation.GetResponse()
-}
-
-func (m *Method) MutationRequest() *graphql.GraphqlRequest {
-	if m.Mutation == nil {
-		return nil
-	}
-	return m.Mutation.GetRequest()
-}
-
-func (m *Method) ExposeQuery() string {
-	if m.Query == nil {
-		return ""
-	} else if m.Query.GetResponse() == nil {
-		return ""
-	}
-	return m.Query.GetResponse().GetExpose()
-}
-
-func (m *Method) ExposeMutation() string {
-	if m.Mutation == nil {
-		return ""
-	} else if m.Mutation.GetResponse() == nil {
-		return ""
-	}
-	return m.Mutation.GetResponse().GetExpose()
-}
-
-func (m *Method) ExposeQueryFields(msg *Message) []*Field {
-	expose := m.ExposeQuery()
-	if expose == "" {
-		return msg.Fields()
-	}
-	var fields []*Field
-	for _, f := range msg.Fields() {
-		if expose != f.Name() {
-			continue
-		}
-		fields = append(fields, f)
-	}
-	return fields
-}
-
-func (m *Method) ExposeMutationFields(msg *Message) []*Field {
-	expose := m.ExposeMutation()
-	if expose == "" {
-		return msg.Fields()
-	}
-	var fields []*Field
-	for _, f := range msg.Fields() {
-		if expose != f.Name() {
-			continue
-		}
-		fields = append(fields, f)
-	}
-	return fields
 }
