@@ -1,6 +1,12 @@
 #!/bin/sh
 
 ### Github create release script
+###
+### Copyright (c) 2019 yoshiaki sugimoto
+###
+### Released under the MIT license.
+### see https://opensource.org/licenses/MIT
+###
 ### This script requires following UNIX commands:
 ### - jq
 ### - file

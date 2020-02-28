@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package human;
+
+option go_package = "github.com/ysugimoto/grpc-graphql-gateway/example/app/human";
+
+message Human {
+  int64 id = 1;
+  string name = 2;
+  repeated Human human_friends = 3;
+  repeated droid.Droid drioid_friends = 4;
+  repeated int64 appears_in = 5;
+  string home_planet = 6;
+  string primary_function = 7;
+}
+
+enum Episode {
+  _ = 0;
+  __ = 1;
+  ___ = 2;
+  ____ = 3;
+  NEWHOPE = 4;
+  EMPIRE = 5;
+  JEDI = 6;
+}
+
+message GetHeroRequest {
+  Episode episode = 1;
+}
+
+
+
+service HumanService {
+  rpc GetHero(GetHeroRequest) returns (Human) {
+  }
+
+  rpc GetHuman(GetHumanRequest) returns (Human) {
+  }
+
+  rpc ListHuman(ListHumanRequest) returns (ListHumanResponse) {
+  }
+}
