@@ -21,131 +21,137 @@ import (
 var _ = json.Marshal
 var _ = json.Unmarshal
 
-// Graphql related variables declaration
-var (
 {{ range .Enums -}}
-Gql__enum_{{ .Name }} *graphql.Enum
-{{ end }}
-{{ range .Interfaces -}}
-gql__interface_{{ .TypeName }} *graphql.Interface
-{{ end }}
-{{ range .Types -}}
-Gql__type_{{ .TypeName }} *graphql.Object
-{{ end }}
-{{ range .Inputs -}}
-Gql__input_{{ .TypeName }} *graphql.InputObject
-{{ end }}
-)
-
-// We need to initialize any values inside init()
-// because some message may have cyclic dependencies like:
-//
-// message Person {
-//    // the Person has repeated Person. this is valid on protobuf.
-//    repeated Person friends = 1;
-// }
-//
-// Then we generates code which has same type in its field,
-// But Go runtime panics with typecheking loop.
-// In order to avoid it, firstly we only define variables and lazy assign it inside init().
-func init() {
-{{ range .Enums -}}
-Gql__enum_{{ .Name }} = graphql.NewEnum(graphql.EnumConfig{
-	Name: "{{ .Name }}",
-	Values: graphql.EnumValueConfigMap{
+// enum {{ .Name }} in {{ .Filename }}
+func Gql__enum_{{ .Name }}() *graphql.Enum {
+	return graphql.NewEnum(graphql.EnumConfig{
+		Name: "{{ .Name }}",
+		Values: graphql.EnumValueConfigMap{
 {{- range .Values }}
-		"{{ .Name }}": &graphql.EnumValueConfig{
-			{{- if .Comment }}
-			Description: "{{ .Comment }}",
-			{{- end }}
-			Value: {{ .Number }},
-		},
+			"{{ .Name }}": &graphql.EnumValueConfig{
+				{{- if .Comment }}
+				Description: "{{ .Comment }}",
+				{{- end }}
+				Value: {{ .Number }},
+			},
 {{- end }}
-	},
-}) // enum {{ .Name }} in {{ .Filename }}
+		},
+	})
+}
+
 {{ end }}
 
 {{ range .Interfaces -}}
-gql__interface_{{ .TypeName }} = graphql.NewInterface(graphql.InterfaceConfig{
-	Name: "{{ .TypeName }}",
-	{{- if .Comment }}
-	Description: "{{ .Comment }}",
-	{{- end }}
-	ResolveType: func(p graphql.ResolveTypeParams) *graphql.Object {
-		return Gql__type_{{ .TypeName }}
-	},
-})
+// message {{ .Name }} in {{ .Filename }}
+func gql__interface_{{ .TypeName }}() *graphql.Interface {
+	return graphql.NewInterface(graphql.InterfaceConfig{
+		Name: "{{ .TypeName }}",
+		{{- if .Comment }}
+		Description: "{{ .Comment }}",
+		{{- end }}
+		Fields: graphql.Fields{
+{{- range .Fields }}
+		{{- if not .IsCyclic }}
+			"{{ .Name }}": &graphql.Field{
+				Type: {{ .FieldType $.RootPackage.Path }},
+				{{- if .Comment }}
+				Description: "{{ .Comment }}",
+				{{- end }}
+			},
+		{{- end }}
+{{- end }}
+		},
+		ResolveType: func(p graphql.ResolveTypeParams) *graphql.Object {
+			return Gql__type_{{ .TypeName }}()
+		},
+	})
+}
+
 {{ end }}
 
 {{ range .Types -}}
-Gql__type_{{ .TypeName }} = graphql.NewObject(graphql.ObjectConfig{
-	Name: "{{ .TypeName }}",
-	{{- if .Comment }}
-	Description: "{{ .Comment }}",
-	{{- end }}
-	Fields: graphql.Fields {
+// message {{ .Name }} in {{ .Filename }}
+func Gql__type_{{ .TypeName }}() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name: "{{ .TypeName }}",
+		{{- if .Comment }}
+		Description: "{{ .Comment }}",
+		{{- end }}
+		Fields: graphql.Fields {
 {{- range .Fields }}
-		"{{ .Name }}": &graphql.Field{
-			Type: {{ .FieldType $.RootPackage.Path }},
-			{{- if .Comment }}
-			Description: "{{ .Comment }}",
-			{{- end }}
+			"{{ .Name }}": &graphql.Field{
+				Type: {{ .FieldType $.RootPackage.Path }},
+				{{- if .Comment }}
+				Description: "{{ .Comment }}",
+				{{- end }}
+			},
+{{- end }}
 		},
-{{- end }}
-	},
-	{{- if .Interfaces }}
-	Interfaces: []*graphql.Interface{
+		{{- if .Interfaces }}
+		Interfaces: []*graphql.Interface{
 {{- range .Interfaces }}
-	  gql__interface_{{ .TypeName }},
+		 gql__interface_{{ .TypeName }}(),
 {{- end }}
-	},
-	{{- end }}
-}) // message {{ .Name }} in {{ .Filename }}
+		},
+		{{- end }}
+	})
+}
 
 {{ end }}
 
 {{ range .Inputs -}}
-Gql__input_{{ .TypeName }} = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "{{ .TypeName }}",
-	Fields: graphql.InputObjectConfigFieldMap{
+// message {{ .Name }} in {{ .Filename }}
+func Gql__input_{{ .TypeName }}() *graphql.InputObject {
+	return graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "{{ .TypeName }}",
+		Fields: graphql.InputObjectConfigFieldMap{
 {{- range .Fields }}
-		"{{ .Name }}": &graphql.InputObjectFieldConfig{
-			{{- if .Comment }}
-			Description: "{{ .Comment }}",
-			{{- end }}
-			Type: {{ .FieldTypeInput $.RootPackage.Path }},
-		},
+			"{{ .Name }}": &graphql.InputObjectFieldConfig{
+				{{- if .Comment }}
+				Description: "{{ .Comment }}",
+				{{- end }}
+				Type: {{ .FieldTypeInput $.RootPackage.Path }},
+			},
 {{- end }}
-	},
-}) // message {{ .Name }} in {{ .Filename }}
+		},
+	})
+}
 
 {{ end }}
-}
 
 {{ range $_, $service := .Services -}}
 // graphql__resolver_{{ $service.Name }} is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_{{ $service.Name }} struct {
-	// grpc client connection.
-	// this connection may be provided by user, then isAutoConnection should be false
-	conn *grpc.ClientConn
 
-	// isAutoConnection indicates that the grpc connection is opened by this handler.
-	// If true, this handler opens connection automatically, and it should be closed on Close() method.
-	isAutoConnection bool
+	// Automatic connection host
+	host string
+
+	// grpc dial options
+	dialOptions []grpc.DialOption
+
+	// grpc client connection.
+	// this connection may be provided by user
+	conn *grpc.ClientConn
 }
 
-// Close() closes grpc connection if it is opened automatically.
-func (x *graphql__resolver_{{ $service.Name }}) Close() error {
-	// nothing to do because the connection is supplied by user, and it should be closed user themselves.
-	if !x.isAutoConnection {
-		return nil
+// CreateConnection() returns grpc connection which user specified or newly connected and closing function
+func (x *graphql__resolver_{{ $service.Name }}) CreateConnection() (*grpc.ClientConn, func(), error) {
+	// If x.conn is not nil, user injected their own connection
+	if x.conn != nil {
+		return x.conn, func() {}, nil
 	}
-	return x.conn.Close()
+
+	// Otherwise, this handler opens connection with specified host
+	conn, err := grpc.Dial(x.host, x.dialOptions...)
+	if err != nil {
+		return nil, nil, err
+	}
+	return conn, func() { conn.Close() }, nil
 }
 
 // GetQueries returns acceptable graphql.Fields for Query.
-func (x *graphql__resolver_{{ $service.Name }}) GetQueries() graphql.Fields {
+func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn) graphql.Fields {
 	return graphql.Fields{
 {{- range .Queries }}
 		"{{ .QueryName }}": &graphql.Field{
@@ -171,7 +177,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries() graphql.Fields {
 				if err := runtime.MarshalRequest(p.Args, &req); err != nil {
 					return nil, err
 				}
-				client := {{ .Package }}New{{ $service.Name }}Client(x.conn)
+				client := {{ .Package }}New{{ $service.Name }}Client(conn)
 				resp, err := client.{{ .Method.Name }}(p.Context, req)
 				if err != nil {
 					return nil, err
@@ -188,7 +194,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries() graphql.Fields {
 }
 
 // GetMutations returns acceptable graphql.Fields for Mutation.
-func (x *graphql__resolver_{{ $service.Name }}) GetMutations() graphql.Fields {
+func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientConn) graphql.Fields {
 	return graphql.Fields{
 {{- range .Mutations }}
 		"{{ .MutationName }}": &graphql.Field{
@@ -214,7 +220,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations() graphql.Fields {
 				if err := runtime.MarshalRequest(p.Args, &req); err != nil {
 					return nil, err
 				}
-				client := {{ .Package }}New{{ $service.Name }}Client(x.conn)
+				client := {{ .Package }}New{{ $service.Name }}Client(conn)
 				resp, err := client.{{ .Method.Name }}(p.Context, req)
 				if err != nil {
 					return nil, err
@@ -234,35 +240,34 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations() graphql.Fields {
 // therefore gRPC connection will be opened and closed automatically.
 // Occasionally you may worry about open/close performance for each handling graphql request,
 // then you can call Register{{ .Name }}GraphqlHandler with *grpc.ClientConn manually.
-func Register{{ .Name }}Graphql(mux *runtime.ServeMux) error {
-	return Register{{ .Name }}GraphqlHandler(mux, nil)
+func Register{{ .Name }}Graphql(mux *runtime.ServeMux) {
+	Register{{ .Name }}GraphqlHandler(mux, nil)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
 // this function accepts your defined grpc connection, so that we reuse that and never close connection inside.
 // You need to close it maunally when application will terminate.
-// Otherwise, the resolver opens connection automatically and then you need to define host with FileOption like:
+// Otherwise, you can specify automatic opening connection with ServiceOption directive:
 //
 // service {{ .Name }} {
 //    option (graphql.service) = {
-//        host: "your default host like localhost:50051";
-//        insecure: true or false;
+//        host: "host:port"
+//        insecure: true or false
 //    };
 //
 //    ...with RPC definitions
 // }
-//
-func Register{{ .Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) (err error) {
-	var isAutoConnection bool
-	if conn == nil {
-		isAutoConnection = true
-		conn, err = grpc.Dial("{{ if .Host }}{{ .Host }}{{ else }}localhost:50051{{ end }}"{{ if .Insecure }}, grpc.WithInsecure(){{ end }})
-		if err != nil {
-			return
-		}
-	}
-	mux.AddHandler(&graphql__resolver_{{ .Name }}{conn, isAutoConnection})
-	return
+func Register{{ .Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) {
+	mux.AddHandler(&graphql__resolver_{{ .Name }}{
+		conn: conn,
+		host: "{{ if .Host }}{{ .Host }}{{ else }}localhost:50051{{ end }}",
+		dialOptions: []grpc.DialOption{
+		{{- if .Insecure }}
+			grpc.WithInsecure(),
+		{{- end }}
+		},
+	})
 }
+
 {{ end }}
 `

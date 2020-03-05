@@ -10,46 +10,61 @@ import (
 var _ = json.Marshal
 var _ = json.Unmarshal
 
-var Gql__type_Author = graphql.NewObject(graphql.ObjectConfig{
-	Name: "Author",
-	Fields: graphql.Fields{
-		"name": &graphql.Field{
-			Type: graphql.String,
+// enum AuthorType in author/author.proto
+func Gql__enum_AuthorType() *graphql.Enum {
+	return graphql.NewEnum(graphql.EnumConfig{
+		Name: "AuthorType",
+		Values: graphql.EnumValueConfigMap{
+			"NORMAL": &graphql.EnumValueConfig{
+				Value: 0,
+			},
+			"SPECIAL": &graphql.EnumValueConfig{
+				Value: 1,
+			},
 		},
-	},
-}) // message Author in author/author.proto
+	})
+}
 
-var Gql__type_GetAuthorRequest = graphql.NewObject(graphql.ObjectConfig{
-	Name: "GetAuthorRequest",
-	Fields: graphql.Fields{
-		"name": &graphql.Field{
-			Type: graphql.String,
+// message Author in author/author.proto
+func Gql__type_Author() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name: "Author",
+		Fields: graphql.Fields{
+			"name": &graphql.Field{
+				Type: graphql.String,
+			},
 		},
-	},
-}) // message GetAuthorRequest in author/author.proto
+	})
+}
 
-var Gql__type_ListAuthorsRequest = graphql.NewObject(graphql.ObjectConfig{
-	Name:   "ListAuthorsRequest",
-	Fields: graphql.Fields{},
-}) // message ListAuthorsRequest in author/author.proto
+// message ListAuthorsResponse in author/author.proto
+func Gql__type_ListAuthorsResponse() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name: "ListAuthorsResponse",
+		Fields: graphql.Fields{
+			"authors": &graphql.Field{
+				Type: graphql.NewList(Gql__type_Author()),
+			},
+		},
+	})
+}
 
-var Gql__type_ListAuthorsResponse = graphql.NewObject(graphql.ObjectConfig{
-	Name: "ListAuthorsResponse",
-	Fields: graphql.Fields{
-		"authors": &graphql.Field{
-			Type: graphql.NewList(Gql__type_Author),
+// message GetAuthorRequest in author/author.proto
+func Gql__type_GetAuthorRequest() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name: "GetAuthorRequest",
+		Fields: graphql.Fields{
+			"name": &graphql.Field{
+				Type: graphql.String,
+			},
 		},
-	},
-}) // message ListAuthorsResponse in author/author.proto
+	})
+}
 
-var Gql__enum_AuthorType = graphql.NewEnum(graphql.EnumConfig{
-	Name: "AuthorType",
-	Values: graphql.EnumValueConfigMap{
-		"NORMAL": &graphql.EnumValueConfig{
-			Value: 0,
-		},
-		"SPECIAL": &graphql.EnumValueConfig{
-			Value: 1,
-		},
-	},
-}) // enum AuthorType in author/author.proto
+// message ListAuthorsRequest in author/author.proto
+func Gql__type_ListAuthorsRequest() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name:   "ListAuthorsRequest",
+		Fields: graphql.Fields{},
+	})
+}

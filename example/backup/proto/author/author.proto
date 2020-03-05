@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/author";
+option go_package = "github.com/ysugimoto/grpc-graphql-gateway/example/backup/app/author";
 
 package some.app.v1.author;
 

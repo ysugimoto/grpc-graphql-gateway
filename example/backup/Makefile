@@ -23,7 +23,7 @@ build: init
 			--go_out=plugins=grpc:./app \
 			$$file; \
 	done
-	mv app/github.com/ysugimoto/grpc-graphql-gateway/example/app/* ./app
+	mv app/github.com/ysugimoto/grpc-graphql-gateway/example/backup/app/* ./app
 	rm -rf app/github.com
 
 init:

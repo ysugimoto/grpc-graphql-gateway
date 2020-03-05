@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/ysugimoto/grpc-graphql-gateway/examples/basic/app/book";
+option go_package = "github.com/ysugimoto/grpc-graphql-gateway/example/backup/app/book";
 
 package book;
 
@@ -24,6 +24,7 @@ message Book {
   BookType type = 3;
   some.app.v1.author.Author author = 4;
   Description description = 5;
+  Book related = 6;
 }
 
 message ListBooksRequest {}

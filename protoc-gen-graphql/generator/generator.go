@@ -184,6 +184,8 @@ func (g *Generator) analyzeService() (
 	services := make(map[string][]*spec.Service)
 
 	for _, f := range g.files {
+		services[f.Package()] = []*spec.Service{}
+
 		for _, s := range f.Services() {
 			for _, m := range s.Methods() {
 				if m.Query == nil && m.Mutation == nil {
@@ -266,13 +268,15 @@ func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*
 				m.Depend(spec.DependTypeInput, rootPkg)
 			} else {
 				log.Printf("package %s depends on message %s", rootPkg, m.FullPath())
-				m.Depend(spec.DependTypeInterface, rootPkg)
+				if m == orig {
+					log.Printf("%s has cyclic dependencies of field %s\n", m.Name(), f.Name())
+					f.IsCyclic = true
+					m.Depend(spec.DependTypeInterface, rootPkg)
+				} else {
+					m.Depend(spec.DependTypeMessage, rootPkg)
+				}
 			}
-			// Original message has cyclic dependency
-			if m == orig {
-				log.Printf("%s has cyclic dependencies of field %s\n", m.Name(), f.Name())
-				f.IsCyclic = true
-			} else {
+			if m != orig {
 				// Guard from recursive with infinite loop
 				g.analyzeFields(rootPkg, m, m.Fields(), asInput)
 			}
