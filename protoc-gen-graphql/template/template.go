@@ -17,14 +17,14 @@ import (
 type Template struct {
 	RootPackage *spec.Package
 
-	Packages []*spec.Package
-	Types    []*spec.Message
-	Enums    []*spec.Enum
-	Inputs   []*spec.Message
-	Services []*spec.Service
-
-	Queries   []*spec.Query
-	Mutations []*spec.Mutation
+	Packages   []*spec.Package
+	Types      []*spec.Message
+	Interfaces []*spec.Message
+	Enums      []*spec.Enum
+	Inputs     []*spec.Message
+	Services   []*spec.Service
+	Queries    []*spec.Query
+	Mutations  []*spec.Mutation
 }
 
 /*

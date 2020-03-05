@@ -19,6 +19,7 @@ type Field struct {
 	paths []int
 
 	DependType interface{}
+	IsCyclic   bool
 }
 
 func NewField(

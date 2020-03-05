@@ -93,7 +93,7 @@ func (g *Generator) generateFile(
 	*plugin.CodeGeneratorResponse_File,
 	error,
 ) {
-	var types, inputs []*spec.Message
+	var types, inputs, interfaces []*spec.Message
 	var enums []*spec.Enum
 	var packages []*spec.Package
 	stack := make(map[string]struct{})
@@ -109,6 +109,9 @@ func (g *Generator) generateFile(
 		}
 		if m.IsDepended(spec.DependTypeInput, file.Package()) {
 			inputs = append(inputs, m)
+		}
+		if m.IsDepended(spec.DependTypeInterface, file.Package()) {
+			interfaces = append(interfaces, m)
 		}
 	}
 
@@ -130,6 +133,7 @@ func (g *Generator) generateFile(
 		Types:       types,
 		Enums:       enums,
 		Inputs:      inputs,
+		Interfaces:  interfaces,
 		Services:    services,
 	}
 	buf := new(bytes.Buffer)
@@ -156,7 +160,7 @@ func (g *Generator) analyzeMessage(file *spec.File) error {
 			continue
 		}
 		m.Depend(spec.DependTypeMessage, file.Package())
-		if err := g.analyzeFields(file.Package(), m.Fields(), false); err != nil {
+		if err := g.analyzeFields(file.Package(), m, m.Fields(), false); err != nil {
 			return err
 		}
 	}
@@ -181,8 +185,6 @@ func (g *Generator) analyzeService() (
 
 	for _, f := range g.files {
 		for _, s := range f.Services() {
-			services[f.Package()] = []*spec.Service{}
-
 			for _, m := range s.Methods() {
 				if m.Query == nil && m.Mutation == nil {
 					continue
@@ -213,11 +215,12 @@ func (g *Generator) analyzeService() (
 				}
 			}
 
-			if len(s.Queries) > 0 && len(s.Mutations) > 0 {
+			if len(s.Queries) > 0 || len(s.Mutations) > 0 {
 				services[f.Package()] = append(services[f.Package()], s)
 			}
 		}
 	}
+	log.Println("services: ", services)
 
 	return services, nil
 }
@@ -225,12 +228,12 @@ func (g *Generator) analyzeService() (
 func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
 	log.Printf("package %s depends on query request %s", f.Package(), q.Input.FullPath())
 	q.Input.Depend(spec.DependTypeMessage, f.Package())
-	if err := g.analyzeFields(f.Package(), q.PluckRequest(), false); err != nil {
+	if err := g.analyzeFields(f.Package(), q.Input, q.PluckRequest(), false); err != nil {
 		return err
 	}
 
 	q.Output.Depend(spec.DependTypeMessage, f.Package())
-	if err := g.analyzeFields(f.Package(), q.PluckResponse(), false); err != nil {
+	if err := g.analyzeFields(f.Package(), q.Output, q.PluckResponse(), false); err != nil {
 		return err
 	}
 	return nil
@@ -239,17 +242,17 @@ func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
 func (g *Generator) analyzeMutation(f *spec.File, m *spec.Mutation) error {
 	log.Printf("package %s depends on mutation request %s", f.Package(), m.Input.FullPath())
 	m.Input.Depend(spec.DependTypeInput, f.Package())
-	if err := g.analyzeFields(f.Package(), m.PluckRequest(), true); err != nil {
+	if err := g.analyzeFields(f.Package(), m.Input, m.PluckRequest(), true); err != nil {
 		return err
 	}
 	m.Output.Depend(spec.DependTypeMessage, f.Package())
-	if err := g.analyzeFields(f.Package(), m.PluckResponse(), false); err != nil {
+	if err := g.analyzeFields(f.Package(), m.Output, m.PluckResponse(), false); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (g *Generator) analyzeFields(rootPkg string, fields []*spec.Field, asInput bool) error {
+func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*spec.Field, asInput bool) error {
 	for _, f := range fields {
 		switch f.Type() {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -265,7 +268,15 @@ func (g *Generator) analyzeFields(rootPkg string, fields []*spec.Field, asInput 
 				log.Printf("package %s depends on message %s", rootPkg, m.FullPath())
 				m.Depend(spec.DependTypeMessage, rootPkg)
 			}
-			g.analyzeFields(rootPkg, m.Fields(), asInput)
+			// Original message has cyclic dependency
+			if m == orig {
+				log.Printf("%s has cyclic dependencies of field %s\n", m.Name(), f.Name())
+				f.IsCyclic = true
+				m.Depend(spec.DependTypeInterface, rootPkg)
+			} else {
+				// Guard from recursive with infinite loop
+				g.analyzeFields(rootPkg, m, m.Fields(), asInput)
+			}
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			e, ok := g.enums[f.TypeName()]
 			if !ok {
