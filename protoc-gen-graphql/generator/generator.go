@@ -266,13 +266,12 @@ func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*
 				m.Depend(spec.DependTypeInput, rootPkg)
 			} else {
 				log.Printf("package %s depends on message %s", rootPkg, m.FullPath())
-				m.Depend(spec.DependTypeMessage, rootPkg)
+				m.Depend(spec.DependTypeInterface, rootPkg)
 			}
 			// Original message has cyclic dependency
 			if m == orig {
 				log.Printf("%s has cyclic dependencies of field %s\n", m.Name(), f.Name())
 				f.IsCyclic = true
-				m.Depend(spec.DependTypeInterface, rootPkg)
 			} else {
 				// Guard from recursive with infinite loop
 				g.analyzeFields(rootPkg, m, m.Fields(), asInput)

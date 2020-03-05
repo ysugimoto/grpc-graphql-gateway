@@ -100,3 +100,13 @@ func (m *Message) StructName(ptr bool) string {
 func (m *Message) FullPath() string {
 	return m.File.Package() + "." + m.Name()
 }
+
+func (m *Message) Interfaces() (ifs []*Message) {
+	for _, f := range m.fields {
+		if !f.IsCyclic {
+			continue
+		}
+		ifs = append(ifs, f.DependType.(*Message))
+	}
+	return ifs
+}

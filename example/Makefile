@@ -1,6 +1,7 @@
 .PHONY: clean all
 
 UNAME := $(shell uname)
+SPECDIR := "./spec"
 
 ifeq ($(UNAME), Darwin)
 	LINKCMD := ln -s $(shell brew --prefix protobuf)/include/google ./proto/google
@@ -12,18 +13,18 @@ endif
 all: build
 
 build: init
-	rm -rf ./app/starwars
+	rm -rf ./spec/starwars
 	for file in `find ./proto -name '*.proto'`; do \
 		echo $$file; \
 		protoc \
 			-Iproto \
 			--plugin=../dist/protoc-gen-graphql \
-			--graphql_out=./app \
-			--go_out=plugins=grpc:./app \
+			--graphql_out=${SPECDIR} \
+			--go_out=plugins=grpc:${SPECDIR} \
 			$$file; \
 	done
-	mv app/github.com/ysugimoto/grpc-graphql-gateway/example/app/* ./app
-	rm -rf app/github.com
+	mv ${SPECDIR}/github.com/ysugimoto/grpc-graphql-gateway/example/spec/* ${SPECDIR}
+	rm -rf ${SPECDIR}/github.com
 
 init:
 	if [ -L "./proto/google" ]; then rm ./proto/google; fi

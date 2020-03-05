@@ -19,6 +19,11 @@ func PrefixInput(name string) string {
 	return "Gql__input_" + name
 }
 
+// PrefixInterface adds prefix to avoid conflicting name
+func PrefixInterface(name string) string {
+	return "gql__interface_" + name
+}
+
 type PackageGetter interface {
 	Package() string
 }

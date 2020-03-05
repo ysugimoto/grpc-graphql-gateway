@@ -203,6 +203,9 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		m := f.DependType.(*Message)
 		tn := strings.TrimPrefix(f.TypeName(), m.Package()+".")
+		if f.IsCyclic {
+			return PrefixInterface(strings.ReplaceAll(tn, ".", "_"))
+		}
 		if isInput {
 			// If get as input type, if should be unprefixed
 			return PrefixInput(strings.ReplaceAll(tn, ".", "_"))
