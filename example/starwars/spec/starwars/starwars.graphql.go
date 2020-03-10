@@ -2,6 +2,7 @@
 package starwars
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/graphql-go/graphql"
@@ -11,21 +12,6 @@ import (
 
 var _ = json.Marshal
 var _ = json.Unmarshal
-
-// enum Type in starwars/starwars.proto
-func Gql__enum_Type() *graphql.Enum {
-	return graphql.NewEnum(graphql.EnumConfig{
-		Name: "Type",
-		Values: graphql.EnumValueConfigMap{
-			"HUMAN": &graphql.EnumValueConfig{
-				Value: 0,
-			},
-			"DROID": &graphql.EnumValueConfig{
-				Value: 1,
-			},
-		},
-	})
-}
 
 // enum Episode in starwars/starwars.proto
 func Gql__enum_Episode() *graphql.Enum {
@@ -48,10 +34,25 @@ func Gql__enum_Episode() *graphql.Enum {
 	})
 }
 
+// enum Type in starwars/starwars.proto
+func Gql__enum_Type() *graphql.Enum {
+	return graphql.NewEnum(graphql.EnumConfig{
+		Name: "Type",
+		Values: graphql.EnumValueConfigMap{
+			"HUMAN": &graphql.EnumValueConfig{
+				Value: 0,
+			},
+			"DROID": &graphql.EnumValueConfig{
+				Value: 1,
+			},
+		},
+	})
+}
+
 // message Character in starwars/starwars.proto
 func gql__interface_Character() *graphql.Interface {
 	return graphql.NewInterface(graphql.InterfaceConfig{
-		Name: "Character",
+		Name: "CharacterInterface",
 		Fields: graphql.Fields{
 			"id": &graphql.Field{
 				Type: graphql.Int,
@@ -91,14 +92,14 @@ func Gql__type_GetHumanRequest() *graphql.Object {
 	})
 }
 
-// message GetHeroRequest in starwars/starwars.proto
-func Gql__type_GetHeroRequest() *graphql.Object {
+// message GetDroidRequest in starwars/starwars.proto
+func Gql__type_GetDroidRequest() *graphql.Object {
 	return graphql.NewObject(graphql.ObjectConfig{
-		Name: "GetHeroRequest",
+		Name: "GetDroidRequest",
 		Fields: graphql.Fields{
-			"episode": &graphql.Field{
-				Type:        Gql__enum_Episode(),
-				Description: "If omitted, returns the hero of the whope saga. If provided, returns the hero of that particular episode.",
+			"id": &graphql.Field{
+				Type:        graphql.NewNonNull(graphql.Int),
+				Description: "id of the droid",
 			},
 		},
 	})
@@ -109,6 +110,43 @@ func Gql__type_ListEmptyRequest() *graphql.Object {
 	return graphql.NewObject(graphql.ObjectConfig{
 		Name:   "ListEmptyRequest",
 		Fields: graphql.Fields{},
+	})
+}
+
+// message ListHumansResponse in starwars/starwars.proto
+func Gql__type_ListHumansResponse() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name: "ListHumansResponse",
+		Fields: graphql.Fields{
+			"humans": &graphql.Field{
+				Type: graphql.NewList(Gql__type_Character()),
+			},
+		},
+	})
+}
+
+// message ListDroidsResponse in starwars/starwars.proto
+func Gql__type_ListDroidsResponse() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name: "ListDroidsResponse",
+		Fields: graphql.Fields{
+			"droids": &graphql.Field{
+				Type: graphql.NewList(Gql__type_Character()),
+			},
+		},
+	})
+}
+
+// message GetHeroRequest in starwars/starwars.proto
+func Gql__type_GetHeroRequest() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name: "GetHeroRequest",
+		Fields: graphql.Fields{
+			"episode": &graphql.Field{
+				Type:        Gql__enum_Episode(),
+				Description: "If omitted, returns the hero of the whope saga. If provided, returns the hero of that particular episode.",
+			},
+		},
 	})
 }
 
@@ -145,43 +183,6 @@ func Gql__type_Character() *graphql.Object {
 	})
 }
 
-// message ListHumansResponse in starwars/starwars.proto
-func Gql__type_ListHumansResponse() *graphql.Object {
-	return graphql.NewObject(graphql.ObjectConfig{
-		Name: "ListHumansResponse",
-		Fields: graphql.Fields{
-			"humans": &graphql.Field{
-				Type: graphql.NewList(Gql__type_Character()),
-			},
-		},
-	})
-}
-
-// message GetDroidRequest in starwars/starwars.proto
-func Gql__type_GetDroidRequest() *graphql.Object {
-	return graphql.NewObject(graphql.ObjectConfig{
-		Name: "GetDroidRequest",
-		Fields: graphql.Fields{
-			"id": &graphql.Field{
-				Type:        graphql.NewNonNull(graphql.Int),
-				Description: "id of the droid",
-			},
-		},
-	})
-}
-
-// message ListDroidsResponse in starwars/starwars.proto
-func Gql__type_ListDroidsResponse() *graphql.Object {
-	return graphql.NewObject(graphql.ObjectConfig{
-		Name: "ListDroidsResponse",
-		Fields: graphql.Fields{
-			"droids": &graphql.Field{
-				Type: graphql.NewList(Gql__type_Character()),
-			},
-		},
-	})
-}
-
 // graphql__resolver_StartwarsService is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_StartwarsService struct {
@@ -198,14 +199,14 @@ type graphql__resolver_StartwarsService struct {
 }
 
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
-func (x *graphql__resolver_StartwarsService) CreateConnection() (*grpc.ClientConn, func(), error) {
+func (x *graphql__resolver_StartwarsService) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
 	if x.conn != nil {
 		return x.conn, func() {}, nil
 	}
 
 	// Otherwise, this handler opens connection with specified host
-	conn, err := grpc.Dial(x.host, x.dialOptions...)
+	conn, err := grpc.DialContext(ctx, x.host, x.dialOptions...)
 	if err != nil {
 		return nil, nil, err
 	}

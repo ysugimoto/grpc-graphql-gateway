@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package startwars;
 
-option go_package = "github.com/ysugimoto/grpc-graphql-gateway/example/spec/starwars";
+option go_package = "github.com/ysugimoto/grpc-graphql-gateway/example/starwars/spec/starwars";
 
 import "graphql/graphql.proto";
 

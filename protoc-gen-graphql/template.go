@@ -5,6 +5,7 @@ var goTemplate = `
 package {{ .RootPackage.Name }}
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/graphql-go/graphql"
@@ -45,7 +46,7 @@ func Gql__enum_{{ .Name }}() *graphql.Enum {
 // message {{ .Name }} in {{ .Filename }}
 func gql__interface_{{ .TypeName }}() *graphql.Interface {
 	return graphql.NewInterface(graphql.InterfaceConfig{
-		Name: "{{ .TypeName }}",
+		Name: "{{ .TypeName }}Interface",
 		{{- if .Comment }}
 		Description: "{{ .Comment }}",
 		{{- end }}
@@ -136,14 +137,14 @@ type graphql__resolver_{{ $service.Name }} struct {
 }
 
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
-func (x *graphql__resolver_{{ $service.Name }}) CreateConnection() (*grpc.ClientConn, func(), error) {
+func (x *graphql__resolver_{{ $service.Name }}) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
 	if x.conn != nil {
 		return x.conn, func() {}, nil
 	}
 
 	// Otherwise, this handler opens connection with specified host
-	conn, err := grpc.Dial(x.host, x.dialOptions...)
+	conn, err := grpc.DialContext(ctx, x.host, x.dialOptions...)
 	if err != nil {
 		return nil, nil, err
 	}

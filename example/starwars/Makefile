@@ -18,18 +18,18 @@ build: init
 		echo $$file; \
 		protoc \
 			-Iproto \
-			--plugin=../dist/protoc-gen-graphql \
+			--plugin=../..//dist/protoc-gen-graphql \
 			--graphql_out=${SPECDIR} \
 			--go_out=plugins=grpc:${SPECDIR} \
 			$$file; \
 	done
-	mv ${SPECDIR}/github.com/ysugimoto/grpc-graphql-gateway/example/spec/* ${SPECDIR}
+	mv ${SPECDIR}/github.com/ysugimoto/grpc-graphql-gateway/example/starwars/spec/* ${SPECDIR}
 	rm -rf ${SPECDIR}/github.com
 
 init:
 	if [ -L "./proto/google" ]; then rm ./proto/google; fi
 	if [ -L "./proto/graphql" ]; then rm ./proto/graphql; fi
 	$(LINKCMD)
-	ln -s $(shell pwd)/../include/graphql ./proto/graphql
-	cd ../ && make
+	ln -s $(shell pwd)/../..//include/graphql ./proto/graphql
+	cd ../../ && make
 
