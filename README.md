@@ -2,6 +2,8 @@
 
 `grpc-graphql-gateway` is `protoc` plugin which generates graphql execution code from Protocol Buffers.
 
+[image](https://raw.githubusercontent.com/ysugimoto/grpc-graphql-gateway/master/misc/grpc-graphql-gateway.png)
+
 ## Motivation
 
 On API development, frequently we choose some IDL, in order to manage API definitions from file.
@@ -228,8 +230,8 @@ query greeting($name: String = "GraphQL Gateway") {
 That's the most simple way :-) to learn more, please see following resources:
 
 - `graphql.proto` Plugin option definition. See comment section for custom usage (e.g mutation).
-- [example/greeter]() Example fileset about above usage.
-- [example/starwars]() Common implementation for GraphQL explanation, the starwars API example
+- [example/greeter](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/greeter) Example fileset of above usage.
+- [example/starwars](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/starwars) Common implementation for GraphQL explanation, the starwars API example
 
 ## Limitations
 
