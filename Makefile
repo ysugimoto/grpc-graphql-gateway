@@ -2,11 +2,11 @@
 
 GRAPHQL_CMD=protoc-gen-graphql
 
-lint:
-	golangci-lint run
-
 command: plugin clean
 	cd ${GRAPHQL_CMD} && go build -o ../dist/${GRAPHQL_CMD}
+
+lint:
+	golangci-lint run
 
 plugin:
 	protoc -I $(shell brew --prefix protobuf)/include/google \
