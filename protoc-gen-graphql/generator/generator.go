@@ -13,9 +13,22 @@ import (
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
+	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
-	tpl "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/template"
 )
+
+type Template struct {
+	RootPackage *spec.Package
+
+	Packages   []*spec.Package
+	Types      []*spec.Message
+	Interfaces []*spec.Message
+	Enums      []*spec.Enum
+	Inputs     []*spec.Message
+	Services   []*spec.Service
+	Queries    []*spec.Query
+	Mutations  []*spec.Mutation
+}
 
 // Generator is struct for analyzing protobuf definition
 // and factory graphql definition in protobuf to generate.
@@ -47,14 +60,8 @@ func New(files []*spec.File, args *spec.Params) *Generator {
 	}
 }
 
-func (g *Generator) Generate(
-	tmpl string,
-	fs []string,
-) (
-	[]*plugin.CodeGeneratorResponse_File,
-	error,
-) {
-	services, err := g.analyzeService()
+func (g *Generator) Generate(tmpl string, fs []string) ([]*plugin.CodeGeneratorResponse_File, error) {
+	services, err := g.analyzeServices()
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +76,7 @@ func (g *Generator) Generate(
 			if !ok {
 				continue
 			}
+
 			// mark as same package defininition in file
 			g.analyzeEnum(f)
 			if err := g.analyzeMessage(f); err != nil {
@@ -85,20 +93,18 @@ func (g *Generator) Generate(
 	return outFiles, nil
 }
 
-func (g *Generator) generateFile(
-	file *spec.File,
-	tmpl string,
-	services []*spec.Service,
-) (
+func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.Service) (
 	*plugin.CodeGeneratorResponse_File,
 	error,
 ) {
+
 	var types, inputs, interfaces []*spec.Message
 	var enums []*spec.Enum
 	var packages []*spec.Package
 	stack := make(map[string]struct{})
 
 	for _, m := range g.messages {
+		// skip empty field message, otherwise graphql-go raise error
 		if len(m.Fields()) == 0 {
 			continue
 		}
@@ -119,6 +125,7 @@ func (g *Generator) generateFile(
 	}
 
 	for _, e := range g.enums {
+		// skip empty values enum, otherwise graphql-go raise error
 		if len(e.Values()) == 0 {
 			continue
 		}
@@ -133,7 +140,7 @@ func (g *Generator) generateFile(
 	}
 
 	root := spec.NewPackage(file.GoPackage())
-	t := &tpl.Template{
+	t := &Template{
 		RootPackage: root,
 		Packages:    packages,
 		Types:       types,
@@ -142,24 +149,28 @@ func (g *Generator) generateFile(
 		Interfaces:  interfaces,
 		Services:    services,
 	}
+
 	buf := new(bytes.Buffer)
 	if tmpl, err := template.New("go").Parse(tmpl); err != nil {
 		return nil, err
 	} else if err := tmpl.Execute(buf, t); err != nil {
 		return nil, err
 	}
+
 	out, err := format.Source(buf.Bytes())
 	if err != nil {
 		log.Println(buf.String())
-		ioutil.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666)
+		ioutil.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666) // nolint: errcheck
 		return nil, err
 	}
+
 	return &plugin.CodeGeneratorResponse_File{
 		Name:    proto.String(fmt.Sprintf("%s/%s.graphql.go", root.Path, root.Name)),
 		Content: proto.String(string(out)),
 	}, nil
 }
 
+// nolint: interfacer
 func (g *Generator) analyzeMessage(file *spec.File) error {
 	for _, m := range g.messages {
 		if m.Package() != file.Package() {
@@ -173,66 +184,68 @@ func (g *Generator) analyzeMessage(file *spec.File) error {
 	return nil
 }
 
-func (g *Generator) analyzeEnum(file *spec.File) error {
+// nolint: interfacer
+func (g *Generator) analyzeEnum(file *spec.File) {
 	for _, e := range g.enums {
 		if e.Package() != file.Package() {
 			continue
 		}
 		e.Depend(spec.DependTypeEnum, file.Package())
 	}
-	return nil
 }
 
-func (g *Generator) analyzeService() (
-	map[string][]*spec.Service,
-	error,
-) {
+func (g *Generator) analyzeServices() (map[string][]*spec.Service, error) {
 	services := make(map[string][]*spec.Service)
 
 	for _, f := range g.files {
 		services[f.Package()] = []*spec.Service{}
 
 		for _, s := range f.Services() {
-			for _, m := range s.Methods() {
-				if m.Query == nil && m.Mutation == nil {
-					continue
-				}
-				var input, output *spec.Message
-				var ok bool
-
-				if input, ok = g.messages[m.Input()]; !ok {
-					return nil, errors.New("failed to resolve input message: " + m.Input())
-				}
-				if output, ok = g.messages[m.Output()]; !ok {
-					return nil, errors.New("failed to resolve output message: " + m.Output())
-				}
-
-				if m.Query != nil {
-					q := spec.NewQuery(m, input, output)
-					if err := g.analyzeQuery(f, q); err != nil {
-						return nil, err
-					}
-					s.Queries = append(s.Queries, q)
-				}
-				if m.Mutation != nil {
-					mu := spec.NewMutation(m, input, output)
-					if err := g.analyzeMutation(f, mu); err != nil {
-						return nil, err
-					}
-					s.Mutations = append(s.Mutations, mu)
-				}
+			if err := g.analyzeService(f, s); err != nil {
+				return nil, err
 			}
-
 			if len(s.Queries) > 0 || len(s.Mutations) > 0 {
 				services[f.Package()] = append(services[f.Package()], s)
 			}
 		}
 	}
-	log.Println("services: ", services)
-
 	return services, nil
 }
 
+func (g *Generator) analyzeService(f *spec.File, s *spec.Service) error {
+	for _, m := range s.Methods() {
+		if m.Schema == nil {
+			continue
+		}
+		var input, output *spec.Message
+		var ok bool
+
+		if input, ok = g.messages[m.Input()]; !ok {
+			return errors.New("failed to resolve input message: " + m.Input())
+		}
+		if output, ok = g.messages[m.Output()]; !ok {
+			return errors.New("failed to resolve output message: " + m.Output())
+		}
+
+		switch m.Schema.GetType() {
+		case graphql.GraphqlType_QUERY:
+			q := spec.NewQuery(m, input, output)
+			if err := g.analyzeQuery(f, q); err != nil {
+				return err
+			}
+			s.Queries = append(s.Queries, q)
+		case graphql.GraphqlType_MUTATION:
+			mu := spec.NewMutation(m, input, output)
+			if err := g.analyzeMutation(f, mu); err != nil {
+				return err
+			}
+			s.Mutations = append(s.Mutations, mu)
+		}
+	}
+	return nil
+}
+
+// nolint: interfacer
 func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
 	log.Printf("package %s depends on query request %s", f.Package(), q.Input.FullPath())
 	q.Input.Depend(spec.DependTypeMessage, f.Package())
@@ -247,6 +260,7 @@ func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
 	return nil
 }
 
+// nolint: interfacer
 func (g *Generator) analyzeMutation(f *spec.File, m *spec.Mutation) error {
 	log.Printf("package %s depends on mutation request %s", f.Package(), m.Input.FullPath())
 	m.Input.Depend(spec.DependTypeInput, f.Package())
@@ -282,9 +296,12 @@ func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*
 					m.Depend(spec.DependTypeMessage, rootPkg)
 				}
 			}
+
+			// Guard from recursive with infinite loop
 			if m != orig {
-				// Guard from recursive with infinite loop
-				g.analyzeFields(rootPkg, m, m.Fields(), asInput)
+				if err := g.analyzeFields(rootPkg, m, m.Fields(), asInput); err != nil {
+					return err
+				}
 			}
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			e, ok := g.enums[f.TypeName()]

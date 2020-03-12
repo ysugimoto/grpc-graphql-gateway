@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  graphql:
+    build:
+      context: app/graphql/
+    ports:
+      - "8888:8888"
+  grpc:
+    build:
+      context: app/grpc/
+    ports:
+      - "50051:50051"
+
+

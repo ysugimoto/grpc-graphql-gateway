@@ -11,7 +11,9 @@ import (
 func main() {
 	mux := runtime.NewServeMux(runtime.Cors())
 
-	starwars.RegisterStartwarsServiceGraphqlHandler(mux, nil)
+	if err := starwars.RegisterStartwarsServiceGraphqlHandler(mux, nil); err != nil {
+		log.Fatalln(err)
+	}
 	http.Handle("/graphql", mux)
 	log.Fatalln(http.ListenAndServe(":8888", nil))
 }

@@ -27,6 +27,7 @@ func NewField(
 	f *File,
 	paths ...int,
 ) *Field {
+
 	var o *graphql.GraphqlField
 	if opts := d.GetOptions(); opts != nil {
 		if ext, err := proto.GetExtension(opts, graphql.E_Field); err == nil {
@@ -114,7 +115,7 @@ func (f *Field) SchemaType() string {
 func (f *Field) SchemaInputType() string {
 	var prefix string
 	if f.Type() == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-		m := f.DependType.(*Message)
+		m := f.DependType.(*Message) // nolint: errcheck
 		if f.Package() == m.Package() || IsGooglePackage(f) {
 			prefix = "Input_"
 		}
@@ -171,11 +172,11 @@ func (f *Field) GraphqlType() string {
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
 		return "String"
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		m := f.DependType.(*Message)
+		m := f.DependType.(*Message) // nolint: errcheck
 		tn := strings.TrimPrefix(f.TypeName(), m.Package()+".")
 		return strings.ReplaceAll(tn, ".", "_")
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
-		e := f.DependType.(*Enum)
+		e := f.DependType.(*Enum) // nolint: errcheck
 		tn := strings.TrimPrefix(f.TypeName(), e.Package()+".")
 		return strings.ReplaceAll(tn, ".", "_")
 	default:
@@ -201,7 +202,7 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
 		return "graphql.String"
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		m := f.DependType.(*Message)
+		m := f.DependType.(*Message) // nolint: errcheck
 		tn := strings.TrimPrefix(f.TypeName(), m.Package()+".")
 		if f.IsCyclic {
 			return PrefixInterface(strings.ReplaceAll(tn, ".", "_"))
@@ -218,7 +219,7 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 		}
 		return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
-		e := f.DependType.(*Enum)
+		e := f.DependType.(*Enum) // nolint: errcheck
 		var pkgPrefix string
 		tn := strings.TrimPrefix(f.TypeName(), e.Package()+".")
 		if filepath.Base(e.GoPackage()) != rootPackage {

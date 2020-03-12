@@ -26,24 +26,15 @@ func NewQuery(m *Method, input, output *Message) *Query {
 }
 
 func (q *Query) QueryName() string {
-	if q.Query == nil {
-		return ""
-	}
-	return q.Query.GetName()
+	return q.Schema.GetName()
 }
 
 func (q *Query) Request() *graphql.GraphqlRequest {
-	if q.Query == nil {
-		return nil
-	}
-	return q.Query.GetRequest()
+	return q.Schema.GetRequest()
 }
 
 func (q *Query) Response() *graphql.GraphqlResponse {
-	if q.Query == nil {
-		return nil
-	}
-	return q.Query.GetResponse()
+	return q.Schema.GetResponse()
 }
 
 func (q *Query) IsPluckRequest() bool {
@@ -111,7 +102,7 @@ func (q *Query) QueryType() string {
 	var pkgPrefix string
 	if q.GoPackage() != q.Output.GoPackage() {
 		pkgPrefix = filepath.Base(q.GoPackage())
-		if pkgPrefix != "main" {
+		if pkgPrefix != mainPackage {
 			pkgPrefix += "."
 		}
 	}
@@ -163,16 +154,6 @@ func (q *Query) OutputName() string {
 	return typeName
 }
 
-// func (q *Query) InputName() string {
-// 	inputName := q.Input.SingleName()
-// 	if req := q.Method.QueryRequest(); req != nil {
-// 		if n := req.GetName(); n != "" {
-// 			inputName = n
-// 		}
-// 	}
-// 	return inputName
-// }
-
 func (q *Query) InputType() string {
 	if q.Method.GoPackage() != q.Input.GoPackage() {
 		return q.Input.StructName(false)
@@ -189,17 +170,9 @@ func (q *Query) Package() string {
 	var pkgName string
 	if q.GoPackage() != q.Input.GoPackage() {
 		pkgName = filepath.Base(q.Input.GoPackage())
-		if pkgName != "main" {
+		if pkgName != mainPackage {
 			pkgName += "."
 		}
 	}
 	return pkgName
 }
-
-// func (q *Query) Expose() string {
-// 	if q.Method.ExposeQuery() == "" {
-// 		return ""
-// 	}
-// 	field := q.Method.ExposeQueryFields(q.Output)[0]
-// 	return strcase.ToCamel(field.Name())
-// }

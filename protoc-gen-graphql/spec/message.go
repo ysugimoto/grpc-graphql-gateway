@@ -27,6 +27,7 @@ func NewMessage(
 	prefix []string,
 	paths ...int,
 ) *Message {
+
 	m := &Message{
 		descriptor: d,
 		File:       f,
@@ -85,7 +86,7 @@ func (m *Message) SingleName() string {
 
 func (m *Message) StructName(ptr bool) string {
 	gopkg := m.GoPackage()
-	if gopkg == "main" {
+	if gopkg == mainPackage {
 		gopkg = ""
 	} else {
 		gopkg = filepath.Base(gopkg) + "."

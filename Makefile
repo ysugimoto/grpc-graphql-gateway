@@ -1,11 +1,12 @@
 .PHONY: command clean
 
 GRAPHQL_CMD=protoc-gen-graphql
-SCHEMA_CMD=protoc-gen-graphql-schema
+
+lint:
+	golangci-lint run
 
 command: plugin clean
 	cd ${GRAPHQL_CMD} && go build -o ../dist/${GRAPHQL_CMD}
-	cd ${SCHEMA_CMD} && go build -o ../dist/${SCHEMA_CMD}
 
 plugin:
 	protoc -I $(shell brew --prefix protobuf)/include/google \
@@ -26,8 +27,6 @@ build:
 clean:
 	rm -rf ./dist/*
 
-all: clean build
+all: lint clean build
 	cd ${GRAPHQL_CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${GRAPHQL_CMD}.darwin
 	cd ${GRAPHQL_CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${GRAPHQL_CMD}.linux
-	cd ${SCHEMA_CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${SCHEMA_CMD}.darwin
-	cd ${SCHEMA_CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${SCHEMA_CMD}.linux

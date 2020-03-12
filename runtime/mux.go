@@ -95,7 +95,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	for _, m := range s.middlewares {
 		if err := m(ctx, w, r); err != nil {
-			http.Error(w, "middleware error occured: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "middleware error occurred: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -166,5 +166,5 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Length", fmt.Sprint(len(out)))
 	w.WriteHeader(http.StatusOK)
-	w.Write(out)
+	w.Write(out) // nolint: errcheck
 }

@@ -4,7 +4,7 @@ import (
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
-// EnumValue spec wraps EnumValueDescriptorProto with keeping file definiton.
+// EnumValue spec wraps EnumValueDescriptorProto with keeping file definition.
 type EnumValue struct {
 	descriptor *descriptor.EnumValueDescriptorProto
 	*File
@@ -17,6 +17,7 @@ func NewEnumValue(
 	f *File,
 	paths ...int,
 ) *EnumValue {
+
 	return &EnumValue{
 		descriptor: d,
 		File:       f,

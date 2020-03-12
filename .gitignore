@@ -16,7 +16,8 @@
 #
 
 dist/protoc-gen-graphql*
-examples/**/google
-examples/**/graphql
-examples/**/schema.graphql
-examples/**/github.com
+example/**/google
+example/**/graphql
+example/**/schema.graphql
+example/**/github.com
+example/**/app

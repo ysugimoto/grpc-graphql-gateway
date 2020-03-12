@@ -56,30 +56,34 @@ message ListDroidsResponse {
 
 service StartwarsService {
   option (graphql.service) = {
-    host: "localhost:50051"
+    host: "grpc:50051"
     insecure: true
   };
 
   rpc GetHero(GetHeroRequest) returns (Character) {
-    option (graphql.query) = {
+    option (graphql.schema) = {
+      type: QUERY
       name: "hero"
     };
   }
 
   rpc GetHuman(GetHumanRequest) returns (Character) {
-    option (graphql.query) = {
+    option (graphql.schema) = {
+      type: QUERY
       name: "human"
     };
   }
 
   rpc GetDroid(GetDroidRequest) returns (Character) {
-    option (graphql.query) = {
+    option (graphql.schema) = {
+      type: QUERY
       name: "droid"
     };
   }
 
   rpc ListHumans(ListEmptyRequest) returns (ListHumansResponse) {
-    option (graphql.query) = {
+    option (graphql.schema) = {
+      type: QUERY
       name: "humans"
       response {
         pluck: "humans"
@@ -88,7 +92,8 @@ service StartwarsService {
   }
 
   rpc ListDroids(ListEmptyRequest) returns (ListDroidsResponse) {
-    option (graphql.query) = {
+    option (graphql.schema) = {
+      type: QUERY
       name: "droids"
       response {
         pluck: "droids"

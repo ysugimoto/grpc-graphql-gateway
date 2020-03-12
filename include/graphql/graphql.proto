@@ -17,17 +17,12 @@ import "google/protobuf/descriptor.proto";
 //
 // service Greeter {
 //    option (graphql.service) = {
-//      host: "localhost:50051" -- define grpc connection host and port
-//      insecure: true          -- set true if connect to insecure grpc server
+//      host: "localhost:50051" // define grpc connection host and port
+//      insecure: true          // set true if connect to insecure grpc server
 //    };
 //
 //    ... some rpc definitions
 // }
-extend google.protobuf.ServiceOptions {
-  GraphqlService service = 50001;
-}
-
-// Service Option Declaration
 message GraphqlService {
   // gRPC default connection host.
   // This value should include host and port, say localhost:50051.
@@ -36,13 +31,15 @@ message GraphqlService {
   bool insecure = 2;
 }
 
-// Extend MethodOptions in order to define GraphQL Query.
+
+// Extend MethodOptions in order to define GraphQL Query or Mutation.
 // User can use this option as following:
 //
 // service Greeter {
 //    rpc SayHello(HelloRequest) returns (HelloReply) {
-//      option (graphql.query) = { -- declare as Query
-//        name: "hello"            -- query name
+//      option (graphql.schema) = {
+//        type: QUERY    // declare as Query
+//        name: "hello"  // query name
 //      }
 //    }
 // }
@@ -66,44 +63,29 @@ message GraphqlService {
 //
 // service MemberService {
 //    rpc ListMembers(ListMembersRequest) returns (ListMembersResponse) {
-//      option (graphql.query) = {
+//      option (graphql.schema) = {
+//        type: QUERY
 //        name: "members"
 //        response {
-//          expose: "members" -- Query will respond [Member] instead of ListMembersResponse
+//          expose: "members" // Query will respond [Member] instead of ListMembersResponse
 //        }
 //      }
 //    }
 // }
 //
-// Finally, user can access this query via /graphql?query={members{name}}
-//
-extend google.protobuf.MethodOptions {
-  GraphqlQuery query = 50001;
-}
-
-// Query Declaration
-message GraphqlQuery {
-  // query name. this field is required
-  string name = 1;
-  // Query request object configuration
-  GraphqlRequest request = 2;
-  // Query response object configuration
-  GraphqlResponse response = 3;
-}
-
-// Extend MethodOptions in order to define GraphQL Mutation.
-// User can use this option as following:
+// In mutation declaration:
 //
 // service MemberService {
 //    rpc CreateMember(CreateMemberRequest) returns (Member) {
-//      option (graphql.mutation) = { -- declare as Mutation
-//        name: "cretemember"         -- mutation name
+//      option (graphql.schema) = {
+//        type: MUTATION        // declare as Mutation
+//        name: "cretemember"   // mutation name
 //      }
 //    }
 // }
 //
 // The Mutation's input always becomes an input object, so you need to declare argument name.
-
+//
 // message Member {
 //   string name = 1;
 // }
@@ -114,26 +96,26 @@ message GraphqlQuery {
 //
 // service MemberService {
 //    rpc CreateMember(CreateMemberRequest) returns (Member) {
-//      option (graphql.mutation) = {
+//      option (graphql.schema) = {
+//        type: MUTATION
 //        name: "createmember"
 //        request {
-//          name: "member" -- this is equivalent to createbook(member: Member): Member in GraphQL
+//          name: "member" // this is equivalent to createbook(member: Member): Member in GraphQL
 //        }
 //      }
 //    }
 // }
-extend google.protobuf.MethodOptions {
-  GraphqlMutation mutation = 50002;
-}
-
-// Mutation Declaration
-message GraphqlMutation {
+//
+// Finally, user can access this query via /graphql?query={members{name}}
+message GraphqlSchema {
+  // graphql type. "query" or "mutation" is valid value
+  GraphqlType type = 1;
   // query name. this field is required
-  string name = 1;
-  // Mutation request object configuration
-  GraphqlRequest request = 2;
+  string name = 2;
+  // Query request object configuration
+  GraphqlRequest request = 3;
   // Query response object configuration
-  GraphqlResponse response = 3;
+  GraphqlResponse response = 4;
 }
 
 // configuration option for request
@@ -159,26 +141,28 @@ message GraphqlResponse {
   string pluck = 2;
 }
 
-// Query response declaration
-// Extend FieldOptions in order to define type field.
+// explicit schema declaration enum
+enum GraphqlType {
+  // schema will generate as Query
+  QUERY = 0;
+  // schema will generate as Mutation
+  MUTATION = 1;
+}
+
+// GraphqlField is FieldOptions in protobuf in order to define type field attribute.
 // User can use this option as following:
 //
 // message Member {
-//   string name = 1 [(graphql.field) = {required: true}]; -- this field is required, it equivalent to String! on GraphQL
+//   string name = 1 [(graphql.field) = {required: true}]; // this field is required in GraphQL, it equivalent to String! on GraphQL
 // }
 //
 // message CreateMemberRequest {
-//   string name = 1; [(grahpql.field) = {default: "anonymous"}]; -- use default value on input
+//   string name = 1; [(grahpql.field) = {default: "anonymous"}]; // use default value on input or query
 // }
 //
 // Note that in protobuf, all fields are dealt with optional
 // so the same as it, all GraphQL fields are optional as default.
 // If you need to be required, use 'required: true' option
-extend google.protobuf.FieldOptions {
-  GraphqlField field = 50004;
-}
-
-// Field Option Declaration
 message GraphqlField {
   // If true, this field is required.
   bool required = 1;
@@ -186,4 +170,18 @@ message GraphqlField {
   string name = 2;
   // Define default value on input
   string default = 3;
+}
+
+// Extend builtin messages
+
+extend google.protobuf.ServiceOptions {
+  GraphqlService service = 50001; // TBD
+}
+
+extend google.protobuf.FieldOptions {
+  GraphqlField field = 50001; // TBO
+}
+
+extend google.protobuf.MethodOptions {
+  GraphqlSchema schema = 50001; // TBD
 }

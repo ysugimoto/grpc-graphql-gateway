@@ -23,17 +23,11 @@ func NewMutation(m *Method, input, output *Message) *Mutation {
 }
 
 func (m *Mutation) MutationName() string {
-	if m.Mutation == nil {
-		return ""
-	}
-	return m.Mutation.GetName()
+	return m.Schema.GetName()
 }
 
 func (m *Mutation) Request() *graphql.GraphqlRequest {
-	if m.Mutation == nil {
-		return nil
-	}
-	return m.Mutation.GetRequest()
+	return m.Schema.GetRequest()
 }
 
 func (m *Mutation) IsPluckRequest() bool {
@@ -45,10 +39,7 @@ func (m *Mutation) IsPluckRequest() bool {
 }
 
 func (m *Mutation) Response() *graphql.GraphqlResponse {
-	if m.Mutation == nil {
-		return nil
-	}
-	return m.Mutation.GetResponse()
+	return m.Schema.GetResponse()
 }
 
 func (m *Mutation) IsPluckResponse() bool {
@@ -116,7 +107,7 @@ func (m *Mutation) MutationType() string {
 	var pkgPrefix string
 	if m.GoPackage() != m.Output.GoPackage() {
 		pkgPrefix = m.Output.GoPackage()
-		if pkgPrefix != "main" {
+		if pkgPrefix != mainPackage {
 			pkgPrefix += "."
 		}
 	}
@@ -152,17 +143,6 @@ func (m *Mutation) OutputName() string {
 }
 
 //
-// func (m *Mutation) InputName() string {
-// 	inputName := m.Input.SingleName()
-// 	if req := m.Method.MutationRequest(); req != nil {
-// 		if n := req.GetName(); n != "" {
-// 			inputName = n
-// 		}
-// 	}
-// 	return inputName
-// }
-//
-
 func (m *Mutation) InputType() string {
 	if m.Method.GoPackage() != m.Input.GoPackage() {
 		return m.Input.StructName(false)
@@ -179,7 +159,7 @@ func (m *Mutation) Package() string {
 	var pkgName string
 	if m.GoPackage() != m.Input.GoPackage() {
 		pkgName = filepath.Base(m.Input.GoPackage())
-		if pkgName != "main" {
+		if pkgName != mainPackage {
 			pkgName += "."
 		}
 	}

@@ -37,7 +37,7 @@ func main() {
 	}
 
 	var req plugin.CodeGeneratorRequest
-	if err := proto.Unmarshal(buf, &req); err != nil {
+	if err = proto.Unmarshal(buf, &req); err != nil {
 		genError = err
 		return
 	}

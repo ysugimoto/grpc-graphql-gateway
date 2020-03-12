@@ -23,6 +23,7 @@ func NewService(
 	f *File,
 	paths ...int,
 ) *Service {
+
 	var o *graphql.GraphqlService
 	if opts := d.GetOptions(); opts != nil {
 		if ext, err := proto.GetExtension(opts, graphql.E_Service); err == nil {

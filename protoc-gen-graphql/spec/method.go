@@ -12,8 +12,7 @@ import (
 type Method struct {
 	descriptor *descriptor.MethodDescriptorProto
 	Service    *Service
-	Query      *graphql.GraphqlQuery
-	Mutation   *graphql.GraphqlMutation
+	Schema     *graphql.GraphqlSchema
 	*File
 
 	paths []int
@@ -24,17 +23,12 @@ func NewMethod(
 	s *Service,
 	paths ...int,
 ) *Method {
-	var q *graphql.GraphqlQuery
-	var mt *graphql.GraphqlMutation
+
+	var schema *graphql.GraphqlSchema
 	if opts := m.GetOptions(); opts != nil {
-		if ext, err := proto.GetExtension(opts, graphql.E_Query); err == nil {
-			if query, ok := ext.(*graphql.GraphqlQuery); ok {
-				q = query
-			}
-		}
-		if ext, err := proto.GetExtension(opts, graphql.E_Mutation); err == nil {
-			if mutation, ok := ext.(*graphql.GraphqlMutation); ok {
-				mt = mutation
+		if ext, err := proto.GetExtension(opts, graphql.E_Schema); err == nil {
+			if v, ok := ext.(*graphql.GraphqlSchema); ok {
+				schema = v
 			}
 		}
 	}
@@ -42,8 +36,7 @@ func NewMethod(
 	return &Method{
 		descriptor: m,
 		Service:    s,
-		Query:      q,
-		Mutation:   mt,
+		Schema:     schema,
 		File:       s.File,
 		paths:      paths,
 	}
