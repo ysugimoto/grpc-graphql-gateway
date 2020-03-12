@@ -1,20 +1,20 @@
 # grpc-graphql-gateway
 
-`grpc-graphql-gateway` is `protoc` plugin which generates graphql execution code from Protocol Buffers.
+`grpc-graphql-gateway` is a protoc plugin that generates graphql execution code from Protocol Buffers.
 
 [image](https://raw.githubusercontent.com/ysugimoto/grpc-graphql-gateway/master/misc/grpc-graphql-gateway.png)
 
 ## Motivation
 
-On API development, frequently we choose some IDL, in order to manage API definitions from file.
+On API development, frequently we choose some IDL, in order to manage API definitions from a file.
 Considering two of IDL -- GraphQL and Protocol Buffers (for gRPC) -- these have positive point respectively:
 
-- GraphQL -- Can put together multiple resource getting into one HTTP request, appropriate for BFF
+- GraphQL -- Can put together multiple resources getting into one HTTP request, appropriate for BFF
 - gRPC -- Easy syntax in Protocol Buffers, and easy to implement API server using HTTP/2
 
-But sometimes it's hard to maintain both of GraphQL and Protocol Buffers, so we created this plugin in order to generate GraphQL Schema from Protocol Buffers.
+But sometimes it's hard to maintain both GraphQL and Protocol Buffers, so we created this plugin in order to generate GraphQL Schema from Protocol Buffers.
 
-This project much refer to [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) how to generate file, provide plugin. many thanks!
+This project much refers to [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) how to generate a file, provide a plugin. many thanks!
 
 ## Installation
 
@@ -32,21 +32,21 @@ Then the binary will place in `$GOBIN`.
 
 ### Get protobuf file
 
-Get `include/graphql.proto` from this repository and put into your project under the protobuf files.
+Get `include/graphql.proto` from this repository and put it into your project under the protobuf files.
 
 ```shell
 git submodule add https://github.com/ysugimoto/grpc-graphql-gateway.git grpc-graphql-gateway
-## Or other way...
+## Or another way...
 ```
 
 ## Usage
 
-Please replace from [your/project] to your appropriate project.
+Please replace fowling `[your/project]` section to your appropriate project.
 
 ### Write Protocol Buffers
 
 Declare gRPC service with protobuf with `grpc-graphql-gateway` options.
-This example have two RPCs which names `SayHello` and `SayGoodbye`:
+This example has two RPCs os names `SayHello` and `SayGoodbye`:
 
 ```protobuf
 // getter.proto
@@ -99,7 +99,7 @@ message GoodbyeReply {
 
 ### Compile to Go code
 
-Compile protobuf file with plugin:
+Compile protobuf file with the plugin:
 
 ```shell
 protoc \
@@ -198,7 +198,7 @@ go run gateway/main.go
 
 The GraphQL gateway will start on `localhost:8888`
 
-### Send request via gateway
+### Send request via the gateway
 
 Now you can access gRPC service via GraphQL gateway!
 
@@ -227,23 +227,23 @@ query greeting($name: String = "GraphQL Gateway") {
 #=> {"data":{"goodbye":{"message":"Good-bye, GraphQL Gateway!"},"hello":{"message":"Hello, GraphQL Gateway!"}}}
 ```
 
-That's the most simple way :-) to learn more, please see following resources:
+That's the most simple way :-) to learn more, please see the following resources:
 
-- `graphql.proto` Plugin option definition. See comment section for custom usage (e.g mutation).
-- [example/greeter](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/greeter) Example fileset of above usage.
-- [example/starwars](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/starwars) Common implementation for GraphQL explanation, the starwars API example
+- `graphql.proto` Plugin option definition. See a comment section for custom usage (e.g mutation).
+- [example/greeter](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/greeter)  Files of above usage.
+- [example/starwars](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/starwars) Common implementation for GraphQL explanation, the StarWars API example
 
 ## Limitations
 
-This plugin have many kind of limitations to use Some of things may solved, and no longer solved.
-The most of limitations come from the IDL's power of expression -- many kind of GraphQL schema feature cannot implement by Protocol Buffers.
+This plugin has many kinds of limitations to use Some of the things may be solved and no longer be solved.
+The most of limitations come from the IDL's power of expression -- some kind of GraphQL schema feature cannot implement by Protocol Buffers.
 
-However, this plugin aims to generate simple gateway of gRPC, so it won't be implemented much better thatn gRPC's way.
+However, this plugin aims to generate a simple gateway of gRPC, so it won't be implemented much better than gRPC's way.
 
 ## Contribute
 
 - Fork this repository
-- Customize/Fix plroblem
+- Customize / Fix problem
 - Send PR :-)
 
 ## Author
