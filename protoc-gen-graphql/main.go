@@ -42,13 +42,14 @@ func main() {
 		return
 	}
 
-	var args *spec.Params
+	var parameter string
 	if req.Parameter != nil {
-		args, err = spec.NewParams(req.GetParameter())
-		if err != nil {
-			genError = err
-			return
-		}
+		parameter = req.GetParameter()
+	}
+	args, err := spec.NewParams(parameter)
+	if err != nil {
+		genError = err
+		return
 	}
 
 	// We're dealing with each descriptors to out wrapper struct

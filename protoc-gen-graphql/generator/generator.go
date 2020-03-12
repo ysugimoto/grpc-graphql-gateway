@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
+	"os"
 
 	"go/format"
 	"io/ioutil"
@@ -37,6 +37,7 @@ type Generator struct {
 	args     *spec.Params
 	messages map[string]*spec.Message
 	enums    map[string]*spec.Enum
+	logger   *Logger
 }
 
 func New(files []*spec.File, args *spec.Params) *Generator {
@@ -52,11 +53,17 @@ func New(files []*spec.File, args *spec.Params) *Generator {
 		}
 	}
 
+	w := ioutil.Discard
+	if args.Verbose {
+		w = os.Stderr
+	}
+
 	return &Generator{
 		files:    files,
 		args:     args,
 		messages: messages,
 		enums:    enums,
+		logger:   NewLogger(w),
 	}
 }
 
@@ -112,7 +119,7 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 			if file.Package() == m.Package() || spec.IsGooglePackage(m) {
 				types = append(types, m)
 			} else if _, ok := stack[m.Package()]; !ok {
-				packages = append(packages, spec.NewPackage(m.GoPackage()))
+				packages = append(packages, spec.NewPackage(m))
 				stack[m.Package()] = struct{}{}
 			}
 		}
@@ -133,13 +140,13 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 			if file.Package() == e.Package() || spec.IsGooglePackage(e) {
 				enums = append(enums, e)
 			} else if _, ok := stack[e.Package()]; !ok {
-				packages = append(packages, spec.NewPackage(e.GoPackage()))
+				packages = append(packages, spec.NewPackage(e))
 				stack[e.Package()] = struct{}{}
 			}
 		}
 	}
 
-	root := spec.NewPackage(file.GoPackage())
+	root := spec.NewPackage(file)
 	t := &Template{
 		RootPackage: root,
 		Packages:    packages,
@@ -159,7 +166,6 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 
 	out, err := format.Source(buf.Bytes())
 	if err != nil {
-		log.Println(buf.String())
 		ioutil.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666) // nolint: errcheck
 		return nil, err
 	}
@@ -168,6 +174,24 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 		Name:    proto.String(fmt.Sprintf("%s/%s.graphql.go", root.Path, root.Name)),
 		Content: proto.String(string(out)),
 	}, nil
+}
+
+func (g *Generator) getMessage(name string) *spec.Message {
+	if v, ok := g.messages[name]; ok {
+		return v
+	} else if v, ok := g.messages["."+name]; ok {
+		return v
+	}
+	return nil
+}
+
+func (g *Generator) getEnum(name string) *spec.Enum {
+	if v, ok := g.enums[name]; ok {
+		return v
+	} else if v, ok := g.enums["."+name]; ok {
+		return v
+	}
+	return nil
 }
 
 // nolint: interfacer
@@ -218,12 +242,11 @@ func (g *Generator) analyzeService(f *spec.File, s *spec.Service) error {
 			continue
 		}
 		var input, output *spec.Message
-		var ok bool
 
-		if input, ok = g.messages[m.Input()]; !ok {
+		if input = g.getMessage(m.Input()); input == nil {
 			return errors.New("failed to resolve input message: " + m.Input())
 		}
-		if output, ok = g.messages[m.Output()]; !ok {
+		if output = g.getMessage(m.Output()); output == nil {
 			return errors.New("failed to resolve output message: " + m.Output())
 		}
 
@@ -247,7 +270,7 @@ func (g *Generator) analyzeService(f *spec.File, s *spec.Service) error {
 
 // nolint: interfacer
 func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
-	log.Printf("package %s depends on query request %s", f.Package(), q.Input.FullPath())
+	g.logger.Write("package %s depends on query request %s", f.Package(), q.Input.FullPath())
 	q.Input.Depend(spec.DependTypeMessage, f.Package())
 	if err := g.analyzeFields(f.Package(), q.Input, q.PluckRequest(), false); err != nil {
 		return err
@@ -262,7 +285,7 @@ func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
 
 // nolint: interfacer
 func (g *Generator) analyzeMutation(f *spec.File, m *spec.Mutation) error {
-	log.Printf("package %s depends on mutation request %s", f.Package(), m.Input.FullPath())
+	g.logger.Write("package %s depends on mutation request %s", f.Package(), m.Input.FullPath())
 	m.Input.Depend(spec.DependTypeInput, f.Package())
 	if err := g.analyzeFields(f.Package(), m.Input, m.PluckRequest(), true); err != nil {
 		return err
@@ -278,18 +301,18 @@ func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*
 	for _, f := range fields {
 		switch f.Type() {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-			m, ok := g.messages[f.TypeName()]
-			if !ok {
+			m := g.getMessage(f.TypeName())
+			if m == nil {
 				return errors.New("failed to resolve field message type: " + f.TypeName())
 			}
 			f.DependType = m
 			if asInput {
-				log.Printf("package %s depends on input %s", rootPkg, m.FullPath())
+				g.logger.Write("package %s depends on input %s", rootPkg, m.FullPath())
 				m.Depend(spec.DependTypeInput, rootPkg)
 			} else {
-				log.Printf("package %s depends on message %s", rootPkg, m.FullPath())
+				g.logger.Write("package %s depends on message %s", rootPkg, m.FullPath())
 				if m == orig {
-					log.Printf("%s has cyclic dependencies of field %s\n", m.Name(), f.Name())
+					g.logger.Write("%s has cyclic dependencies of field %s\n", m.Name(), f.Name())
 					f.IsCyclic = true
 					m.Depend(spec.DependTypeInterface, rootPkg)
 				} else {
@@ -304,12 +327,12 @@ func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*
 				}
 			}
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			e, ok := g.enums[f.TypeName()]
-			if !ok {
+			e := g.getEnum(f.TypeName())
+			if e == nil {
 				return errors.New("failed to resolve field enum name: " + f.TypeName())
 			}
 			f.DependType = e
-			log.Printf("package %s depends on enum %s", rootPkg, e.FullPath())
+			g.logger.Write("package %s depends on enum %s", rootPkg, e.FullPath())
 			e.Depend(spec.DependTypeEnum, rootPkg)
 		}
 	}

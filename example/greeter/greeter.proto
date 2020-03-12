@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+import "graphql.proto";
+
+service Greeter {
+  // gRPC service information
+  option (graphql.service) = {
+    host: "localhost:50051"
+    insecure: true
+  };
+
+  rpc SayHello (HelloRequest) returns (HelloReply) {
+    // Here is plugin definition
+    option (graphql.schema) = {
+      type: QUERY   // decleare as Query
+      name: "hello" // query name
+    };
+  }
+
+  rpc SayGoodbye (GoodbyeRequest) returns (GoodbyeReply) {
+    // Here is plugin definition
+    option (graphql.schema) = {
+      type: QUERY     // decleare as Query
+      name: "goodbye" // query name
+    };
+  }
+}
+
+message HelloRequest {
+  // Below line means the "name" field is required in GraphQL argument
+  string name = 1 [(graphql.field) = {required: true}];
+}
+
+message HelloReply {
+  string message = 1;
+}
+
+message GoodbyeRequest {
+  // Below line means the "name" field is required in GraphQL argument
+  string name = 1 [(graphql.field) = {required: true}];
+}
+
+message GoodbyeReply {
+  string message = 1;
+}

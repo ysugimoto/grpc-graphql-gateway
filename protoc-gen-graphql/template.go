@@ -14,7 +14,7 @@ import (
 {{- end }}
 
 {{- range .Packages }}
-	{{ .Name }} "{{ .Path }}"
+	{{ if .Path }}{{ .Name }} "{{ .Path }}"{{ end }}
 {{ end }}
 )
 
@@ -42,7 +42,7 @@ func Gql__enum_{{ .Name }}() *graphql.Enum {
 {{- range .Values }}
 				"{{ .Name }}": &graphql.EnumValueConfig{
 					{{- if .Comment }}
-					Description: "{{ .Comment }}",
+					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
 					Value: {{ .Number }},
 				},
@@ -61,7 +61,7 @@ func Gql__interface_{{ .TypeName }}() *graphql.Interface {
 		gql__interface_{{ .TypeName }} =  graphql.NewInterface(graphql.InterfaceConfig{
 			Name: "{{ .TypeName }}Interface",
 			{{- if .Comment }}
-			Description: "{{ .Comment }}",
+			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 			{{- end }}
 			Fields: graphql.Fields{
 {{- range .Fields }}
@@ -69,7 +69,7 @@ func Gql__interface_{{ .TypeName }}() *graphql.Interface {
 				"{{ .Name }}": &graphql.Field{
 					Type: {{ .FieldType $.RootPackage.Path }},
 					{{- if .Comment }}
-					Description: "{{ .Comment }}",
+					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
 				},
 			{{- end }}
@@ -91,14 +91,14 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 		gql__type_{{ .TypeName }} =  graphql.NewObject(graphql.ObjectConfig{
 			Name: "{{ .TypeName }}",
 			{{- if .Comment }}
-			Description: "{{ .Comment }}",
+			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 			{{- end }}
 			Fields: graphql.Fields {
 {{- range .Fields }}
 				"{{ .Name }}": &graphql.Field{
 					Type: {{ .FieldType $.RootPackage.Path }},
 					{{- if .Comment }}
-					Description: "{{ .Comment }}",
+					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
 				},
 {{- end }}
@@ -126,7 +126,7 @@ func Gql__input_{{ .TypeName }}() *graphql.InputObject {
 {{- range .Fields }}
 				"{{ .Name }}": &graphql.InputObjectFieldConfig{
 					{{- if .Comment }}
-					Description: "{{ .Comment }}",
+					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
 					Type: {{ .FieldTypeInput $.RootPackage.Path }},
 				},
@@ -177,14 +177,14 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 		"{{ .QueryName }}": &graphql.Field{
 			Type: {{ .QueryType }},
 			{{- if .Comment }}
-			Description: "{{ .Comment }}",
+			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 			{{- end }}
 			Args: graphql.FieldConfigArgument{
 			{{- range .Args }}
 				"{{ .Name }}": &graphql.ArgumentConfig{
 					Type: {{ .FieldType $.RootPackage.Path }},
 					{{- if .Comment }}
-					Description: "{{ .Comment }}",
+					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
 					{{- if .DefaultValue }}
 					DefaultValue: {{ .DefaultValue }},
@@ -220,14 +220,14 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 		"{{ .MutationName }}": &graphql.Field{
 			Type: {{ .MutationType }},
 			{{- if .Comment }}
-			Description: "{{ .Comment }}",
+			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 			{{ end }}
 			Args: graphql.FieldConfigArgument{
 			{{- range .Args }}
 				"{{ .Name }}": &graphql.ArgumentConfig{
 					Type: {{ .FieldTypeInput $.RootPackage.Path }},
 					{{- if .Comment }}
-					Description: "{{ .Comment }}",
+					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
 					{{- if .DefaultValue }}
 					DefaultValue: {{ .DefaultValue }},
