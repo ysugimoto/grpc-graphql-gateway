@@ -26,24 +26,15 @@ func NewQuery(m *Method, input, output *Message) *Query {
 }
 
 func (q *Query) QueryName() string {
-	if q.Query == nil {
-		return ""
-	}
-	return q.Query.GetName()
+	return q.Schema.GetName()
 }
 
 func (q *Query) Request() *graphql.GraphqlRequest {
-	if q.Query == nil {
-		return nil
-	}
-	return q.Query.GetRequest()
+	return q.Schema.GetRequest()
 }
 
 func (q *Query) Response() *graphql.GraphqlResponse {
-	if q.Query == nil {
-		return nil
-	}
-	return q.Query.GetResponse()
+	return q.Schema.GetResponse()
 }
 
 func (q *Query) IsPluckRequest() bool {

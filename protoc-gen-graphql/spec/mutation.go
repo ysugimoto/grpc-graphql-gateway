@@ -23,17 +23,11 @@ func NewMutation(m *Method, input, output *Message) *Mutation {
 }
 
 func (m *Mutation) MutationName() string {
-	if m.Mutation == nil {
-		return ""
-	}
-	return m.Mutation.GetName()
+	return m.Schema.GetName()
 }
 
 func (m *Mutation) Request() *graphql.GraphqlRequest {
-	if m.Mutation == nil {
-		return nil
-	}
-	return m.Mutation.GetRequest()
+	return m.Schema.GetRequest()
 }
 
 func (m *Mutation) IsPluckRequest() bool {
@@ -45,10 +39,7 @@ func (m *Mutation) IsPluckRequest() bool {
 }
 
 func (m *Mutation) Response() *graphql.GraphqlResponse {
-	if m.Mutation == nil {
-		return nil
-	}
-	return m.Mutation.GetResponse()
+	return m.Schema.GetResponse()
 }
 
 func (m *Mutation) IsPluckResponse() bool {

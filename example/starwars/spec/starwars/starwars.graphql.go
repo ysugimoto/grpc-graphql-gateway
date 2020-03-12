@@ -14,11 +14,11 @@ var (
 	gql__enum_Episode            *graphql.Enum      // enum Episode in starwars/starwars.proto
 	gql__interface_Character     *graphql.Interface // message Character in starwars/starwars.proto
 	gql__type_ListHumansResponse *graphql.Object    // message ListHumansResponse in starwars/starwars.proto
+	gql__type_GetHumanRequest    *graphql.Object    // message GetHumanRequest in starwars/starwars.proto
+	gql__type_GetHeroRequest     *graphql.Object    // message GetHeroRequest in starwars/starwars.proto
 	gql__type_Character          *graphql.Object    // message Character in starwars/starwars.proto
 	gql__type_GetDroidRequest    *graphql.Object    // message GetDroidRequest in starwars/starwars.proto
-	gql__type_GetHumanRequest    *graphql.Object    // message GetHumanRequest in starwars/starwars.proto
 	gql__type_ListDroidsResponse *graphql.Object    // message ListDroidsResponse in starwars/starwars.proto
-	gql__type_GetHeroRequest     *graphql.Object    // message GetHeroRequest in starwars/starwars.proto
 )
 
 func Gql__enum_Type() *graphql.Enum {
@@ -107,6 +107,36 @@ func Gql__type_ListHumansResponse() *graphql.Object {
 	return gql__type_ListHumansResponse
 }
 
+func Gql__type_GetHumanRequest() *graphql.Object {
+	if gql__type_GetHumanRequest == nil {
+		gql__type_GetHumanRequest = graphql.NewObject(graphql.ObjectConfig{
+			Name: "GetHumanRequest",
+			Fields: graphql.Fields{
+				"id": &graphql.Field{
+					Type:        graphql.NewNonNull(graphql.Int),
+					Description: "id of the human",
+				},
+			},
+		})
+	}
+	return gql__type_GetHumanRequest
+}
+
+func Gql__type_GetHeroRequest() *graphql.Object {
+	if gql__type_GetHeroRequest == nil {
+		gql__type_GetHeroRequest = graphql.NewObject(graphql.ObjectConfig{
+			Name: "GetHeroRequest",
+			Fields: graphql.Fields{
+				"episode": &graphql.Field{
+					Type:        Gql__enum_Episode(),
+					Description: "If omitted, returns the hero of the whope saga. If provided, returns the hero of that particular episode.",
+				},
+			},
+		})
+	}
+	return gql__type_GetHeroRequest
+}
+
 func Gql__type_Character() *graphql.Object {
 	if gql__type_Character == nil {
 		gql__type_Character = graphql.NewObject(graphql.ObjectConfig{
@@ -157,21 +187,6 @@ func Gql__type_GetDroidRequest() *graphql.Object {
 	return gql__type_GetDroidRequest
 }
 
-func Gql__type_GetHumanRequest() *graphql.Object {
-	if gql__type_GetHumanRequest == nil {
-		gql__type_GetHumanRequest = graphql.NewObject(graphql.ObjectConfig{
-			Name: "GetHumanRequest",
-			Fields: graphql.Fields{
-				"id": &graphql.Field{
-					Type:        graphql.NewNonNull(graphql.Int),
-					Description: "id of the human",
-				},
-			},
-		})
-	}
-	return gql__type_GetHumanRequest
-}
-
 func Gql__type_ListDroidsResponse() *graphql.Object {
 	if gql__type_ListDroidsResponse == nil {
 		gql__type_ListDroidsResponse = graphql.NewObject(graphql.ObjectConfig{
@@ -184,21 +199,6 @@ func Gql__type_ListDroidsResponse() *graphql.Object {
 		})
 	}
 	return gql__type_ListDroidsResponse
-}
-
-func Gql__type_GetHeroRequest() *graphql.Object {
-	if gql__type_GetHeroRequest == nil {
-		gql__type_GetHeroRequest = graphql.NewObject(graphql.ObjectConfig{
-			Name: "GetHeroRequest",
-			Fields: graphql.Fields{
-				"episode": &graphql.Field{
-					Type:        Gql__enum_Episode(),
-					Description: "If omitted, returns the hero of the whope saga. If provided, returns the hero of that particular episode.",
-				},
-			},
-		})
-	}
-	return gql__type_GetHeroRequest
 }
 
 // graphql__resolver_StartwarsService is a struct for making query, mutation and resolve fields.

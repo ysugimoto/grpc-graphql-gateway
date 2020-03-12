@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
+	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 	tpl "github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/template"
 )
@@ -99,6 +100,7 @@ func (g *Generator) generateFile(
 	stack := make(map[string]struct{})
 
 	for _, m := range g.messages {
+		// skip empty field message, otherwise graphql-go raise error
 		if len(m.Fields()) == 0 {
 			continue
 		}
@@ -119,6 +121,7 @@ func (g *Generator) generateFile(
 	}
 
 	for _, e := range g.enums {
+		// skip empty values enum, otherwise graphql-go raise error
 		if len(e.Values()) == 0 {
 			continue
 		}
@@ -142,6 +145,7 @@ func (g *Generator) generateFile(
 		Interfaces:  interfaces,
 		Services:    services,
 	}
+
 	buf := new(bytes.Buffer)
 	if tmpl, err := template.New("go").Parse(tmpl); err != nil {
 		return nil, err
@@ -154,6 +158,7 @@ func (g *Generator) generateFile(
 		ioutil.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666)
 		return nil, err
 	}
+
 	return &plugin.CodeGeneratorResponse_File{
 		Name:    proto.String(fmt.Sprintf("%s/%s.graphql.go", root.Path, root.Name)),
 		Content: proto.String(string(out)),
@@ -194,7 +199,7 @@ func (g *Generator) analyzeService() (
 
 		for _, s := range f.Services() {
 			for _, m := range s.Methods() {
-				if m.Query == nil && m.Mutation == nil {
+				if m.Schema == nil {
 					continue
 				}
 				var input, output *spec.Message
@@ -207,14 +212,14 @@ func (g *Generator) analyzeService() (
 					return nil, errors.New("failed to resolve output message: " + m.Output())
 				}
 
-				if m.Query != nil {
+				switch m.Schema.GetType() {
+				case graphql.GraphqlType_QUERY:
 					q := spec.NewQuery(m, input, output)
 					if err := g.analyzeQuery(f, q); err != nil {
 						return nil, err
 					}
 					s.Queries = append(s.Queries, q)
-				}
-				if m.Mutation != nil {
+				case graphql.GraphqlType_MUTATION:
 					mu := spec.NewMutation(m, input, output)
 					if err := g.analyzeMutation(f, mu); err != nil {
 						return nil, err
