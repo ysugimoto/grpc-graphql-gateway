@@ -22,6 +22,7 @@ definitions:
              sudo ln -s /usr/local/protoc/bin/protoc /usr/local/bin
              sudo ln -s /usr/local/protoc/include/google `pwd`/include/google
              go get -u github.com/golang/protobuf/protoc-gen-go
+             curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.6
         - run: make all
         - persist_to_workspace:
            root: .

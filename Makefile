@@ -27,6 +27,6 @@ build:
 clean:
 	rm -rf ./dist/*
 
-all: clean build
+all: lint clean build
 	cd ${GRAPHQL_CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${GRAPHQL_CMD}.darwin
 	cd ${GRAPHQL_CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${GRAPHQL_CMD}.linux
