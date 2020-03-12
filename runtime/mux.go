@@ -35,6 +35,7 @@ type ServeMux struct {
 	handlers []GraphqlHandler
 }
 
+// NewServeMux creates ServeMux pointer
 func NewServeMux(ms ...MiddlewareFunc) *ServeMux {
 	return &ServeMux{
 		middlewares: ms,
@@ -42,8 +43,44 @@ func NewServeMux(ms ...MiddlewareFunc) *ServeMux {
 	}
 }
 
-func (s *ServeMux) AddHandler(h GraphqlHandler) {
+// AddHandler registers graphql handler which is built via plugin
+func (s *ServeMux) AddHandler(h GraphqlHandler) error {
+	if err := s.validateHandler(h); err != nil {
+		return err
+	}
 	s.handlers = append(s.handlers, h)
+	return nil
+}
+
+// Validate handler definition
+func (s *ServeMux) validateHandler(h GraphqlHandler) error {
+	queries := h.GetQueries(nil)
+	mutations := h.GetMutations(nil)
+
+	// If handler doesn't have any definitions, pass
+	if len(queries) == 0 && len(mutations) == 0 {
+		return nil
+	}
+
+	schemaConfig := graphql.SchemaConfig{}
+	if len(queries) > 0 {
+		schemaConfig.Query = graphql.NewObject(graphql.ObjectConfig{
+			Name:   "Query",
+			Fields: queries,
+		})
+	}
+	if len(mutations) > 0 {
+		schemaConfig.Mutation = graphql.NewObject(graphql.ObjectConfig{
+			Name:   "Mutation",
+			Fields: mutations,
+		})
+	}
+
+	// Try to generate Schema and check error
+	if _, err := graphql.NewSchema(schemaConfig); err != nil {
+		return fmt.Errorf("Schema validation error: %s", err)
+	}
+	return nil
 }
 
 // Use adds more middlwares
@@ -81,19 +118,25 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// occasionally, schema raises error with:
-	// `Schema must contain unique named types but contains multiple types named "XXXX"`
-	// however it works, so we ignores this error
-	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
-		Query: graphql.NewObject(graphql.ObjectConfig{
+	schemaConfig := graphql.SchemaConfig{}
+	if len(queries) > 0 {
+		schemaConfig.Query = graphql.NewObject(graphql.ObjectConfig{
 			Name:   "Query",
 			Fields: queries,
-		}),
-		Mutation: graphql.NewObject(graphql.ObjectConfig{
+		})
+	}
+	if len(mutations) > 0 {
+		schemaConfig.Mutation = graphql.NewObject(graphql.ObjectConfig{
 			Name:   "Mutation",
 			Fields: mutations,
-		}),
-	})
+		})
+	}
+
+	schema, err := graphql.NewSchema(schemaConfig)
+	if err != nil {
+		http.Error(w, "failed to build schema: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	req, err := parseRequest(r)
 	if err != nil {

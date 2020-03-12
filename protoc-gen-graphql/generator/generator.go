@@ -99,6 +99,9 @@ func (g *Generator) generateFile(
 	stack := make(map[string]struct{})
 
 	for _, m := range g.messages {
+		if len(m.Fields()) == 0 {
+			continue
+		}
 		if m.IsDepended(spec.DependTypeMessage, file.Package()) {
 			if file.Package() == m.Package() || spec.IsGooglePackage(m) {
 				types = append(types, m)
@@ -116,6 +119,9 @@ func (g *Generator) generateFile(
 	}
 
 	for _, e := range g.enums {
+		if len(e.Values()) == 0 {
+			continue
+		}
 		if e.IsDepended(spec.DependTypeEnum, file.Package()) {
 			if file.Package() == e.Package() || spec.IsGooglePackage(e) {
 				enums = append(enums, e)

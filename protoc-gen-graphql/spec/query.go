@@ -103,8 +103,8 @@ func (q *Query) PluckResponse() []*Field {
 }
 
 func (q *Query) QueryType() string {
-	if fields := q.PluckResponse(); len(fields) > 0 {
-		field := fields[0]
+	if q.IsPluckResponse() {
+		field := q.PluckResponse()[0]
 		return field.FieldType(q.GoPackage())
 	}
 

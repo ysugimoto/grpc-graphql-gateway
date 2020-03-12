@@ -6,7 +6,6 @@ package {{ .RootPackage.Name }}
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/graphql-go/graphql"
 {{- if .Services }}
@@ -19,103 +18,123 @@ import (
 {{ end }}
 )
 
-var _ = json.Marshal
-var _ = json.Unmarshal
+var (
+	{{- range .Enums }}
+	gql__enum_{{ .Name }} *graphql.Enum // enum {{ .Name }} in {{ .Filename }}
+	{{- end }}
+	{{- range .Interfaces }}
+	gql__interface_{{ .Name }} *graphql.Interface // message {{ .Name }} in {{ .Filename }}
+	{{- end }}
+	{{- range .Types }}
+	gql__type_{{ .TypeName }} *graphql.Object // message {{ .Name }} in {{ .Filename }}
+	{{- end }}
+	{{- range .Inputs }}
+	gql__input_{{ .TypeName }} *graphql.InputObject // message {{ .Name }} in {{ .Filename }}
+	{{- end }}
+)
 
 {{ range .Enums -}}
-// enum {{ .Name }} in {{ .Filename }}
 func Gql__enum_{{ .Name }}() *graphql.Enum {
-	return graphql.NewEnum(graphql.EnumConfig{
-		Name: "{{ .Name }}",
-		Values: graphql.EnumValueConfigMap{
+	if gql__enum_{{ .Name }} == nil {
+		gql__enum_{{ .Name }} =  graphql.NewEnum(graphql.EnumConfig{
+			Name: "{{ .Name }}",
+			Values: graphql.EnumValueConfigMap{
 {{- range .Values }}
-			"{{ .Name }}": &graphql.EnumValueConfig{
-				{{- if .Comment }}
-				Description: "{{ .Comment }}",
-				{{- end }}
-				Value: {{ .Number }},
-			},
+				"{{ .Name }}": &graphql.EnumValueConfig{
+					{{- if .Comment }}
+					Description: "{{ .Comment }}",
+					{{- end }}
+					Value: {{ .Number }},
+				},
 {{- end }}
-		},
-	})
+			},
+		})
+	}
+	return gql__enum_{{ .Name }}
 }
 
 {{ end }}
 
 {{ range .Interfaces -}}
-// message {{ .Name }} in {{ .Filename }}
-func gql__interface_{{ .TypeName }}() *graphql.Interface {
-	return graphql.NewInterface(graphql.InterfaceConfig{
-		Name: "{{ .TypeName }}Interface",
-		{{- if .Comment }}
-		Description: "{{ .Comment }}",
-		{{- end }}
-		Fields: graphql.Fields{
+func Gql__interface_{{ .TypeName }}() *graphql.Interface {
+	if gql__interface_{{ .TypeName }} == nil {
+		gql__interface_{{ .TypeName }} =  graphql.NewInterface(graphql.InterfaceConfig{
+			Name: "{{ .TypeName }}Interface",
+			{{- if .Comment }}
+			Description: "{{ .Comment }}",
+			{{- end }}
+			Fields: graphql.Fields{
 {{- range .Fields }}
-		{{- if not .IsCyclic }}
-			"{{ .Name }}": &graphql.Field{
-				Type: {{ .FieldType $.RootPackage.Path }},
-				{{- if .Comment }}
-				Description: "{{ .Comment }}",
-				{{- end }}
-			},
-		{{- end }}
+			{{- if not .IsCyclic }}
+				"{{ .Name }}": &graphql.Field{
+					Type: {{ .FieldType $.RootPackage.Path }},
+					{{- if .Comment }}
+					Description: "{{ .Comment }}",
+					{{- end }}
+				},
+			{{- end }}
 {{- end }}
-		},
-		ResolveType: func(p graphql.ResolveTypeParams) *graphql.Object {
-			return Gql__type_{{ .TypeName }}()
-		},
-	})
+			},
+			ResolveType: func(p graphql.ResolveTypeParams) *graphql.Object {
+				return Gql__type_{{ .TypeName }}()
+			},
+		})
+	}
+	return gql__interface_{{ .TypeName }}
 }
 
 {{ end }}
 
 {{ range .Types -}}
-// message {{ .Name }} in {{ .Filename }}
 func Gql__type_{{ .TypeName }}() *graphql.Object {
-	return graphql.NewObject(graphql.ObjectConfig{
-		Name: "{{ .TypeName }}",
-		{{- if .Comment }}
-		Description: "{{ .Comment }}",
-		{{- end }}
-		Fields: graphql.Fields {
+	if gql__type_{{ .TypeName }} == nil {
+		gql__type_{{ .TypeName }} =  graphql.NewObject(graphql.ObjectConfig{
+			Name: "{{ .TypeName }}",
+			{{- if .Comment }}
+			Description: "{{ .Comment }}",
+			{{- end }}
+			Fields: graphql.Fields {
 {{- range .Fields }}
-			"{{ .Name }}": &graphql.Field{
-				Type: {{ .FieldType $.RootPackage.Path }},
-				{{- if .Comment }}
-				Description: "{{ .Comment }}",
-				{{- end }}
+				"{{ .Name }}": &graphql.Field{
+					Type: {{ .FieldType $.RootPackage.Path }},
+					{{- if .Comment }}
+					Description: "{{ .Comment }}",
+					{{- end }}
+				},
+{{- end }}
 			},
-{{- end }}
-		},
-		{{- if .Interfaces }}
-		Interfaces: []*graphql.Interface{
+			{{- if .Interfaces }}
+			Interfaces: []*graphql.Interface{
 {{- range .Interfaces }}
-		 gql__interface_{{ .TypeName }}(),
+			Gql__interface_{{ .TypeName }}(),
 {{- end }}
-		},
-		{{- end }}
-	})
+			},
+			{{- end }}
+		})
+	}
+	return gql__type_{{ .TypeName }}
 }
 
 {{ end }}
 
 {{ range .Inputs -}}
-// message {{ .Name }} in {{ .Filename }}
 func Gql__input_{{ .TypeName }}() *graphql.InputObject {
-	return graphql.NewInputObject(graphql.InputObjectConfig{
-		Name: "{{ .TypeName }}",
-		Fields: graphql.InputObjectConfigFieldMap{
+	if gql__input_{{ .TypeName }} == nil {
+		gql__input_{{ .TypeName }} =  graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "{{ .TypeName }}",
+			Fields: graphql.InputObjectConfigFieldMap{
 {{- range .Fields }}
-			"{{ .Name }}": &graphql.InputObjectFieldConfig{
-				{{- if .Comment }}
-				Description: "{{ .Comment }}",
-				{{- end }}
-				Type: {{ .FieldTypeInput $.RootPackage.Path }},
-			},
+				"{{ .Name }}": &graphql.InputObjectFieldConfig{
+					{{- if .Comment }}
+					Description: "{{ .Comment }}",
+					{{- end }}
+					Type: {{ .FieldTypeInput $.RootPackage.Path }},
+				},
 {{- end }}
-		},
-	})
+			},
+		})
+	}
+	return gql__input_{{ .TypeName }}
 }
 
 {{ end }}
@@ -241,8 +260,8 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 // therefore gRPC connection will be opened and closed automatically.
 // Occasionally you may worry about open/close performance for each handling graphql request,
 // then you can call Register{{ .Name }}GraphqlHandler with *grpc.ClientConn manually.
-func Register{{ .Name }}Graphql(mux *runtime.ServeMux) {
-	Register{{ .Name }}GraphqlHandler(mux, nil)
+func Register{{ .Name }}Graphql(mux *runtime.ServeMux) error {
+	return Register{{ .Name }}GraphqlHandler(mux, nil)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
@@ -258,8 +277,8 @@ func Register{{ .Name }}Graphql(mux *runtime.ServeMux) {
 //
 //    ...with RPC definitions
 // }
-func Register{{ .Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) {
-	mux.AddHandler(&graphql__resolver_{{ .Name }}{
+func Register{{ .Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return mux.AddHandler(&graphql__resolver_{{ .Name }}{
 		conn: conn,
 		host: "{{ if .Host }}{{ .Host }}{{ else }}localhost:50051{{ end }}",
 		dialOptions: []grpc.DialOption{
