@@ -58,21 +58,21 @@ func (d *Dependencies) IsDepended(t DependType, pkg string) bool {
 
 func (d *Dependencies) GetDependendencies() map[string][]string {
 	ret := map[string][]string{
-		"message":   []string{},
-		"enum":      []string{},
-		"input":     []string{},
-		"interface": []string{},
+		"message":   {},
+		"enum":      {},
+		"input":     {},
+		"interface": {},
 	}
-	for p, _ := range d.message {
+	for p := range d.message {
 		ret["message"] = append(ret["message"], p)
 	}
-	for p, _ := range d.enum {
+	for p := range d.enum {
 		ret["enum"] = append(ret["enum"], p)
 	}
-	for p, _ := range d.input {
+	for p := range d.input {
 		ret["input"] = append(ret["input"], p)
 	}
-	for p, _ := range d.interfaces {
+	for p := range d.interfaces {
 		ret["interface"] = append(ret["interface"], p)
 	}
 	return ret

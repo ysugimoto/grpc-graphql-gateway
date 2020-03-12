@@ -6,6 +6,10 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
+const (
+	mainPackage = "main"
+)
+
 type Package struct {
 	Name      string
 	CamelName string

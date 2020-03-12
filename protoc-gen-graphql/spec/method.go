@@ -23,6 +23,7 @@ func NewMethod(
 	s *Service,
 	paths ...int,
 ) *Method {
+
 	var schema *graphql.GraphqlSchema
 	if opts := m.GetOptions(); opts != nil {
 		if ext, err := proto.GetExtension(opts, graphql.E_Schema); err == nil {

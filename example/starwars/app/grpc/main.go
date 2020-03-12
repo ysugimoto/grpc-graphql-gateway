@@ -12,6 +12,7 @@ import (
 
 var characters map[int64]*starwars.Character
 
+// nolint: funlen
 func init() {
 	characters = map[int64]*starwars.Character{
 		1000: {
@@ -91,16 +92,125 @@ func init() {
 			Type:            starwars.Type_DROID,
 		},
 	)
-	// characters[1001].Friends = append(characters[1001].Friends, characters[1004])
-	// characters[1002].Friends = append(characters[1002].Friends,
-	// 	characters[1000], characters[1003], characters[2001])
-	// characters[1003].Friends = append(characters[1003].Friends,
-	// 	characters[1000], characters[1002], characters[2000], characters[2001])
-	// characters[1004].Friends = append(characters[1004].Friends, characters[1002])
-	// characters[2000].Friends = append(characters[2000].Friends,
-	// 	characters[1000], characters[1002], characters[1003], characters[2001])
-	// characters[2001].Friends = append(characters[2001].Friends,
-	// 	characters[1000], characters[1002], characters[1003])
+	characters[1001].Friends = append(characters[1001].Friends,
+		&starwars.Character{
+			Id:        1004,
+			Name:      "Wilhuff Tarkin",
+			AppearsIn: []starwars.Episode{1},
+			Type:      starwars.Type_HUMAN,
+		},
+	)
+	characters[1002].Friends = append(characters[1002].Friends,
+		&starwars.Character{
+			Id:         1000,
+			Name:       "Luke Skywalker",
+			AppearsIn:  []starwars.Episode{1, 2, 3},
+			HomePlanet: "Tatooine",
+			Type:       starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:         1003,
+			Name:       "Leia Organa",
+			AppearsIn:  []starwars.Episode{1, 2, 3},
+			HomePlanet: "Alderaa",
+			Type:       starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:              2001,
+			Name:            "R2-D2",
+			AppearsIn:       []starwars.Episode{1, 2, 3},
+			PrimaryFunction: "Astromech",
+			Type:            starwars.Type_DROID,
+		},
+	)
+	characters[1003].Friends = append(characters[1003].Friends,
+		&starwars.Character{
+			Id:         1000,
+			Name:       "Luke Skywalker",
+			AppearsIn:  []starwars.Episode{1, 2, 3},
+			HomePlanet: "Tatooine",
+			Type:       starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:        1002,
+			Name:      "Han Solo",
+			AppearsIn: []starwars.Episode{1, 2, 3},
+			Type:      starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:              2000,
+			Name:            "C-3PO",
+			AppearsIn:       []starwars.Episode{1, 2, 3},
+			PrimaryFunction: "Protocol",
+			Type:            starwars.Type_DROID,
+		},
+		&starwars.Character{
+			Id:              2001,
+			Name:            "R2-D2",
+			AppearsIn:       []starwars.Episode{1, 2, 3},
+			PrimaryFunction: "Astromech",
+			Type:            starwars.Type_DROID,
+		},
+	)
+	characters[1004].Friends = append(characters[1004].Friends,
+		&starwars.Character{
+			Id:        1002,
+			Name:      "Han Solo",
+			AppearsIn: []starwars.Episode{1, 2, 3},
+			Type:      starwars.Type_HUMAN,
+		},
+	)
+	characters[2000].Friends = append(characters[2000].Friends,
+		&starwars.Character{
+			Id:         1000,
+			Name:       "Luke Skywalker",
+			AppearsIn:  []starwars.Episode{1, 2, 3},
+			HomePlanet: "Tatooine",
+			Type:       starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:        1002,
+			Name:      "Han Solo",
+			AppearsIn: []starwars.Episode{1, 2, 3},
+			Type:      starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:         1003,
+			Name:       "Leia Organa",
+			AppearsIn:  []starwars.Episode{1, 2, 3},
+			HomePlanet: "Alderaa",
+			Type:       starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:              2001,
+			Name:            "R2-D2",
+			AppearsIn:       []starwars.Episode{1, 2, 3},
+			PrimaryFunction: "Astromech",
+			Type:            starwars.Type_DROID,
+		},
+	)
+	characters[2001].Friends = append(characters[2001].Friends,
+		&starwars.Character{
+			Id:         1000,
+			Name:       "Luke Skywalker",
+			AppearsIn:  []starwars.Episode{1, 2, 3},
+			HomePlanet: "Tatooine",
+			Type:       starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:        1002,
+			Name:      "Han Solo",
+			AppearsIn: []starwars.Episode{1, 2, 3},
+			Type:      starwars.Type_HUMAN,
+		},
+		&starwars.Character{
+			Id:         1003,
+			Name:       "Leia Organa",
+			AppearsIn:  []starwars.Episode{1, 2, 3},
+			HomePlanet: "Alderaa",
+			Type:       starwars.Type_HUMAN,
+		},
+	)
 }
 
 type Server struct{}
@@ -117,25 +227,27 @@ func (s *Server) GetHero(
 func (s *Server) GetHuman(
 	ctx context.Context, req *starwars.GetHumanRequest) (*starwars.Character, error) {
 
-	if h, ok := characters[req.GetId()]; !ok {
+	h, ok := characters[req.GetId()]
+	if !ok {
 		return nil, errors.New("character not found")
-	} else if h.GetType() != starwars.Type_HUMAN {
-		return nil, errors.New("character is not a human")
-	} else {
-		return h, nil
 	}
+	if h.GetType() != starwars.Type_HUMAN {
+		return nil, errors.New("character is not a human")
+	}
+	return h, nil
 }
 
 func (s *Server) GetDroid(
 	ctx context.Context, req *starwars.GetDroidRequest) (*starwars.Character, error) {
 
-	if d, ok := characters[req.GetId()]; !ok {
+	d, ok := characters[req.GetId()]
+	if !ok {
 		return nil, errors.New("character not found")
-	} else if d.GetType() != starwars.Type_DROID {
-		return nil, errors.New("character is not a droid")
-	} else {
-		return d, nil
 	}
+	if d.GetType() != starwars.Type_DROID {
+		return nil, errors.New("character is not a droid")
+	}
+	return d, nil
 }
 
 func (s *Server) ListHumans(
@@ -179,5 +291,7 @@ func main() {
 	srv := &Server{}
 	g := grpc.NewServer()
 	starwars.RegisterStartwarsServiceServer(g, srv)
-	log.Fatalln(g.Serve(listener))
+	if err := g.Serve(listener); err != nil {
+		log.Println(err)
+	}
 }
