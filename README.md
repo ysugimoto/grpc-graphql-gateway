@@ -151,7 +151,7 @@ func main() {
 	defer conn.Close()
 
 	server := grpc.NewServer()
-  greeter.RegisterGreeterServer(server, &Server{})
+	greeter.RegisterGreeterServer(server, &Server{})
 	server.Serve(conn)
 }
 ```
