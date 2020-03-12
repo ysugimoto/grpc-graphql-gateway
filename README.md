@@ -45,7 +45,7 @@ Please replace fowling `[your/project]` section to your appropriate project.
 
 ### Write Protocol Buffers
 
-Declare gRPC service with protobuf with `grpc-graphql-gateway` options.
+Declare gRPC service with protobuf using `grpc-graphql-gateway` options.
 This example has two RPCs os names `SayHello` and `SayGoodbye`:
 
 ```protobuf
@@ -227,7 +227,7 @@ query greeting($name: String = "GraphQL Gateway") {
 #=> {"data":{"goodbye":{"message":"Good-bye, GraphQL Gateway!"},"hello":{"message":"Hello, GraphQL Gateway!"}}}
 ```
 
-That's the most simple way :-) to learn more, please see the following resources:
+This is the most simple way :-) to learn more, please see the following resources:
 
 - `graphql.proto` Plugin option definition. See a comment section for custom usage (e.g mutation).
 - [example/greeter](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/greeter)  Files of above usage.
@@ -235,10 +235,10 @@ That's the most simple way :-) to learn more, please see the following resources
 
 ## Limitations
 
-This plugin has many kinds of limitations to use Some of the things may be solved and no longer be solved.
-The most of limitations come from the IDL's power of expression -- some kind of GraphQL schema feature cannot implement by Protocol Buffers.
+This plugin just aims to generate a simple gateway of gRPC.
 
-However, this plugin aims to generate a simple gateway of gRPC, so it won't be implemented much better than gRPC's way.
+Some of the things could be solved and could not be solved.
+The most of limitations come from the IDL's power of expression -- some kind of GraphQL schema feature cannot implement by Protocol Buffers X(
 
 ## Contribute
 
