@@ -9,8 +9,8 @@
 On API development, frequently we choose some IDL, in order to manage API definitions from a file.
 Considering two of IDL -- GraphQL and Protocol Buffers (for gRPC) -- these have positive point respectively:
 
-- GraphQL -- Can put together multiple resources getting into one HTTP request, appropriate for BFF
-- gRPC -- Easy syntax in Protocol Buffers, and easy to implement API server using HTTP/2
+- **GraphQL** -- Can put together multiple resources getting into one HTTP request, appropriate for BFF
+- **gRPC** -- Easy syntax in Protocol Buffers, and easy to implement API server using HTTP/2
 
 But sometimes it's hard to maintain both GraphQL and Protocol Buffers, so we created this plugin in order to generate GraphQL Schema from Protocol Buffers.
 

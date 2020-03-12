@@ -37,3 +37,6 @@ start: build
 	cd app/graphql && GOOS=linux go build -o app main.go
 	cd app/grpc && GOOS=linux go build -o app main.go
 	docker-compose up -d --build
+
+stop:
+	docker-compose down
