@@ -1,0 +1,155 @@
+# See full settings at https://github.com/golangci/golangci-lint
+run:
+  concurrency: 4
+  timeout: 3m
+  tests: false
+  skip-dirs:
+    - dist
+    - include
+
+issues:
+  exclude-rules:
+    ## Add file patters to exclude linter
+    - path: grpc\/main\.go
+      linters:
+        - gomnd
+    - path: protoc-gen-graphql\/template\.go
+      linters:
+        - lll
+
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - gosimple
+    - structcheck
+    - varcheck
+    - ineffassign
+    - interfacer
+    - deadcode
+    - dogsled
+    - dupl
+    - funlen
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - gomnd
+    - lll
+    - maligned
+    - misspell
+    - whitespace
+    - unparam
+  fast: false
+
+linters-settings:
+  dogsled:
+    max-blank-identifiers: 2
+  dupl:
+    threshold: 200
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  funlen:
+    lines: 120
+    statements: 80
+  gocognit:
+    min-complexity: 30
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  gocritic:
+    settings:
+      nestingReduce:
+        bodyWidth: 3
+      rangeValCopy:
+        sizeThreshold: 2048
+
+    #see: https://go-critic.github.io/overview#checks-overview
+    enabled-checks:
+      - appendAssign
+      - argOrder
+      - assignOp
+      - badCall
+      - badCond
+      - boolExprSimplify
+      - builtinShadow
+      - captLocal
+      - caseOrder
+      - commentFormatting
+      - commentedOutCode
+      - commentedOutimport
+      - defaultCaseOrder
+      - dupArg
+      - dupBranchBody
+      - dupCase
+      - dupSubExpr
+      - elseif
+      - emptyFallthrough
+      - emptyStringTest
+      - equalFold
+      - evalOrder
+      - exitAfterDefer
+      - flagDeref
+      - flagName
+      - ifElseChain
+      - importShadow
+      - indexAlloc
+      - initClause
+      - mapKey
+      - methodExprCall
+      - nestingReduce
+      - nilValReturn
+      - octalLiteral
+      - offBy1
+      - paramTypeCombine
+      - ptrToRefParam
+      - rangeExprCopy
+      - rangeValCopy
+      - regexpMust
+      - regexpPattern
+      - singleCaseSwitch
+      - sloppyLen
+      - sloppyReassign
+      - stringXbytes
+      - switchTrue
+      - truncateCmp
+      - typeAssertChain
+      - typeSwitchVar
+      - typeUnparen
+      - underef
+      - unlabelStmt
+      - unlambda
+      - unnecessaryBlock
+      - unslice
+      - valSwap
+      - weakCond
+      - wrapperFunc
+      - yodaStyleExpr
+  gocyclo:
+    min-complexity: 20
+  gofmt:
+    simplify: true
+  golint:
+    min-confidence: 0.8
+  govet:
+    check-shadowing: true
+  gomnd:
+    settings:
+      mnd:
+        checks: argument,assign,operation,return
+  lll:
+    line-length: 120
+  maligned:
+    suggest-new: true
+  misspell:
+    locale: US
+    ignore-words:
+      - sponser
+  whitespace:
+    multi-if: true
+    multi-func: true
