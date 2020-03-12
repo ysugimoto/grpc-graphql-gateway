@@ -203,7 +203,7 @@ The GraphQL gateway will start on `localhost:8888`
 Now you can access gRPC service via GraphQL gateway!
 
 ```shell
-curl -g "https://localhost:8888/graphql" -d '
+curl -g "http://localhost:8888/graphql" -d '
 {
   hello(name: "GraphQL Gateway") {
     message
