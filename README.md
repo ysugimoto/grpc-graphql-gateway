@@ -27,7 +27,7 @@ Get `protoc-gen-graphql` binary from [releases](https://github.com/ysugimoto/grp
 Or, simply get the latest one:
 
 ```shell
-go install github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql
+go get github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/...
 ```
 
 Then the binary will place in `$GOBIN`.
