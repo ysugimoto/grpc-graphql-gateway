@@ -51,7 +51,7 @@ Declare gRPC service with protobuf using `grpc-graphql-gateway` options.
 This example has two RPCs os names `SayHello` and `SayGoodbye`:
 
 ```protobuf
-// getter.proto
+// greeter.proto
 syntax = "proto3";
 
 import "graphql.proto";
