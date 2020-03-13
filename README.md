@@ -43,7 +43,7 @@ git submodule add https://github.com/ysugimoto/grpc-graphql-gateway.git grpc-gra
 
 ## Usage
 
-Please replace fowling `[your/project]` section to your appropriate project.
+Please replace  `[your/project]` section to your appropriate project.
 
 ### Write Protocol Buffers
 
