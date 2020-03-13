@@ -4,7 +4,7 @@
 
 `grpc-graphql-gateway` is a protoc plugin that generates graphql execution code from Protocol Buffers.
 
-[image](https://raw.githubusercontent.com/ysugimoto/grpc-graphql-gateway/master/misc/grpc-graphql-gateway.png)
+![image](https://raw.githubusercontent.com/ysugimoto/grpc-graphql-gateway/master/misc/grpc-graphql-gateway.png)
 
 ## Motivation
 
