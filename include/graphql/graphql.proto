@@ -44,8 +44,8 @@ message GraphqlService {
 //    }
 // }
 //
-// Since gRPC has limitation that the response could not be repeated.
-// it's hard to respond array response, so that we accept "response.expose"
+// Since gRPC reason, it has limitation that the response could not be repeated.
+// it's dificcurl to respond array response, so that we accept "response.pluck"
 // in order to expose repeated fields in response message.
 //
 // For instance:
@@ -67,7 +67,8 @@ message GraphqlService {
 //        type: QUERY
 //        name: "members"
 //        response {
-//          expose: "members" // Query will respond [Member] instead of ListMembersResponse
+//          repeated : true
+//          pluck: "members" // Query will respond [Member] instead of ListMembersResponse
 //        }
 //      }
 //    }
@@ -108,7 +109,7 @@ message GraphqlService {
 //
 // Finally, user can access this query via /graphql?query={members{name}}
 message GraphqlSchema {
-  // graphql type. "query" or "mutation" is valid value
+  // graphql type. Enum of QUERY or MUTATION is valid value
   GraphqlType type = 1;
   // query name. this field is required
   string name = 2;
@@ -168,7 +169,7 @@ message GraphqlField {
   bool required = 1;
   // Use as other field name (not recommend)
   string name = 2;
-  // Define default value on input
+  // Define default value on input.
   string default = 3;
 }
 
