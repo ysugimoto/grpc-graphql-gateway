@@ -48,7 +48,7 @@ Please replace  `[your/project]` section to your appropriate project.
 ### Write Protocol Buffers
 
 Declare gRPC service with protobuf using `grpc-graphql-gateway` options.
-This example has two RPCs os names `SayHello` and `SayGoodbye`:
+This example has two RPCs that names `SayHello` and `SayGoodbye`:
 
 ```protobuf
 // greeter.proto
