@@ -247,6 +247,7 @@ The most of limitations come from the IDL's power of expression -- some kind of 
 - Fork this repository
 - Customize / Fix problem
 - Send PR :-)
+- Or feel free to create issue for us. We'll look into it
 
 ## Author
 
