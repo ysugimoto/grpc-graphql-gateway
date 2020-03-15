@@ -229,7 +229,7 @@ query greeting($name: String = "GraphQL Gateway") {
 #=> {"data":{"goodbye":{"message":"Good-bye, GraphQL Gateway!"},"hello":{"message":"Hello, GraphQL Gateway!"}}}
 ```
 
-This is the most simple way :-) 
+This is the most simplest way :-) 
 
 ## Resources
 
@@ -239,7 +239,7 @@ To learn more, please see the following resources:
 - [example/greeter](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/greeter)  Files of above usage.
 - [example/starwars](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/starwars) Common implementation for GraphQL explanation, the StarWars API example
 
-This plugin generates graphql execution code using [graphql-go/grahpql](https://github.com/graphql-go/graphql), see that repository in detail.
+This plugin generates graphql execution code using [graphql-go/graphql](https://github.com/graphql-go/graphql), see that repository in detail.
 
 ## Limitations
 
