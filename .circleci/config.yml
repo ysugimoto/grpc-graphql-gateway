@@ -35,7 +35,7 @@ definitions:
         - run:
            command: |
              sudo apt-get install jq file
-             sh ./github-release.sh
+             sh .misc/github-release.sh
 
 jobs:
   <<: *job_presets
