@@ -229,11 +229,17 @@ query greeting($name: String = "GraphQL Gateway") {
 #=> {"data":{"goodbye":{"message":"Good-bye, GraphQL Gateway!"},"hello":{"message":"Hello, GraphQL Gateway!"}}}
 ```
 
-This is the most simple way :-) to learn more, please see the following resources:
+This is the most simple way :-) 
+
+## Resources
+
+To learn more, please see the following resources:
 
 - `graphql.proto` Plugin option definition. See a comment section for custom usage (e.g mutation).
 - [example/greeter](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/greeter)  Files of above usage.
 - [example/starwars](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/starwars) Common implementation for GraphQL explanation, the StarWars API example
+
+This plugin generates graphql execution code using [graphql-go/grahpql](https://github.com/graphql-go/graphql), see that repository in detail.
 
 ## Limitations
 
@@ -241,6 +247,12 @@ This plugin just aims to generate a simple gateway of gRPC.
 
 Some of the things could be solved and could not be solved.
 The most of limitations come from the IDL's power of expression -- some kind of GraphQL schema feature cannot implement by Protocol Buffers X(
+
+Currently we don't support some Protobuf types:
+
+- Builtin `oneof` type
+- Wrapper types in `google/protobuf/wrappers`
+- Any types of `google/potobuf/any`
 
 ## Contribute
 
