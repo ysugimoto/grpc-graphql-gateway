@@ -146,7 +146,7 @@ func (s *Server) SayGoodbye(ctx context.Context, req *greeter.GoodbyeRequest) (*
 }
 
 func main() {
-	conn, err := net.Listen("tcp", ":50001")
+	conn, err := net.Listen("tcp", ":500５1")
 	if err != nil {
 		log.Fatal(err)
 	}
