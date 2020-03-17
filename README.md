@@ -245,7 +245,7 @@ This plugin generates graphql execution code using [graphql-go/graphql](https://
 
 This plugin just aims to generate a simple gateway of gRPC.
 
-Some of the things could be solved and could not be solved.
+Some of things could be solved and could not be solved.
 The most of limitations come from the IDL's power of expression -- some kind of GraphQL schema feature cannot implement by Protocol Buffers X(
 
 Currently we don't support some Protobuf types:
