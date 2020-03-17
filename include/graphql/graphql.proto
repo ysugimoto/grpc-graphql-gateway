@@ -176,13 +176,13 @@ message GraphqlField {
 // Extend builtin messages
 
 extend google.protobuf.ServiceOptions {
-  GraphqlService service = 50001; // TBD
+  GraphqlService service = 1079;
 }
 
 extend google.protobuf.FieldOptions {
-  GraphqlField field = 50001; // TBO
+  GraphqlField field = 1079;
 }
 
 extend google.protobuf.MethodOptions {
-  GraphqlSchema schema = 50001; // TBD
+  GraphqlSchema schema = 1079;
 }
