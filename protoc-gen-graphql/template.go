@@ -223,6 +223,11 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 			{{ end }}
 			Args: graphql.FieldConfigArgument{
+			{{- if .InputName }}
+				"{{ .InputName }}": &graphql.ArgumentConfig{
+					Type: Gql__input_{{ .Input.TypeName }}(),
+				},
+			{{- else }}
 			{{- range .Args }}
 				"{{ .Name }}": &graphql.ArgumentConfig{
 					Type: {{ .FieldTypeInput $.RootPackage.Path }},
@@ -233,6 +238,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 					DefaultValue: {{ .DefaultValue }},
 					{{- end }}
 				},
+			{{- end }}
 			{{- end }}
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
