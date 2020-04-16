@@ -201,7 +201,7 @@ func (g *Generator) analyzeMessage(file *spec.File) error {
 			continue
 		}
 		m.Depend(spec.DependTypeMessage, file.Package())
-		if err := g.analyzeFields(file.Package(), m, m.Fields(), false); err != nil {
+		if err := g.analyzeFields(file.Package(), m, m.Fields(), false, false); err != nil {
 			return err
 		}
 	}
@@ -272,12 +272,12 @@ func (g *Generator) analyzeService(f *spec.File, s *spec.Service) error {
 func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
 	g.logger.Write("package %s depends on query request %s", f.Package(), q.Input.FullPath())
 	q.Input.Depend(spec.DependTypeMessage, f.Package())
-	if err := g.analyzeFields(f.Package(), q.Input, q.PluckRequest(), false); err != nil {
+	if err := g.analyzeFields(f.Package(), q.Input, q.PluckRequest(), false, false); err != nil {
 		return err
 	}
 
 	q.Output.Depend(spec.DependTypeMessage, f.Package())
-	if err := g.analyzeFields(f.Package(), q.Output, q.PluckResponse(), false); err != nil {
+	if err := g.analyzeFields(f.Package(), q.Output, q.PluckResponse(), false, false); err != nil {
 		return err
 	}
 	return nil
@@ -287,17 +287,17 @@ func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
 func (g *Generator) analyzeMutation(f *spec.File, m *spec.Mutation) error {
 	g.logger.Write("package %s depends on mutation request %s", f.Package(), m.Input.FullPath())
 	m.Input.Depend(spec.DependTypeInput, f.Package())
-	if err := g.analyzeFields(f.Package(), m.Input, m.PluckRequest(), true); err != nil {
+	if err := g.analyzeFields(f.Package(), m.Input, m.PluckRequest(), true, false); err != nil {
 		return err
 	}
 	m.Output.Depend(spec.DependTypeMessage, f.Package())
-	if err := g.analyzeFields(f.Package(), m.Output, m.PluckResponse(), false); err != nil {
+	if err := g.analyzeFields(f.Package(), m.Output, m.PluckResponse(), false, false); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*spec.Field, asInput bool) error {
+func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*spec.Field, asInput, recursive bool) error {
 	for _, f := range fields {
 		switch f.Type() {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -315,14 +315,14 @@ func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*
 					g.logger.Write("%s has cyclic dependencies of field %s\n", m.Name(), f.Name())
 					f.IsCyclic = true
 					m.Depend(spec.DependTypeInterface, rootPkg)
-				} else {
+				} else if !recursive {
 					m.Depend(spec.DependTypeMessage, rootPkg)
 				}
 			}
 
 			// Guard from recursive with infinite loop
 			if m != orig {
-				if err := g.analyzeFields(rootPkg, m, m.Fields(), asInput); err != nil {
+				if err := g.analyzeFields(rootPkg, m, m.Fields(), asInput, true); err != nil {
 					return err
 				}
 			}
