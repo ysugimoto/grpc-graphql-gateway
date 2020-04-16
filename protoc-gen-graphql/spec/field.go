@@ -188,7 +188,7 @@ func (f *Field) GraphqlType() string {
 func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 	switch f.Type() {
 	case descriptor.FieldDescriptorProto_TYPE_BOOL:
-		return "graphql.Bool"
+		return "graphql.Boolean"
 	case descriptor.FieldDescriptorProto_TYPE_DOUBLE,
 		descriptor.FieldDescriptorProto_TYPE_FLOAT:
 		return "graphql.Float"
