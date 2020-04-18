@@ -8,8 +8,6 @@ import (
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
-var c = `aaaaa ` + "`" + `sint` + "`" + ` foobar `
-
 // File spec wraps FileDescriptorProto
 // and this spec will be passed in all other specs in order to get
 // filename, package name, etc...
