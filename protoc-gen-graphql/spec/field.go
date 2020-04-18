@@ -196,10 +196,15 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 		descriptor.FieldDescriptorProto_TYPE_INT64,
 		descriptor.FieldDescriptorProto_TYPE_SFIXED32,
 		descriptor.FieldDescriptorProto_TYPE_SFIXED64,
+		descriptor.FieldDescriptorProto_TYPE_FIXED32,
+		descriptor.FieldDescriptorProto_TYPE_FIXED64,
+		descriptor.FieldDescriptorProto_TYPE_SINT32,
+		descriptor.FieldDescriptorProto_TYPE_SINT64,
 		descriptor.FieldDescriptorProto_TYPE_UINT32,
 		descriptor.FieldDescriptorProto_TYPE_UINT64:
 		return "graphql.Int"
-	case descriptor.FieldDescriptorProto_TYPE_STRING:
+	case descriptor.FieldDescriptorProto_TYPE_STRING,
+		descriptor.FieldDescriptorProto_TYPE_BYTES:
 		return "graphql.String"
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		m := f.DependType.(*Message) // nolint: errcheck
@@ -229,6 +234,6 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 		}
 		return pkgPrefix + PrefixEnum(strings.ReplaceAll(tn, ".", "_"))
 	default:
-		return "interface{}"
+		return "graphql.SkipDirective"
 	}
 }

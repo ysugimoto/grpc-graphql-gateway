@@ -317,6 +317,8 @@ func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*
 					m.Depend(spec.DependTypeInterface, rootPkg)
 				} else if !recursive {
 					m.Depend(spec.DependTypeMessage, rootPkg)
+				} else {
+					return nil
 				}
 			}
 

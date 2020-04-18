@@ -97,7 +97,7 @@ func (f *File) getComment(paths []int) string {
 	}
 
 	if v, ok := f.comments[b.String()]; ok {
-		return strings.TrimSpace(v)
+		return strings.ReplaceAll(strings.TrimSpace(v), "`", "`+\"`\"+`")
 	}
 	return ""
 }
