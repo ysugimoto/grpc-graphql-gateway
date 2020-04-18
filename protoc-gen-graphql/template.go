@@ -5,13 +5,13 @@ var goTemplate = `
 package {{ .RootPackage.Name }}
 
 import (
+{{- if .Services }}
 	"context"
 
-	"github.com/graphql-go/graphql"
-{{- if .Services }}
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
 {{- end }}
+	"github.com/graphql-go/graphql"
 
 {{- range .Packages }}
 	{{ if .Path }}{{ .Name }} "{{ .Path }}"{{ end }}
