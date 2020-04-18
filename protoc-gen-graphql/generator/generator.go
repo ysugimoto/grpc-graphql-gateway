@@ -79,6 +79,7 @@ func (g *Generator) Generate(tmpl string, fs []string) ([]*plugin.CodeGeneratorR
 			if f.Filename() != v {
 				continue
 			}
+
 			s, ok := services[f.Package()]
 			if !ok {
 				continue
