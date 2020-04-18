@@ -3,8 +3,6 @@ package spec
 import (
 	"strings"
 
-	"path/filepath"
-
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
@@ -80,7 +78,8 @@ func (f *Field) IsRepeated() bool {
 }
 
 func (f *Field) FieldType(rootPackage string) string {
-	fieldType := f.GraphqlGoType(filepath.Base(rootPackage), false)
+	pkg := NewGoPackageFromString(rootPackage)
+	fieldType := f.GraphqlGoType(pkg.Name, false)
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
 	}
@@ -91,7 +90,8 @@ func (f *Field) FieldType(rootPackage string) string {
 }
 
 func (f *Field) FieldTypeInput(rootPackage string) string {
-	fieldType := f.GraphqlGoType(filepath.Base(rootPackage), true)
+	pkg := NewGoPackageFromString(rootPackage)
+	fieldType := f.GraphqlGoType(pkg.Name, true)
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
 	}
@@ -217,21 +217,23 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 			return PrefixInput(strings.ReplaceAll(tn, ".", "_"))
 		}
 		var pkgPrefix string
-		if filepath.Base(m.GoPackage()) != rootPackage {
+		pkg := NewPackage(m)
+		if pkg.Name != rootPackage {
 			if !IsGooglePackage(m) {
-				pkgPrefix = filepath.Base(m.GoPackage()) + "."
+				pkgPrefix = pkg.Name + "."
 			}
 		}
 		return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
 		e := f.DependType.(*Enum) // nolint: errcheck
 		var pkgPrefix string
-		tn := strings.TrimPrefix(f.TypeName(), e.Package()+".")
-		if filepath.Base(e.GoPackage()) != rootPackage {
+		pkg := NewPackage(e)
+		if pkg.Name != rootPackage {
 			if !IsGooglePackage(e) {
-				pkgPrefix = filepath.Base(e.GoPackage()) + "."
+				pkgPrefix = pkg.Name + "."
 			}
 		}
+		tn := strings.TrimPrefix(f.TypeName(), e.Package()+".")
 		return pkgPrefix + PrefixEnum(strings.ReplaceAll(tn, ".", "_"))
 	default:
 		return "graphql.SkipDirective"

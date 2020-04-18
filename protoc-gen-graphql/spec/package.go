@@ -26,8 +26,14 @@ type Package struct {
 func NewPackage(g PackageGetter) *Package {
 	p := &Package{}
 	if pkg := g.GoPackage(); pkg != "" {
-		p.Name = filepath.Base(pkg)
-		p.Path = pkg
+		// Support custom package definitions like example.com/path/to/package:packageName
+		if index := strings.Index(pkg, ";"); index > -1 {
+			p.Name = pkg[index+1:]
+			p.Path = pkg[0:index]
+		} else {
+			p.Name = filepath.Base(pkg)
+			p.Path = pkg
+		}
 	} else if pkg := g.Package(); pkg != "" {
 		p.Name = pkg
 	} else {
@@ -39,5 +45,18 @@ func NewPackage(g PackageGetter) *Package {
 	}
 
 	p.CamelName = strcase.ToCamel(p.Name)
+	return p
+}
+
+func NewGoPackageFromString(pkg string) *Package {
+	p := &Package{}
+	// Support custom package definitions like example.com/path/to/package:packageName
+	if index := strings.Index(pkg, ";"); index > -1 {
+		p.Name = pkg[index+1:]
+		p.Path = pkg[0:index]
+	} else {
+		p.Name = filepath.Base(pkg)
+		p.Path = pkg
+	}
 	return p
 }
