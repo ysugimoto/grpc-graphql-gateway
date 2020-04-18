@@ -60,10 +60,18 @@ func main() {
 	}
 
 	g := generator.New(files, args)
-	genFiles, err := g.Generate(goTemplate, req.GetFileToGenerate())
-	if err != nil {
-		genError = err
-		return
+	var ftg []string
+	for _, f := range req.GetFileToGenerate() {
+		if !args.IsExclude(f) {
+			ftg = append(ftg, f)
+		}
 	}
-	resp.File = append(resp.File, genFiles...)
+	if len(ftg) > 0 {
+		genFiles, err := g.Generate(goTemplate, ftg)
+		if err != nil {
+			genError = err
+			return
+		}
+		resp.File = append(resp.File, genFiles...)
+	}
 }
