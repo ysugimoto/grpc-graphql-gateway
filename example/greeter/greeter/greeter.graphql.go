@@ -11,15 +11,15 @@ import (
 
 var (
 	gql__type_HelloRequest   *graphql.Object // message HelloRequest in greeter.proto
-	gql__type_GoodbyeReply   *graphql.Object // message GoodbyeReply in greeter.proto
-	gql__type_GoodbyeRequest *graphql.Object // message GoodbyeRequest in greeter.proto
 	gql__type_HelloReply     *graphql.Object // message HelloReply in greeter.proto
+	gql__type_GoodbyeRequest *graphql.Object // message GoodbyeRequest in greeter.proto
+	gql__type_GoodbyeReply   *graphql.Object // message GoodbyeReply in greeter.proto
 )
 
 func Gql__type_HelloRequest() *graphql.Object {
 	if gql__type_HelloRequest == nil {
 		gql__type_HelloRequest = graphql.NewObject(graphql.ObjectConfig{
-			Name: "HelloRequest",
+			Name: "Greeter_HelloRequest",
 			Fields: graphql.Fields{
 				"name": &graphql.Field{
 					Type:        graphql.NewNonNull(graphql.String),
@@ -31,10 +31,10 @@ func Gql__type_HelloRequest() *graphql.Object {
 	return gql__type_HelloRequest
 }
 
-func Gql__type_GoodbyeReply() *graphql.Object {
-	if gql__type_GoodbyeReply == nil {
-		gql__type_GoodbyeReply = graphql.NewObject(graphql.ObjectConfig{
-			Name: "GoodbyeReply",
+func Gql__type_HelloReply() *graphql.Object {
+	if gql__type_HelloReply == nil {
+		gql__type_HelloReply = graphql.NewObject(graphql.ObjectConfig{
+			Name: "Greeter_HelloReply",
 			Fields: graphql.Fields{
 				"message": &graphql.Field{
 					Type: graphql.String,
@@ -42,13 +42,13 @@ func Gql__type_GoodbyeReply() *graphql.Object {
 			},
 		})
 	}
-	return gql__type_GoodbyeReply
+	return gql__type_HelloReply
 }
 
 func Gql__type_GoodbyeRequest() *graphql.Object {
 	if gql__type_GoodbyeRequest == nil {
 		gql__type_GoodbyeRequest = graphql.NewObject(graphql.ObjectConfig{
-			Name: "GoodbyeRequest",
+			Name: "Greeter_GoodbyeRequest",
 			Fields: graphql.Fields{
 				"name": &graphql.Field{
 					Type:        graphql.NewNonNull(graphql.String),
@@ -60,10 +60,10 @@ func Gql__type_GoodbyeRequest() *graphql.Object {
 	return gql__type_GoodbyeRequest
 }
 
-func Gql__type_HelloReply() *graphql.Object {
-	if gql__type_HelloReply == nil {
-		gql__type_HelloReply = graphql.NewObject(graphql.ObjectConfig{
-			Name: "HelloReply",
+func Gql__type_GoodbyeReply() *graphql.Object {
+	if gql__type_GoodbyeReply == nil {
+		gql__type_GoodbyeReply = graphql.NewObject(graphql.ObjectConfig{
+			Name: "Greeter_GoodbyeReply",
 			Fields: graphql.Fields{
 				"message": &graphql.Field{
 					Type: graphql.String,
@@ -71,7 +71,7 @@ func Gql__type_HelloReply() *graphql.Object {
 			},
 		})
 	}
-	return gql__type_HelloReply
+	return gql__type_GoodbyeReply
 }
 
 // graphql__resolver_Greeter is a struct for making query, mutation and resolve fields.
