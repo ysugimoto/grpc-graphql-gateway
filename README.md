@@ -6,6 +6,15 @@
 
 ![image](https://raw.githubusercontent.com/ysugimoto/grpc-graphql-gateway/master/misc/grpc-graphql-gateway.png)
 
+## Change Log
+
+### v0.9.1
+
+#### Changed middleware fucntion type
+
+On MiddlewareFunc, you need to return `context.Context` as first return value. this is because we need to make custom metadata to gRPC on middleware process.
+If you are already using your onw middleware, plase change its interface. see https://github.com/ysugimoto/grpc-graphql-gateway/pull/10
+
 ## Motivation
 
 On API development, frequently we choose some IDL, in order to manage API definitions from a file.
