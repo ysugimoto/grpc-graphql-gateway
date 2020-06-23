@@ -6,6 +6,15 @@
 
 ![image](https://raw.githubusercontent.com/ysugimoto/grpc-graphql-gateway/master/misc/grpc-graphql-gateway.png)
 
+## Change Log
+
+### v0.9.1
+
+#### Changed middleware fucntion type
+
+No longer passing `context.Context` to first argument of `MiddlewareFunc`. this is because we need to pass custom metadata to gRPC.
+If you are already using your onw middleware, plase change its interface. To access current context, get from `http.Request` by calling `r.Context()`.
+
 ## Motivation
 
 On API development, frequently we choose some IDL, in order to manage API definitions from a file.

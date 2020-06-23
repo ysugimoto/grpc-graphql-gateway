@@ -14,7 +14,7 @@ import (
 
 type (
 	// MiddlewareFunc type definition
-	MiddlewareFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
+	MiddlewareFunc func(w http.ResponseWriter, r *http.Request) error
 
 	// Custom error handler which is called on graphql result has an error
 	GraphqlErrorHandler func(errs gqlerrors.FormattedErrors)
@@ -91,14 +91,13 @@ func (s *ServeMux) Use(ms ...MiddlewareFunc) *ServeMux {
 
 // ServeHTTP implements http.Handler
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
 	for _, m := range s.middlewares {
-		if err := m(ctx, w, r); err != nil {
+		if err := m(w, r); err != nil {
 			http.Error(w, "middleware error occurred: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
+	ctx := r.Context()
 
 	queries := graphql.Fields{}
 	mutations := graphql.Fields{}
