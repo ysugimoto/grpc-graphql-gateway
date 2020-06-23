@@ -12,8 +12,8 @@
 
 #### Changed middleware fucntion type
 
-No longer passing `context.Context` to first argument of `MiddlewareFunc`. this is because we need to pass custom metadata to gRPC.
-If you are already using your onw middleware, plase change its interface. To access current context, get from `http.Request` by calling `r.Context()`.
+On MiddlewareFunc, you need to return `context.Context` as first return value. this is because we need to make custom metadata to gRPC on middleware process.
+If you are already using your onw middleware, plase change its interface. see https://github.com/ysugimoto/grpc-graphql-gateway/pull/10
 
 ## Motivation
 
