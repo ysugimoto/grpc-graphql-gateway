@@ -80,11 +80,11 @@ func (f *Field) IsRepeated() bool {
 func (f *Field) FieldType(rootPackage string) string {
 	pkg := NewGoPackageFromString(rootPackage)
 	fieldType := f.GraphqlGoType(pkg.Name, false)
-	if f.IsRepeated() {
-		fieldType = "graphql.NewList(" + fieldType + ")"
-	}
 	if f.IsRequired() {
 		fieldType = "graphql.NewNonNull(" + fieldType + ")"
+	}
+	if f.IsRepeated() {
+		fieldType = "graphql.NewList(" + fieldType + ")"
 	}
 	return fieldType
 }
@@ -92,11 +92,11 @@ func (f *Field) FieldType(rootPackage string) string {
 func (f *Field) FieldTypeInput(rootPackage string) string {
 	pkg := NewGoPackageFromString(rootPackage)
 	fieldType := f.GraphqlGoType(pkg.Name, true)
-	if f.IsRepeated() {
-		fieldType = "graphql.NewList(" + fieldType + ")"
-	}
 	if f.IsRequired() {
 		fieldType = "graphql.NewNonNull(" + fieldType + ")"
+	}
+	if f.IsRepeated() {
+		fieldType = "graphql.NewList(" + fieldType + ")"
 	}
 	return fieldType
 }
