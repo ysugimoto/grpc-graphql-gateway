@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
 
 	"go/format"
 	"io/ioutil"
@@ -146,6 +147,26 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 			}
 		}
 	}
+
+	// Sort by name to avoid to appear some diff on each generation
+	sort.Slice(packages, func(i, j int) bool {
+		return packages[i].Name > packages[j].Name
+	})
+	sort.Slice(types, func(i, j int) bool {
+		return types[i].Name() > types[j].Name()
+	})
+	sort.Slice(enums, func(i, j int) bool {
+		return enums[i].Name() > enums[j].Name()
+	})
+	sort.Slice(inputs, func(i, j int) bool {
+		return inputs[i].Name() > inputs[j].Name()
+	})
+	sort.Slice(interfaces, func(i, j int) bool {
+		return interfaces[i].Name() > interfaces[j].Name()
+	})
+	sort.Slice(services, func(i, j int) bool {
+		return services[i].Name() > services[j].Name()
+	})
 
 	root := spec.NewPackage(file)
 	t := &Template{
