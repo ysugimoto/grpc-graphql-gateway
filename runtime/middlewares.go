@@ -5,6 +5,22 @@ import (
 	"net/http"
 )
 
+type MiddlewareError struct {
+	Code    string
+	Message string
+}
+
+func (m *MiddlewareError) Error() string {
+	return m.Message
+}
+
+func NewMiddlewareError(code, message string) *MiddlewareError {
+	return &MiddlewareError{
+		Code:    code,
+		Message: message,
+	}
+}
+
 // Cors is middelware function to provide CORS headers to response headers
 func Cors() MiddlewareFunc {
 	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, error) {

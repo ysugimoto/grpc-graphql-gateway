@@ -96,7 +96,21 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		var err error
 		ctx, err = m(ctx, w, r)
 		if err != nil {
-			http.Error(w, "middleware error occurred: "+err.Error(), http.StatusInternalServerError)
+			ge := gqlerrors.FormattedError{}
+			if me, ok := err.(*MiddlewareError); ok {
+				ge.Message = me.Message
+				ge.Extensions = map[string]interface{}{
+					"code": me.Code,
+				}
+			} else {
+				ge.Message = err.Error()
+				ge.Extensions = map[string]interface{}{
+					"code": "MIDDLEWARE_ERROR",
+				}
+			}
+			respondResult(w, &graphql.Result{
+				Errors: []gqlerrors.FormattedError{ge},
+			})
 			return
 		}
 	}
@@ -106,7 +120,16 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, h := range s.handlers {
 		c, closer, err := h.CreateConnection(ctx)
 		if err != nil {
-			http.Error(w, "failed to create grpc connection: "+err.Error(), http.StatusInternalServerError)
+			respondResult(w, &graphql.Result{
+				Errors: []gqlerrors.FormattedError{
+					{
+						Message: "Failed to create grpc connection: " + err.Error(),
+						Extensions: map[string]interface{}{
+							"code": "GRPC_CONNECT_ERROR",
+						},
+					},
+				},
+			})
 			return
 		}
 		defer closer()
@@ -135,13 +158,31 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	schema, err := graphql.NewSchema(schemaConfig)
 	if err != nil {
-		http.Error(w, "failed to build schema: "+err.Error(), http.StatusInternalServerError)
+		respondResult(w, &graphql.Result{
+			Errors: []gqlerrors.FormattedError{
+				{
+					Message: "Failed to build schema: " + err.Error(),
+					Extensions: map[string]interface{}{
+						"code": "SCHEMA_GENERATION_ERROR",
+					},
+				},
+			},
+		})
 		return
 	}
 
 	req, err := parseRequest(r)
 	if err != nil {
-		http.Error(w, "failed to parse request: "+err.Error(), http.StatusInternalServerError)
+		respondResult(w, &graphql.Result{
+			Errors: []gqlerrors.FormattedError{
+				{
+					Message: "Failed to parse request: " + err.Error(),
+					Extensions: map[string]interface{}{
+						"code": "REQUEST_PARSE_ERROR",
+					},
+				},
+			},
+		})
 		return
 	}
 
@@ -157,12 +198,11 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			s.ErrorHandler(result.Errors)
 		}
 	}
+	respondResult(w, result)
+}
 
-	out, err := json.Marshal(result)
-	if err != nil {
-		http.Error(w, "failed to marshal response JSON: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+func respondResult(w http.ResponseWriter, result *graphql.Result) {
+	out, _ := json.Marshal(result)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Length", fmt.Sprint(len(out)))
