@@ -19,11 +19,15 @@ type MiddlewareError struct {
 return runtime.NewMiddlewareError("CODE", "MESSAGE")
 ```
 
-```json
-// If middleware returns common error, the runtime error will be:
-{"data": null, "errors": [{"message": "error message of err.Error()", "extensions": {"code": "MIDDLEWARE_ERROR"}]}
+If middleware returns common error, the runtime error will be:
 
-// If middleware returns `MiddlewareError`, the runtime error will be:
+```
+{"data": null, "errors": [{"message": "error message of err.Error()", "extensions": {"code": "MIDDLEWARE_ERROR"}]}
+```
+
+If middleware returns `MiddlewareError`, the runtime error will be:
+
+```
 {"data": null, "errors": [{"message": "Message field value of MiddlewareError", "extensions": {"code": "Code field value of MiddlewareError"}]}
 ```
 
