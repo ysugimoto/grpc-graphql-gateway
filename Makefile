@@ -16,7 +16,10 @@ plugin:
 	mv graphql/github.com/ysugimoto/grpc-graphql-gateway/graphql/graphql.pb.go graphql/
 	rm -rf graphql/github.com
 
-build:
+test:
+	go list ./... | xargs go test
+
+build: test
 	protoc -I google \
 		-I include/graphql \
 		--go_out=./graphql \
