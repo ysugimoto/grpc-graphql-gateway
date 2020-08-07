@@ -12,14 +12,21 @@ type Mutation struct {
 	*Method
 	Input  *Message
 	Output *Message
+
+	isCamel bool
 }
 
-func NewMutation(m *Method, input, output *Message) *Mutation {
+func NewMutation(m *Method, input, output *Message, isCamel bool) *Mutation {
 	return &Mutation{
-		Method: m,
-		Input:  input,
-		Output: output,
+		Method:  m,
+		Input:   input,
+		Output:  output,
+		isCamel: isCamel,
 	}
+}
+
+func (m *Mutation) IsCamel() bool {
+	return m.isCamel
 }
 
 func (m *Mutation) MutationName() string {

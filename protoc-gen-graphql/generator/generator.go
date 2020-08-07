@@ -27,8 +27,6 @@ type Template struct {
 	Enums      []*spec.Enum
 	Inputs     []*spec.Message
 	Services   []*spec.Service
-	Queries    []*spec.Query
-	Mutations  []*spec.Mutation
 }
 
 // Generator is struct for analyzing protobuf definition
@@ -274,13 +272,13 @@ func (g *Generator) analyzeService(f *spec.File, s *spec.Service) error {
 
 		switch m.Schema.GetType() {
 		case graphql.GraphqlType_QUERY:
-			q := spec.NewQuery(m, input, output)
+			q := spec.NewQuery(m, input, output, g.args.FieldCamelCase)
 			if err := g.analyzeQuery(f, q); err != nil {
 				return err
 			}
 			s.Queries = append(s.Queries, q)
 		case graphql.GraphqlType_MUTATION:
-			mu := spec.NewMutation(m, input, output)
+			mu := spec.NewMutation(m, input, output, g.args.FieldCamelCase)
 			if err := g.analyzeMutation(f, mu); err != nil {
 				return err
 			}

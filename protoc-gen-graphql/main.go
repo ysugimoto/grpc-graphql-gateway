@@ -56,7 +56,7 @@ func main() {
 	// in order to access easily plugin options, package name, comment, etc...
 	var files []*spec.File
 	for _, f := range req.GetProtoFile() {
-		files = append(files, spec.NewFile(f))
+		files = append(files, spec.NewFile(f, args.FieldCamelCase))
 	}
 
 	g := generator.New(files, args)

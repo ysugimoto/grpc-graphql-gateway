@@ -19,7 +19,7 @@ var (
 func Gql__type_HelloRequest() *graphql.Object {
 	if gql__type_HelloRequest == nil {
 		gql__type_HelloRequest = graphql.NewObject(graphql.ObjectConfig{
-			Name: "Greeter_HelloRequest",
+			Name: "Greeter_Type_HelloRequest",
 			Fields: graphql.Fields{
 				"name": &graphql.Field{
 					Type:        graphql.NewNonNull(graphql.String),
@@ -34,7 +34,7 @@ func Gql__type_HelloRequest() *graphql.Object {
 func Gql__type_HelloReply() *graphql.Object {
 	if gql__type_HelloReply == nil {
 		gql__type_HelloReply = graphql.NewObject(graphql.ObjectConfig{
-			Name: "Greeter_HelloReply",
+			Name: "Greeter_Type_HelloReply",
 			Fields: graphql.Fields{
 				"message": &graphql.Field{
 					Type: graphql.String,
@@ -48,7 +48,7 @@ func Gql__type_HelloReply() *graphql.Object {
 func Gql__type_GoodbyeRequest() *graphql.Object {
 	if gql__type_GoodbyeRequest == nil {
 		gql__type_GoodbyeRequest = graphql.NewObject(graphql.ObjectConfig{
-			Name: "Greeter_GoodbyeRequest",
+			Name: "Greeter_Type_GoodbyeRequest",
 			Fields: graphql.Fields{
 				"name": &graphql.Field{
 					Type:        graphql.NewNonNull(graphql.String),
@@ -63,7 +63,7 @@ func Gql__type_GoodbyeRequest() *graphql.Object {
 func Gql__type_GoodbyeReply() *graphql.Object {
 	if gql__type_GoodbyeReply == nil {
 		gql__type_GoodbyeReply = graphql.NewObject(graphql.ObjectConfig{
-			Name: "Greeter_GoodbyeReply",
+			Name: "Greeter_Type_GoodbyeReply",
 			Fields: graphql.Fields{
 				"message": &graphql.Field{
 					Type: graphql.String,
@@ -126,7 +126,7 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 				if err != nil {
 					return nil, err
 				}
-				return resp, nil
+				return runtime.MarshalResponse(resp, false)
 			},
 		},
 		"goodbye": &graphql.Field{
@@ -148,7 +148,7 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 				if err != nil {
 					return nil, err
 				}
-				return resp, nil
+				return runtime.MarshalResponse(resp, false)
 			},
 		},
 	}

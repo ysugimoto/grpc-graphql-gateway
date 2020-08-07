@@ -25,6 +25,7 @@ func NewMessage(
 	d *descriptor.DescriptorProto,
 	f *File,
 	prefix []string,
+	isCamel bool,
 	paths ...int,
 ) *Message {
 
@@ -40,7 +41,7 @@ func NewMessage(
 	for i, field := range d.GetField() {
 		ps := make([]int, len(paths))
 		copy(ps, paths)
-		m.fields = append(m.fields, NewField(field, f, append(ps, 2, i)...))
+		m.fields = append(m.fields, NewField(field, f, isCamel, append(ps, 2, i)...))
 	}
 	return m
 }

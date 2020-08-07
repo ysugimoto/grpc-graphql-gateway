@@ -15,14 +15,21 @@ type Query struct {
 	*Method
 	Input  *Message
 	Output *Message
+
+	isCamel bool
 }
 
-func NewQuery(m *Method, input, output *Message) *Query {
+func NewQuery(m *Method, input, output *Message, isCamel bool) *Query {
 	return &Query{
-		Method: m,
-		Input:  input,
-		Output: output,
+		Method:  m,
+		Input:   input,
+		Output:  output,
+		isCamel: isCamel,
 	}
+}
+
+func (q *Query) IsCamel() bool {
+	return q.isCamel
 }
 
 func (q *Query) QueryName() string {
