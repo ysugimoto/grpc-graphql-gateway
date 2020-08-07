@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## v0.13.0
+
+### Add infix typename
+
+Add infix typename to GraphQL typename in order to avoid conflicting name between `Type` and `Input`.
+After this version, GraphQL typename is modified that `[PackageName]_[Type]_[MessageName]` for example:
+
+```
+package user
+
+message User {
+  int64 user_id = 1;
+}
+```
+
+Then typename is `User_Type_User`.
+
 ## v0.12.0
 
 ### Define MiddlewareError and respond with error code
