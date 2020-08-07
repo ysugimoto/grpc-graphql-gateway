@@ -126,7 +126,7 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 				if err != nil {
 					return nil, err
 				}
-				return runtime.MarshalResponse(resp, false)
+				return runtime.MarshalResponse(resp, false), nil
 			},
 		},
 		"goodbye": &graphql.Field{
@@ -148,7 +148,7 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 				if err != nil {
 					return nil, err
 				}
-				return runtime.MarshalResponse(resp, false)
+				return runtime.MarshalResponse(resp, false), nil
 			},
 		},
 	}
