@@ -37,7 +37,7 @@ var (
 func Gql__enum_{{ .Name }}() *graphql.Enum {
 	if gql__enum_{{ .Name }} == nil {
 		gql__enum_{{ .Name }} =  graphql.NewEnum(graphql.EnumConfig{
-			Name: "{{ $.RootPackage.CamelName }}_{{ .Name }}",
+			Name: "{{ $.RootPackage.CamelName }}_Enum_{{ .Name }}",
 			Values: graphql.EnumValueConfigMap{
 {{- range .Values }}
 				"{{ .Name }}": &graphql.EnumValueConfig{
@@ -59,7 +59,7 @@ func Gql__enum_{{ .Name }}() *graphql.Enum {
 func Gql__interface_{{ .TypeName }}() *graphql.Interface {
 	if gql__interface_{{ .TypeName }} == nil {
 		gql__interface_{{ .TypeName }} =  graphql.NewInterface(graphql.InterfaceConfig{
-			Name: "{{ $.RootPackage.CamelName }}_{{ .TypeName }}Interface",
+			Name: "{{ $.RootPackage.CamelName }}_Interface_{{ .TypeName }}",
 			{{- if .Comment }}
 			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 			{{- end }}
@@ -89,7 +89,7 @@ func Gql__interface_{{ .TypeName }}() *graphql.Interface {
 func Gql__type_{{ .TypeName }}() *graphql.Object {
 	if gql__type_{{ .TypeName }} == nil {
 		gql__type_{{ .TypeName }} =  graphql.NewObject(graphql.ObjectConfig{
-			Name: "{{ $.RootPackage.CamelName }}_{{ .TypeName }}",
+			Name: "{{ $.RootPackage.CamelName }}_Type_{{ .TypeName }}",
 			{{- if .Comment }}
 			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 			{{- end }}
@@ -121,7 +121,7 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 func Gql__input_{{ .TypeName }}() *graphql.InputObject {
 	if gql__input_{{ .TypeName }} == nil {
 		gql__input_{{ .TypeName }} =  graphql.NewInputObject(graphql.InputObjectConfig{
-			Name: "{{ $.RootPackage.CamelName }}_{{ .TypeName }}",
+			Name: "{{ $.RootPackage.CamelName }}_Input_{{ .TypeName }}",
 			Fields: graphql.InputObjectConfigFieldMap{
 {{- range .Fields }}
 				"{{ .Name }}": &graphql.InputObjectFieldConfig{
