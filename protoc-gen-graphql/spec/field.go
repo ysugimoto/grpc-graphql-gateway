@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/iancoleman/strcase"
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 )
 
@@ -18,11 +19,13 @@ type Field struct {
 
 	DependType interface{}
 	IsCyclic   bool
+	isCamel    bool
 }
 
 func NewField(
 	d *descriptor.FieldDescriptorProto,
 	f *File,
+	isCamel bool,
 	paths ...int,
 ) *Field {
 
@@ -40,6 +43,7 @@ func NewField(
 		Option:     o,
 		File:       f,
 		paths:      paths,
+		isCamel:    isCamel,
 	}
 }
 
@@ -52,6 +56,13 @@ func (f *Field) Comment() string {
 
 func (f *Field) Name() string {
 	return f.descriptor.GetName()
+}
+
+func (f *Field) FieldName() string {
+	if f.isCamel {
+		return strcase.ToLowerCamel(f.Name())
+	}
+	return f.Name()
 }
 
 func (f *Field) Type() descriptor.FieldDescriptorProto_Type {

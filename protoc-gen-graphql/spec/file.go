@@ -18,9 +18,11 @@ type File struct {
 	messages []*Message
 	services []*Service
 	enums    []*Enum
+
+	isCamel bool
 }
 
-func NewFile(d *descriptor.FileDescriptorProto) *File {
+func NewFile(d *descriptor.FileDescriptorProto, isCamel bool) *File {
 	f := &File{
 		descriptor: d,
 		comments:   makeComments(d),
@@ -55,7 +57,7 @@ func (f *File) Enums() []*Enum {
 
 func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string, paths ...int) []*Message {
 	messages := []*Message{
-		NewMessage(d, f, prefix, paths...),
+		NewMessage(d, f, prefix, f.isCamel, paths...),
 	}
 
 	prefix = append(prefix, d.GetName())

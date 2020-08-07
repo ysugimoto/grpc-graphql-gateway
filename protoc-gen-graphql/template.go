@@ -66,7 +66,7 @@ func Gql__interface_{{ .TypeName }}() *graphql.Interface {
 			Fields: graphql.Fields{
 {{- range .Fields }}
 			{{- if not .IsCyclic }}
-				"{{ .Name }}": &graphql.Field{
+				"{{ .FieldName }}": &graphql.Field{
 					Type: {{ .FieldType $.RootPackage.Path }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
@@ -95,7 +95,7 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 			{{- end }}
 			Fields: graphql.Fields {
 {{- range .Fields }}
-				"{{ .Name }}": &graphql.Field{
+				"{{ .FieldName }}": &graphql.Field{
 					Type: {{ .FieldType $.RootPackage.Path }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
@@ -124,7 +124,7 @@ func Gql__input_{{ .TypeName }}() *graphql.InputObject {
 			Name: "{{ $.RootPackage.CamelName }}_Input_{{ .TypeName }}",
 			Fields: graphql.InputObjectConfigFieldMap{
 {{- range .Fields }}
-				"{{ .Name }}": &graphql.InputObjectFieldConfig{
+				"{{ .FieldName }}": &graphql.InputObjectFieldConfig{
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
@@ -181,7 +181,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 			{{- end }}
 			Args: graphql.FieldConfigArgument{
 			{{- range .Args }}
-				"{{ .Name }}": &graphql.ArgumentConfig{
+				"{{ .FieldName }}": &graphql.ArgumentConfig{
 					Type: {{ .FieldType $.RootPackage.Path }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
@@ -203,9 +203,9 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 					return nil, err
 				}
 				{{- if .IsPluckResponse }}
-				return resp.Get{{ .PluckResponseFieldName }}(), nil
+				return runtime.MarshalResponse(resp.Get{{ .PluckResponseFieldName }}(), {{ .IsCamel }}). nil
 				{{- else }}
-				return resp, nil
+				return runtime.MarshalResponse(resp, {{ .IsCamel }}), nil
 				{{- end }}
 			},
 		},
@@ -229,7 +229,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 				},
 			{{- else }}
 			{{- range .Args }}
-				"{{ .Name }}": &graphql.ArgumentConfig{
+				"{{ .FieldName }}": &graphql.ArgumentConfig{
 					Type: {{ .FieldTypeInput $.RootPackage.Path }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
@@ -252,9 +252,9 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 					return nil, err
 				}
 				{{- if .IsPluckResponse }}
-				return resp.Get{{ .PluckResponseFieldName }}(), nil
+				return runtime.MarshalResponse(resp.Get{{ .PluckResponseFieldName }}(), {{ .IsCamel }}), nil
 				{{- else }}
-				return resp, nil
+				return runtime.MarshalResponse(resp, {{ .IsCamel }}), nil
 				{{- end }}
 			},
 		},

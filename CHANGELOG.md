@@ -17,6 +17,35 @@ message User {
 
 Then typename is `User_Type_User`.
 
+### Convert field name to CamelCase option
+
+In protocol buffers, all message field name should define as *lower_snake_case* referred by [Style Guide](https://developers.google.com/protocol-buffers/docs/style#message_and_field_names). But in GraphQL Schema, typically each field name should define as *lowerCamelCase*, so we add more option in `protoc-gen-graphql`:
+
+```shell
+protoc -I.
+    --graphql_out=field_camel_case=true:.
+    --go_out=plugins=grpc:.
+    example.proto
+```
+
+The new option, `field_camel_case=true` converts all message field name to camel case like:
+
+```
+// protobuf
+message User {
+    int64 user_id = 1 [(graphql.field).required = true];
+      string user_name = 2 [(graphql.field).required = true];
+}
+
+// Graphql Schema
+type User_Type_User {
+    userId Int!
+      userName String!
+}
+```
+
+To keep backward compatibility, compile as *lower_snake_case* as default. If you want to define any graphql field as lowerCamelCase, please supply this option.
+
 ## v0.12.0
 
 ### Define MiddlewareError and respond with error code

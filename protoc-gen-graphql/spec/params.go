@@ -8,9 +8,10 @@ import (
 
 // Params spec have plugin parameters
 type Params struct {
-	QueryOut string
-	Excludes []*regexp.Regexp
-	Verbose  bool
+	QueryOut       string
+	Excludes       []*regexp.Regexp
+	Verbose        bool
+	FieldCamelCase bool
 }
 
 func NewParams(p string) (*Params, error) {
@@ -40,6 +41,8 @@ func NewParams(p string) (*Params, error) {
 				return nil, errors.New("failed to compile regex for exclude argument " + kv[1])
 			}
 			params.Excludes = append(params.Excludes, regex)
+		case "field_camel":
+			params.FieldCamelCase = true
 		default:
 			return nil, errors.New("Unacceptable argument " + kv[0] + " provided")
 		}
