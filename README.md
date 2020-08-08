@@ -252,7 +252,7 @@ Currently we don't support some Protobuf types:
 
 - Builtin `oneof` type
 - Wrapper types in `google/protobuf/wrappers`
-- Any types of `google/potobuf/any`
+- Any types of `google/protobuf/any`
 
 ## Contribute
 
