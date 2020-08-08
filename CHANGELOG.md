@@ -23,24 +23,24 @@ In protocol buffers, all message field name should define as *lower_snake_case* 
 
 ```shell
 protoc -I.
-    --graphql_out=field_camel_case=true:.
+    --graphql_out=field_camel=true:.
     --go_out=plugins=grpc:.
     example.proto
 ```
 
-The new option, `field_camel_case=true` converts all message field name to camel case like:
+The new option, `field_camel=true` converts all message field name to camel case like:
 
 ```
 // protobuf
 message User {
     int64 user_id = 1 [(graphql.field).required = true];
-      string user_name = 2 [(graphql.field).required = true];
+    string user_name = 2 [(graphql.field).required = true];
 }
 
 // Graphql Schema
 type User_Type_User {
     userId Int!
-      userName String!
+    userName String!
 }
 ```
 
