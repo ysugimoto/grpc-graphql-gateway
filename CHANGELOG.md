@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## v0.14.0
+
+### Partially support google's type
+
+Implement specific types and provide from this repository:
+
+- google.protobuf.Timestamp
+- google.protobuf.Wrappers
+- google.protobuf.Empty
+
+Note that we could only support the above types hence if a user imports other types e.g. google.protobuf.Any will raise an error.
+
+And for GraphQL spec, google.protobuf.Empty defined empty field like `_: Boolean` because GraphQL raises error when type fields are empty.
+
+### Fix map type in proto3
+
+In proto3, map type can define as `map<string, string>` but PB parse as xxxEntry message. This PR also can use as graphql type with required key and value.
+
+### Version printing in plugin binary
+
+`protoc-gen-graphql` accepts `-v` option for print build version.
+
 ## v0.13.0
 
 ### Add infix typename
