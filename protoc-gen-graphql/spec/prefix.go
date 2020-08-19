@@ -19,6 +19,11 @@ func PrefixInput(name string) string {
 	return "Gql__input_" + name + "()"
 }
 
+// PrefixPtypes adds prefix to avoid conflicting name
+func PrefixPtypesInput(name string) string {
+	return "gql_ptypes_" + strings.ToLower(name) + ".Gql__input_" + name + "()"
+}
+
 // PrefixInterface adds prefix to avoid conflicting name
 func PrefixInterface(name string) string {
 	return "Gql__interface_" + name + "()"

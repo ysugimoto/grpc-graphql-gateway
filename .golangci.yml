@@ -6,6 +6,7 @@ run:
   skip-dirs:
     - dist
     - include
+    - playground
 
 issues:
   exclude-rules:

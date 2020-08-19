@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"text/template"
 
+	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
@@ -100,6 +101,7 @@ func (g *Generator) Generate(tmpl string, fs []string) ([]*plugin.CodeGeneratorR
 	return outFiles, nil
 }
 
+// nolint: gocognit, funlen, gocyclo
 func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.Service) (
 	*plugin.CodeGeneratorResponse_File,
 	error,
@@ -115,16 +117,19 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 			continue
 		}
 		if m.IsDepended(spec.DependTypeMessage, file.Package()) {
-			if file.Package() == m.Package() {
+			switch {
+			case file.Package() == m.Package():
 				types = append(types, m)
-			} else if spec.IsGooglePackage(m) {
+			case spec.IsGooglePackage(m):
 				packages = append(packages, spec.NewGooglePackage(m))
-			} else {
+			default:
 				packages = append(packages, spec.NewPackage(m))
 			}
 		}
 		if m.IsDepended(spec.DependTypeInput, file.Package()) {
-			inputs = append(inputs, m)
+			if !spec.IsGooglePackage(m) {
+				inputs = append(inputs, m)
+			}
 		}
 		if m.IsDepended(spec.DependTypeInterface, file.Package()) {
 			interfaces = append(interfaces, m)
@@ -364,7 +369,14 @@ func (g *Generator) analyzeMutation(f *spec.File, m *spec.Mutation) error {
 	return nil
 }
 
-func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*spec.Field, asInput, recursive bool) error {
+func (g *Generator) analyzeFields(
+	rootPkg string,
+	orig *spec.Message,
+	fields []*spec.Field,
+	asInput,
+	recursive bool,
+) error {
+
 	for _, f := range fields {
 		switch f.Type() {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -378,13 +390,14 @@ func (g *Generator) analyzeFields(rootPkg string, orig *spec.Message, fields []*
 				m.Depend(spec.DependTypeInput, rootPkg)
 			} else {
 				g.logger.Write("package %s depends on message %s", rootPkg, m.FullPath())
-				if m == orig {
+				switch {
+				case m == orig:
 					g.logger.Write("%s has cyclic dependencies of field %s\n", m.Name(), f.Name())
 					f.IsCyclic = true
 					m.Depend(spec.DependTypeInterface, rootPkg)
-				} else if !recursive {
+				case !recursive:
 					m.Depend(spec.DependTypeMessage, rootPkg)
-				} else {
+				default:
 					return nil
 				}
 			}

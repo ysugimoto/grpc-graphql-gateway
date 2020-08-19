@@ -30,6 +30,7 @@ func NewFile(d *descriptor.FileDescriptorProto, isCamel bool) *File {
 		services: make([]*Service, 0),
 		messages: make([]*Message, 0),
 		enums:    make([]*Enum, 0),
+		isCamel:  isCamel,
 	}
 	for i, s := range d.GetService() {
 		f.services = append(f.services, NewService(s, f, 6, i))
