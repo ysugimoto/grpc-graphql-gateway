@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.14.1, v0.14.2
+
+Bugfixes
+
+- Fix tiny syntax error
+- Fix field camelcase generation
+- Fix required sign in repeated array and input object
+
 ## v0.14.0
 
 ### Partially support google's type
