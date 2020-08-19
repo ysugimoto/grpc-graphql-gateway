@@ -108,7 +108,6 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 	var types, inputs, interfaces []*spec.Message
 	var enums []*spec.Enum
 	var packages []*spec.Package
-	// stack := make(map[string]struct{})
 
 	for _, m := range g.messages {
 		// skip empty field message, otherwise graphql-go raise error
@@ -120,10 +119,8 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 				types = append(types, m)
 			} else if spec.IsGooglePackage(m) {
 				packages = append(packages, spec.NewGooglePackage(m))
-				// stack[m.Package()] = struct{}{}
-			} else { // else if _, ok := stack[m.Package()]; !ok {
+			} else {
 				packages = append(packages, spec.NewPackage(m))
-				// stack[m.Package()] = struct{}{}
 			}
 		}
 		if m.IsDepended(spec.DependTypeInput, file.Package()) {
@@ -179,7 +176,7 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 		if e.IsDepended(spec.DependTypeEnum, file.Package()) {
 			if file.Package() == e.Package() || spec.IsGooglePackage(e) {
 				enums = append(enums, e)
-			} else { // if _, ok := stack[e.Package()]; !ok {
+			} else {
 				packages = append(packages, spec.NewPackage(e))
 			}
 		}
