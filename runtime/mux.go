@@ -202,7 +202,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func respondResult(w http.ResponseWriter, result *graphql.Result) {
-	out, _ := json.Marshal(result)
+	out, _ := json.Marshal(result) // nolint: errcheck
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Length", fmt.Sprint(len(out)))

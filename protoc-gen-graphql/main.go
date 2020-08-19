@@ -8,6 +8,7 @@ import (
 
 	"io/ioutil"
 
+	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/generator"
@@ -20,7 +21,7 @@ var printVersion = flag.Bool("v", false, "show binary version")
 func main() {
 	flag.Parse()
 	if *printVersion {
-		io.WriteString(os.Stdout, version)
+		io.WriteString(os.Stdout, version) // nolint: errcheck
 		os.Exit(0)
 	}
 
@@ -61,6 +62,10 @@ func main() {
 	if err != nil {
 		genError = err
 		return
+	}
+
+	if args.FieldCamelCase {
+		log.Println("[INFO] field_camel option is provided, all type fields are transform to camelcase.")
 	}
 
 	// We're dealing with each descriptors to out wrapper struct

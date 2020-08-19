@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/iancoleman/strcase"
@@ -125,6 +126,9 @@ func (f *Field) FieldType(rootPackage string) string {
 	}
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
+		if f.IsRequired() {
+			fieldType = "graphql.NewNonNull(" + fieldType + ")"
+		}
 	}
 	return fieldType
 }
@@ -137,6 +141,9 @@ func (f *Field) FieldTypeInput(rootPackage string) string {
 	}
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
+		if f.IsRequired() {
+			fieldType = "graphql.NewNonNull(" + fieldType + ")"
+		}
 	}
 	return fieldType
 }
@@ -253,7 +260,9 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 			return PrefixInterface(strings.ReplaceAll(tn, ".", "_"))
 		}
 		if isInput {
-			// If get as input type, if should be unprefixed
+			if IsGooglePackage(m) {
+				return PrefixPtypesInput(strings.ReplaceAll(tn, ".", "_"))
+			}
 			return PrefixInput(strings.ReplaceAll(tn, ".", "_"))
 		}
 		var pkgPrefix string

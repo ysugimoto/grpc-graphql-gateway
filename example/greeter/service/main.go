@@ -27,11 +27,13 @@ func (s *Server) SayGoodbye(ctx context.Context, req *greeter.GoodbyeRequest) (*
 func main() {
 	conn, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 	defer conn.Close()
 
 	server := grpc.NewServer()
 	greeter.RegisterGreeterServer(server, &Server{})
-	server.Serve(conn)
+	if err := server.Serve(conn); err != nil {
+		log.Println(err)
+	}
 }
