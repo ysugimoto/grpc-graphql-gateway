@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"path/filepath"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -48,7 +49,7 @@ func NewField(
 }
 
 func (f *Field) Comment() string {
-	if strings.HasPrefix(f.Package(), "google.protobuf") {
+	if IsGooglePackage(f) {
 		return ""
 	}
 	return f.File.getComment(f.paths)
@@ -229,9 +230,14 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 		}
 		var pkgPrefix string
 		pkg := NewPackage(m)
-		if pkg.Name != rootPackage {
-			if !IsGooglePackage(m) {
-				pkgPrefix = pkg.Name + "."
+		// Case message is nested, also includes map_entry
+		if rootPackage != "." {
+			if pkg.Name != rootPackage {
+				if IsGooglePackage(m) {
+					pkgPrefix = strings.ToLower(filepath.Base(m.GoPackage())) + "."
+				} else {
+					pkgPrefix = pkg.Name + "."
+				}
 			}
 		}
 		return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))

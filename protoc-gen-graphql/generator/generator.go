@@ -116,8 +116,11 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 			continue
 		}
 		if m.IsDepended(spec.DependTypeMessage, file.Package()) {
-			if file.Package() == m.Package() || spec.IsGooglePackage(m) {
+			if file.Package() == m.Package() {
 				types = append(types, m)
+			} else if spec.IsGooglePackage(m) {
+				packages = append(packages, spec.NewGooglePackage(m))
+				stack[m.Package()] = struct{}{}
 			} else if _, ok := stack[m.Package()]; !ok {
 				packages = append(packages, spec.NewPackage(m))
 				stack[m.Package()] = struct{}{}
