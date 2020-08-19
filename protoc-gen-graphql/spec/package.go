@@ -52,7 +52,7 @@ func NewGooglePackage(m PackageGetter) *Package {
 	name := filepath.Base(m.GoPackage())
 
 	return &Package{
-		Name:      strings.ToLower(name),
+		Name:      "gql_ptypes_" + strings.ToLower(name),
 		CamelName: strcase.ToCamel(name),
 		Path:      "github.com/ysugimoto/grpc-graphql-gateway/ptypes/" + strings.ToLower(name),
 	}

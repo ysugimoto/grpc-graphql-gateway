@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"log"
 	"path/filepath"
 	"strings"
 
@@ -10,6 +11,23 @@ import (
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 )
 
+var supportedPtypes = []string{
+	"timestamp",
+	"wrappers",
+}
+
+func mustImplementedPtypes(ptype string) {
+	var found bool
+	for _, v := range supportedPtypes {
+		if ptype == v {
+			found = true
+		}
+	}
+	if !found {
+		log.Fatalf("[PROTOC-GEN-GRAPHQL] Error: google's ptype \"%s\" does not implement for now.\n", ptype)
+	}
+}
+
 // Field spec wraps FieldDescriptorProto with keeping file info
 type Field struct {
 	descriptor *descriptor.FieldDescriptorProto
@@ -18,9 +36,10 @@ type Field struct {
 
 	paths []int
 
-	DependType interface{}
-	IsCyclic   bool
-	isCamel    bool
+	DependType    interface{}
+	IsCyclic      bool
+	isCamel       bool
+	forceRequired bool
 }
 
 func NewField(
@@ -59,6 +78,10 @@ func (f *Field) Name() string {
 	return f.descriptor.GetName()
 }
 
+func (f *Field) setRequiredField() {
+	f.forceRequired = true
+}
+
 func (f *Field) FieldName() string {
 	if f.isCamel {
 		return strcase.ToLowerCamel(f.Name())
@@ -79,6 +102,10 @@ func (f *Field) Label() descriptor.FieldDescriptorProto_Label {
 }
 
 func (f *Field) IsRequired() bool {
+	if f.forceRequired {
+		return true
+	}
+
 	if f.Option == nil {
 		return false
 	}
@@ -230,11 +257,14 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 		}
 		var pkgPrefix string
 		pkg := NewPackage(m)
-		// Case message is nested, also includes map_entry
-		if rootPackage != "." {
+		if IsGooglePackage(m) {
+			name := strings.ToLower(filepath.Base(m.GoPackage()))
+			mustImplementedPtypes(name)
+			pkgPrefix = "gql_ptypes_" + name + "."
+		} else if rootPackage != "." {
+			// Case message is nested, also includes map_entry
 			if pkg.Name != rootPackage {
 				if IsGooglePackage(m) {
-					pkgPrefix = strings.ToLower(filepath.Base(m.GoPackage())) + "."
 				} else {
 					pkgPrefix = pkg.Name + "."
 				}

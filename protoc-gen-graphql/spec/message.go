@@ -50,6 +50,12 @@ func (m *Message) Fields() []*Field {
 	return m.fields
 }
 
+func (m *Message) setRequiredFields() {
+	for _, f := range m.fields {
+		f.setRequiredField()
+	}
+}
+
 func (m *Message) TypeFields() []*Field {
 	if m.PluckFields == nil {
 		return m.Fields()
