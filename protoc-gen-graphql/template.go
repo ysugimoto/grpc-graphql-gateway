@@ -203,7 +203,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 					return nil, err
 				}
 				{{- if .IsPluckResponse }}
-				return runtime.MarshalResponse(resp.Get{{ .PluckResponseFieldName }}(), {{ .IsCamel }}). nil
+				return runtime.MarshalResponse(resp.Get{{ .PluckResponseFieldName }}(), {{ .IsCamel }}), nil
 				{{- else }}
 				return runtime.MarshalResponse(resp, {{ .IsCamel }}), nil
 				{{- end }}

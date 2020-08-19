@@ -96,6 +96,9 @@ func (f *Field) FieldType(rootPackage string) string {
 	}
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
+		if f.IsRequired() {
+			fieldType = "graphql.NewNonNull(" + fieldType + ")"
+		}
 	}
 	return fieldType
 }
@@ -108,6 +111,9 @@ func (f *Field) FieldTypeInput(rootPackage string) string {
 	}
 	if f.IsRepeated() {
 		fieldType = "graphql.NewList(" + fieldType + ")"
+		if f.IsRequired() {
+			fieldType = "graphql.NewNonNull(" + fieldType + ")"
+		}
 	}
 	return fieldType
 }

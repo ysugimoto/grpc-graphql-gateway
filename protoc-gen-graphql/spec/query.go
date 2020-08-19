@@ -103,13 +103,7 @@ func (q *Query) PluckResponse() []*Field {
 func (q *Query) QueryType() string {
 	if q.IsPluckResponse() {
 		field := q.PluckResponse()[0]
-		typeName := field.FieldType(q.GoPackage())
-		if resp := q.Response(); resp != nil {
-			if resp.GetRequired() {
-				typeName = "graphql.NewNonNull(" + typeName + ")"
-			}
-		}
-		return typeName
+		return field.FieldType(q.GoPackage())
 	}
 
 	var pkgPrefix string
