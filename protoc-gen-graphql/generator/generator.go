@@ -108,7 +108,6 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 	var types, inputs, interfaces []*spec.Message
 	var enums []*spec.Enum
 	var packages []*spec.Package
-	stack := make(map[string]struct{})
 
 	for _, m := range g.messages {
 		// skip empty field message, otherwise graphql-go raise error
@@ -116,11 +115,12 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 			continue
 		}
 		if m.IsDepended(spec.DependTypeMessage, file.Package()) {
-			if file.Package() == m.Package() || spec.IsGooglePackage(m) {
+			if file.Package() == m.Package() {
 				types = append(types, m)
-			} else if _, ok := stack[m.Package()]; !ok {
+			} else if spec.IsGooglePackage(m) {
+				packages = append(packages, spec.NewGooglePackage(m))
+			} else {
 				packages = append(packages, spec.NewPackage(m))
-				stack[m.Package()] = struct{}{}
 			}
 		}
 		if m.IsDepended(spec.DependTypeInput, file.Package()) {
@@ -128,6 +128,43 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 		}
 		if m.IsDepended(spec.DependTypeInterface, file.Package()) {
 			interfaces = append(interfaces, m)
+		}
+	}
+
+	for _, s := range services {
+		for _, q := range s.Queries {
+			input, output := q.Input, q.Output
+			if input.Package() != file.Package() {
+				if spec.IsGooglePackage(input) {
+					packages = append(packages, spec.NewGooglePackage(input))
+				} else {
+					packages = append(packages, spec.NewPackage(input))
+				}
+			}
+			if output.Package() != file.Package() {
+				if spec.IsGooglePackage(output) {
+					packages = append(packages, spec.NewGooglePackage(output))
+				} else {
+					packages = append(packages, spec.NewPackage(output))
+				}
+			}
+		}
+		for _, m := range s.Mutations {
+			input, output := m.Input, m.Output
+			if input.Package() != file.Package() {
+				if spec.IsGooglePackage(input) {
+					packages = append(packages, spec.NewGooglePackage(input))
+				} else {
+					packages = append(packages, spec.NewPackage(input))
+				}
+			}
+			if output.Package() != file.Package() {
+				if spec.IsGooglePackage(output) {
+					packages = append(packages, spec.NewGooglePackage(output))
+				} else {
+					packages = append(packages, spec.NewPackage(output))
+				}
+			}
 		}
 	}
 
@@ -139,16 +176,26 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 		if e.IsDepended(spec.DependTypeEnum, file.Package()) {
 			if file.Package() == e.Package() || spec.IsGooglePackage(e) {
 				enums = append(enums, e)
-			} else if _, ok := stack[e.Package()]; !ok {
+			} else {
 				packages = append(packages, spec.NewPackage(e))
-				stack[e.Package()] = struct{}{}
 			}
 		}
 	}
 
+	// drop duplicate packages
+	uniquePackages := make([]*spec.Package, 0)
+	stack := make(map[string]struct{})
+	for _, p := range packages {
+		if _, ok := stack[p.Path]; ok {
+			continue
+		}
+		uniquePackages = append(uniquePackages, p)
+		stack[p.Path] = struct{}{}
+	}
+
 	// Sort by name to avoid to appear some diff on each generation
-	sort.Slice(packages, func(i, j int) bool {
-		return packages[i].Name > packages[j].Name
+	sort.Slice(uniquePackages, func(i, j int) bool {
+		return uniquePackages[i].Name > uniquePackages[j].Name
 	})
 	sort.Slice(types, func(i, j int) bool {
 		return types[i].Name() > types[j].Name()
@@ -169,7 +216,7 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 	root := spec.NewPackage(file)
 	t := &Template{
 		RootPackage: root,
-		Packages:    packages,
+		Packages:    uniquePackages,
 		Types:       types,
 		Enums:       enums,
 		Inputs:      inputs,

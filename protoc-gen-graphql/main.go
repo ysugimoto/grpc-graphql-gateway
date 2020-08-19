@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"io"
 	"log"
 	"os"
 
@@ -12,7 +14,16 @@ import (
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
 )
 
+var version = "dev"
+var printVersion = flag.Bool("v", false, "show binary version")
+
 func main() {
+	flag.Parse()
+	if *printVersion {
+		io.WriteString(os.Stdout, version)
+		os.Exit(0)
+	}
+
 	var genError error
 
 	resp := &plugin.CodeGeneratorResponse{}

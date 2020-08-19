@@ -1,9 +1,13 @@
 .PHONY: command clean
 
 GRAPHQL_CMD=protoc-gen-graphql
+VERSION=$(or ${tag}, dev)
 
 command: plugin clean
-	cd ${GRAPHQL_CMD} && go build -o ../dist/${GRAPHQL_CMD}
+	cd ${GRAPHQL_CMD} && \
+		go build \
+			-ldflags "-X main.version=${VERSION}" \
+			-o ../dist/${GRAPHQL_CMD}
 
 lint:
 	golangci-lint run
@@ -31,5 +35,5 @@ clean:
 	rm -rf ./dist/*
 
 all: clean build
-	cd ${GRAPHQL_CMD} && GOOS=darwin GOARCH=amd64 go build -o ../dist/${GRAPHQL_CMD}.darwin
-	cd ${GRAPHQL_CMD} && GOOS=linux GOARCH=amd64 go build -o ../dist/${GRAPHQL_CMD}.linux
+	cd ${GRAPHQL_CMD} && GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.version=${VERSION}" -o ../dist/${GRAPHQL_CMD}.darwin
+	cd ${GRAPHQL_CMD} && GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=${VERSION}" -o ../dist/${GRAPHQL_CMD}.linux

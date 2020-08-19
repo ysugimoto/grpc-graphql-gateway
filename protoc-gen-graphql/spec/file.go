@@ -56,9 +56,13 @@ func (f *File) Enums() []*Enum {
 }
 
 func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string, paths ...int) []*Message {
-	messages := []*Message{
-		NewMessage(d, f, prefix, f.isCamel, paths...),
+	m := NewMessage(d, f, prefix, f.isCamel, paths...)
+
+	// If message is map_entry, assign all fields as "required"
+	if opt := d.GetOptions(); opt != nil && opt.GetMapEntry() {
+		m.setRequiredFields()
 	}
+	messages := []*Message{m}
 
 	prefix = append(prefix, d.GetName())
 	for i, m := range d.GetNestedType() {

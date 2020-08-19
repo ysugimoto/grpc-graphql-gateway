@@ -103,20 +103,23 @@ func (q *Query) PluckResponse() []*Field {
 func (q *Query) QueryType() string {
 	if q.IsPluckResponse() {
 		field := q.PluckResponse()[0]
-		typeName := field.FieldType(q.GoPackage())
-		if resp := q.Response(); resp != nil {
-			if resp.GetRequired() {
-				typeName = "graphql.NewNonNull(" + typeName + ")"
-			}
-		}
-		return typeName
+		return field.FieldType(q.GoPackage())
 	}
 
 	var pkgPrefix string
 	if q.GoPackage() != q.Output.GoPackage() {
-		pkgPrefix = filepath.Base(q.GoPackage())
-		if pkgPrefix != mainPackage {
-			pkgPrefix += "."
+		if IsGooglePackage(q.Output) {
+			name := strings.ToLower(filepath.Base(q.Output.GoPackage()))
+			mustImplementedPtypes(name)
+			pkgPrefix = "gql_ptypes_" + name + "."
+		} else {
+			pkgPrefix = filepath.Base(q.GoPackage())
+			if index := strings.Index(pkgPrefix, ";"); index > -1 {
+				pkgPrefix = pkgPrefix[index+1:]
+			}
+			if pkgPrefix != mainPackage {
+				pkgPrefix += "."
+			}
 		}
 	}
 

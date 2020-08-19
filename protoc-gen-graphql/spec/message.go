@@ -50,6 +50,12 @@ func (m *Message) Fields() []*Field {
 	return m.fields
 }
 
+func (m *Message) setRequiredFields() {
+	for _, f := range m.fields {
+		f.setRequiredField()
+	}
+}
+
 func (m *Message) TypeFields() []*Field {
 	if m.PluckFields == nil {
 		return m.Fields()
@@ -58,7 +64,7 @@ func (m *Message) TypeFields() []*Field {
 }
 
 func (m *Message) Comment() string {
-	if strings.HasPrefix(m.Package(), "google.protobuf") {
+	if IsGooglePackage(m) {
 		return ""
 	}
 	return m.File.getComment(m.paths)
