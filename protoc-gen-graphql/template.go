@@ -225,7 +225,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 			Args: graphql.FieldConfigArgument{
 			{{- if .InputName }}
 				"{{ .InputName }}": &graphql.ArgumentConfig{
-					Type: Gql__input_{{ .Input.TypeName }}(),
+					Type: graphql.NewNonNull(Gql__input_{{ .Input.TypeName }}()),
 				},
 			{{- else }}
 			{{- range .Args }}
