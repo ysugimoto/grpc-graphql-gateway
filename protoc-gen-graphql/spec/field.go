@@ -14,6 +14,7 @@ import (
 var supportedPtypes = []string{
 	"timestamp",
 	"wrappers",
+	"empty",
 }
 
 func mustImplementedPtypes(ptype string) {
