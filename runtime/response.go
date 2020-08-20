@@ -55,9 +55,16 @@ func marshalStruct(v reflect.Value) map[string]interface{} {
 	t := v.Type()
 
 	for i := 0; i < t.NumField(); i++ {
-		vv := derefValue(v.Field(i))
+		// If "json" tag is not set in struct field, it's not related to response field
+		// So we can skip marshaling
 		tag := t.Field(i).Tag.Get("json")
+		if tag == "" {
+			continue
+		}
+
 		name := strcase.ToLowerCamel(strings.TrimSuffix(tag, ",omitempty"))
+		vv := derefValue(v.Field(i))
+
 		switch vv.Kind() {
 		case reflect.Struct:
 			ret[name] = marshalStruct(vv)
@@ -74,6 +81,11 @@ func marshalStruct(v reflect.Value) map[string]interface{} {
 // Protobuf in Go only use a few scalar types.
 // See: https://developers.google.com/protocol-buffers/docs/proto3#scalar
 func primitive(v reflect.Value) interface{} {
+	// Guard by cheking IsValid due to prevent panic in runtime
+	if !v.IsValid() {
+		return nil
+	}
+
 	switch v.Type().Kind() {
 	case reflect.String:
 		return v.String()
