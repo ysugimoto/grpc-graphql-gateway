@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.14.3, v0.14.4
+
+Bugfixes
+
+- Fix unexpected panic caused by reflect package in marshaling JSON response with camel-case
+
 ## v0.14.1, v0.14.2
 
 Bugfixes
