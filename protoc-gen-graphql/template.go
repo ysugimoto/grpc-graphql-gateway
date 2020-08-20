@@ -203,9 +203,17 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 					return nil, err
 				}
 				{{- if .IsPluckResponse }}
-				return runtime.MarshalResponse(resp.Get{{ .PluckResponseFieldName }}(), {{ .IsCamel }}), nil
+					{{- if .IsCamel }}
+					return runtime.MarshalResponse(resp.Get{{ .PluckResponseFieldName }}()), nil
+					{{- else }}
+					return resp.Get({{ .PluckResponseFieldName }}(), nil
+					{{- end }}
 				{{- else }}
-				return runtime.MarshalResponse(resp, {{ .IsCamel }}), nil
+					{{- if .IsCamel }}
+					return runtime.MarshalResponse(resp), nil
+					{{- else }}
+					return resp, nil
+					{{- end }}
 				{{- end }}
 			},
 		},
@@ -252,9 +260,17 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 					return nil, err
 				}
 				{{- if .IsPluckResponse }}
-				return runtime.MarshalResponse(resp.Get{{ .PluckResponseFieldName }}(), {{ .IsCamel }}), nil
+					{{- if .IsCamel }}
+					return runtime.MarshalResponse(resp.Get{{ .PluckResponseFieldName }}()), nil
+					{{- else }}
+					return resp.Get({{ .PluckResponseFieldName }}(), nil
+					{{- end }}
 				{{- else }}
-				return runtime.MarshalResponse(resp, {{ .IsCamel }}), nil
+					{{- if .IsCamel }}
+					return runtime.MarshalResponse(resp), nil
+					{{- else }}
+					return resp, nil
+					{{- end }}
 				{{- end }}
 			},
 		},

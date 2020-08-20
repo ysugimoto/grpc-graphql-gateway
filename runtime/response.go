@@ -14,9 +14,9 @@ func derefValue(v reflect.Value) reflect.Value {
 	return v
 }
 
-func MarshalResponse(resp interface{}, isCamel bool) interface{} {
-	// If response is nil or does not need to transform field to camel case, nothing to do.
-	if !isCamel || resp == nil {
+func MarshalResponse(resp interface{}) interface{} {
+	// If response is nil, nothing to do.
+	if resp == nil {
 		return resp
 	}
 	v := derefValue(reflect.ValueOf(resp))
@@ -56,7 +56,8 @@ func marshalStruct(v reflect.Value) map[string]interface{} {
 
 	for i := 0; i < t.NumField(); i++ {
 		vv := derefValue(v.Field(i))
-		name := strcase.ToLowerCamel(strings.TrimSuffix(t.Field(i).Tag.Get("json"), ",omitempty"))
+		tag := t.Field(i).Tag.Get("json")
+		name := strcase.ToLowerCamel(strings.TrimSuffix(tag, ",omitempty"))
 		switch vv.Kind() {
 		case reflect.Struct:
 			ret[name] = marshalStruct(vv)

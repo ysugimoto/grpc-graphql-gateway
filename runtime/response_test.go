@@ -59,7 +59,7 @@ func TestMarshalStruct(t *testing.T) {
 			{SomeData: "some_slice"},
 		},
 	}
-	v := MarshalResponse(e, true)
+	v := MarshalResponse(e)
 	m, ok := v.(map[string]interface{})
 	if !assert.True(t, ok) {
 		t.FailNow()
@@ -151,7 +151,7 @@ func TestMarshalSlice(t *testing.T) {
 			},
 		},
 	}
-	v := MarshalResponse(e, true)
+	v := MarshalResponse(e)
 	vv, ok := v.([]interface{})
 	if !assert.True(t, ok) {
 		t.FailNow()
