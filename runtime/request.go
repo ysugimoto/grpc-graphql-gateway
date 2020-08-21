@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/iancoleman/strcase"
 )
 
 type GraphqlRequest struct {
@@ -41,10 +43,36 @@ func parseRequest(r *http.Request) (*GraphqlRequest, error) {
 	return &req, nil
 }
 
-func MarshalRequest(args map[string]interface{}, v interface{}) error {
+func MarshalRequest(args map[string]interface{}, v interface{}, isCamel bool) error {
+	if isCamel {
+		args = toLowerCaseKeys(args)
+	}
 	buf, err := json.Marshal(args)
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(buf, &v)
+}
+
+func toLowerCaseKeys(args map[string]interface{}) map[string]interface{} {
+	lc := make(map[string]interface{})
+	for k, v := range args {
+		lc[strcase.ToSnake(k)] = marshal(v)
+	}
+	return lc
+}
+
+func marshal(v interface{}) interface{} {
+	switch t := v.(type) {
+	case map[string]interface{}:
+		return toLowerCaseKeys(t)
+	case []interface{}:
+		ret := make([]interface{}, len(t))
+		for i, si := range t {
+			ret[i] = marshal(si)
+		}
+		return ret
+	default:
+		return t
+	}
 }
