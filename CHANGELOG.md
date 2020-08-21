@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.14.6
+
+Bugfixes
+
+- enum: use protobuf enum type for value #18 (@bmkessler)
+
 ## v0.14.5
 
 Bugfixes
