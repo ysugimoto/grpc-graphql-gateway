@@ -118,7 +118,7 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				var req *HelloRequest
-				if err := runtime.MarshalRequest(p.Args, &req); err != nil {
+				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
 					return nil, err
 				}
 				client := NewGreeterClient(conn)
@@ -126,7 +126,7 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 				if err != nil {
 					return nil, err
 				}
-				return runtime.MarshalResponse(resp, false), nil
+				return resp, nil
 			},
 		},
 		"goodbye": &graphql.Field{
@@ -140,7 +140,7 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				var req *GoodbyeRequest
-				if err := runtime.MarshalRequest(p.Args, &req); err != nil {
+				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
 					return nil, err
 				}
 				client := NewGreeterClient(conn)
@@ -148,7 +148,7 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 				if err != nil {
 					return nil, err
 				}
-				return runtime.MarshalResponse(resp, false), nil
+				return resp, nil
 			},
 		},
 	}
