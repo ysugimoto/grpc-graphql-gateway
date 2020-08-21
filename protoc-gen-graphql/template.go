@@ -33,7 +33,7 @@ var (
 	{{- end }}
 )
 
-{{ range .Enums -}}
+{{ range $enum := .Enums -}}
 func Gql__enum_{{ .Name }}() *graphql.Enum {
 	if gql__enum_{{ .Name }} == nil {
 		gql__enum_{{ .Name }} =  graphql.NewEnum(graphql.EnumConfig{
@@ -44,7 +44,7 @@ func Gql__enum_{{ .Name }}() *graphql.Enum {
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
-					Value: {{ .Number }},
+					Value: {{ $enum.Name }}({{ .Number }}),
 				},
 {{- end }}
 			},
