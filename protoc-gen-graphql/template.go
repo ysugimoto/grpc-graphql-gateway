@@ -193,12 +193,12 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 			{{- end }}
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *{{ .InputType }}
-				if err := runtime.MarshalRequest(p.Args, req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+				var req {{ .InputType }}
+				if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
 					return nil, err
 				}
 				client := {{ .Package }}New{{ $service.Name }}Client(conn)
-				resp, err := client.{{ .Method.Name }}(p.Context, req)
+				resp, err := client.{{ .Method.Name }}(p.Context, &req)
 				if err != nil {
 					return nil, err
 				}
@@ -250,12 +250,16 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 			{{- end }}
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *{{ .InputType }}
-				if err := runtime.MarshalRequest(p.Args, req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+				var req {{ .InputType }}
+				{{- if .InputName }}
+				if err := runtime.MarshalRequest(p.Args["{{ .InputName }}"], &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+				{{- else }}
+				if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+				{{- end }}
 					return nil, err
 				}
 				client := {{ .Package }}New{{ $service.Name }}Client(conn)
-				resp, err := client.{{ .Method.Name }}(p.Context, req)
+				resp, err := client.{{ .Method.Name }}(p.Context, &req)
 				if err != nil {
 					return nil, err
 				}

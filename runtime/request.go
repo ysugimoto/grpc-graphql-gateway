@@ -43,11 +43,18 @@ func parseRequest(r *http.Request) (*GraphqlRequest, error) {
 	return &req, nil
 }
 
-func MarshalRequest(args map[string]interface{}, v interface{}, isCamel bool) error {
-	if isCamel {
-		args = toLowerCaseKeys(args)
+func MarshalRequest(args interface{}, v interface{}, isCamel bool) error {
+	if args == nil {
+		return errors.New("Resolved params should be non-nil")
 	}
-	buf, err := json.Marshal(args)
+	m, ok := args.(map[string]interface{}) // graphql.ResolveParams or nested object
+	if !ok {
+		return errors.New("Failed to type conversion of map[string]interface{}")
+	}
+	if isCamel {
+		m = toLowerCaseKeys(m)
+	}
+	buf, err := json.Marshal(m)
 	if err != nil {
 		return err
 	}
