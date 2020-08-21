@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.14.5
+
+Bugfixes
+
+- Implement request transformation from CamelCase to SnakeCase.
+
 ## v0.14.3, v0.14.4
 
 Bugfixes
