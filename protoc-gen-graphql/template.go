@@ -194,7 +194,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				var req *{{ .InputType }}
-				if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+				if err := runtime.MarshalRequest(p.Args, req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
 					return nil, err
 				}
 				client := {{ .Package }}New{{ $service.Name }}Client(conn)
@@ -251,7 +251,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				var req *{{ .InputType }}
-				if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+				if err := runtime.MarshalRequest(p.Args, req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
 					return nil, err
 				}
 				client := {{ .Package }}New{{ $service.Name }}Client(conn)
