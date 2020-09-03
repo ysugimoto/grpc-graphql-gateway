@@ -114,6 +114,13 @@ func (f *Field) IsRequired() bool {
 	return f.Option.GetRequired()
 }
 
+func (f *Field) IsOmit() bool {
+	if f.Option == nil {
+		return false
+	}
+	return f.Option.GetOmit()
+}
+
 func (f *Field) IsRepeated() bool {
 	return f.Label() == descriptor.FieldDescriptorProto_LABEL_REPEATED
 }

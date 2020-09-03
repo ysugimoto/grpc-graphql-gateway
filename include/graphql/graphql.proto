@@ -171,6 +171,8 @@ message GraphqlField {
   string name = 2;
   // Define default value on input.
   string default = 3;
+  // Omit this field from graphql definition
+  bool omit = 4;
 }
 
 // Extend builtin messages
