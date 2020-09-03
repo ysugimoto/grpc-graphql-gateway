@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.15.0
+
+Add `omit` option in graphql.field option.
+
 ## v0.14.6
 
 Bugfixes
