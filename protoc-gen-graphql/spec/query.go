@@ -28,6 +28,10 @@ func NewQuery(m *Method, input, output *Message, isCamel bool) *Query {
 	}
 }
 
+func (q *Query) IsResolver() bool {
+	return q.Schema.GetType() == graphql.GraphqlType_RESOLVER
+}
+
 func (q *Query) IsCamel() bool {
 	return q.isCamel
 }

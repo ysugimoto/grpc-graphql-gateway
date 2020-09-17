@@ -133,7 +133,7 @@ message GraphqlRequest {
 // configuration option for response
 message GraphqlResponse {
   // If true, this response object is required
-  // But when you declare "expose", we respect expose field definition.
+  // But when you declare "pluck", we respect expose field definition.
   bool required = 1;
 
   // Define pluck message field.
@@ -148,6 +148,8 @@ enum GraphqlType {
   QUERY = 0;
   // schema will generate as Mutation
   MUTATION = 1;
+  // schema will generate as Resolver. Resolver behaves not listed in query, but can resolve nested field.
+  RESOLVER = 2;
 }
 
 // GraphqlField is FieldOptions in protobuf in order to define type field attribute.
@@ -173,6 +175,8 @@ message GraphqlField {
   string default = 3;
   // Omit this field from graphql definition
   bool omit = 4;
+  // Resolve this field by nested query with additional RPC
+  string resolve = 5;
 }
 
 // Extend builtin messages
