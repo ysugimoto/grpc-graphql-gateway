@@ -303,3 +303,33 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 		return "graphql.SkipDirective"
 	}
 }
+
+func (f *Field) IsResolve() bool {
+	if f.Option == nil {
+		return false
+	}
+
+	return f.Option.GetResolver() != ""
+}
+
+func (f *Field) ResolveSubField(services []*Service) *Query {
+	name := f.Option.GetResolver()
+	var query *Query
+OUTER:
+	for _, s := range services {
+		for _, q := range s.Queries {
+			if !q.IsResolver() {
+				continue
+			}
+			if name == q.QueryName() {
+				query = q
+				break OUTER
+			}
+		}
+	}
+
+	if query == nil {
+		panic("Could not find field resolve " + name + " in defined queries")
+	}
+	return query
+}
