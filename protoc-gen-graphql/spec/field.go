@@ -309,11 +309,11 @@ func (f *Field) IsResolve() bool {
 		return false
 	}
 
-	return f.Option.GetResolve() != ""
+	return f.Option.GetResolver() != ""
 }
 
 func (f *Field) ResolveSubField(services []*Service) *Query {
-	name := f.Option.GetResolve()
+	name := f.Option.GetResolver()
 	var query *Query
 OUTER:
 	for _, s := range services {
