@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.17.0
+
+- Add default error handler which add `code` extension via gRPC error [#25](https://github.com/ysugimoto/grpc-graphql-gateway/pull/25)
+
 ## v0.16.0
 
 ## New graphql.proto option
