@@ -8,16 +8,12 @@ import (
 	"net/http"
 
 	"github.com/graphql-go/graphql"
-	"github.com/graphql-go/graphql/gqlerrors"
 	"google.golang.org/grpc"
 )
 
 type (
 	// MiddlewareFunc type definition
 	MiddlewareFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, error)
-
-	// Custom error handler which is called on graphql result has an error
-	GraphqlErrorHandler func(errs gqlerrors.FormattedErrors)
 )
 
 type GraphqlHandler interface {
@@ -96,7 +92,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		var err error
 		ctx, err = m(ctx, w, r)
 		if err != nil {
-			ge := gqlerrors.FormattedError{}
+			ge := GraphqlError{}
 			if me, ok := err.(*MiddlewareError); ok {
 				ge.Message = me.Message
 				ge.Extensions = map[string]interface{}{
@@ -109,7 +105,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			respondResult(w, &graphql.Result{
-				Errors: []gqlerrors.FormattedError{ge},
+				Errors: []GraphqlError{ge},
 			})
 			return
 		}
@@ -121,7 +117,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c, closer, err := h.CreateConnection(ctx)
 		if err != nil {
 			respondResult(w, &graphql.Result{
-				Errors: []gqlerrors.FormattedError{
+				Errors: []GraphqlError{
 					{
 						Message: "Failed to create grpc connection: " + err.Error(),
 						Extensions: map[string]interface{}{
@@ -159,7 +155,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	schema, err := graphql.NewSchema(schemaConfig)
 	if err != nil {
 		respondResult(w, &graphql.Result{
-			Errors: []gqlerrors.FormattedError{
+			Errors: []GraphqlError{
 				{
 					Message: "Failed to build schema: " + err.Error(),
 					Extensions: map[string]interface{}{
@@ -174,7 +170,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	req, err := parseRequest(r)
 	if err != nil {
 		respondResult(w, &graphql.Result{
-			Errors: []gqlerrors.FormattedError{
+			Errors: []GraphqlError{
 				{
 					Message: "Failed to parse request: " + err.Error(),
 					Extensions: map[string]interface{}{
@@ -196,6 +192,8 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(result.Errors) > 0 {
 		if s.ErrorHandler != nil {
 			s.ErrorHandler(result.Errors)
+		} else {
+			defaultGraphqlErrorHandler(result.Errors)
 		}
 	}
 	respondResult(w, result)
