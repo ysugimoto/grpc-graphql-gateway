@@ -1,4 +1,4 @@
-package timestamp
+package empty
 
 import (
 	"github.com/graphql-go/graphql"
