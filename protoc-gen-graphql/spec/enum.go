@@ -11,6 +11,7 @@ type Enum struct {
 	descriptor *descriptor.EnumDescriptorProto
 	*File
 
+	prefix []string
 	paths  []int
 	values []*EnumValue
 
@@ -20,12 +21,14 @@ type Enum struct {
 func NewEnum(
 	d *descriptor.EnumDescriptorProto,
 	f *File,
+	prefix []string,
 	paths ...int,
 ) *Enum {
 
 	e := &Enum{
 		descriptor: d,
 		File:       f,
+		prefix:     prefix,
 		paths:      paths,
 		values:     make([]*EnumValue, 0),
 
@@ -43,8 +46,22 @@ func (e *Enum) Comment() string {
 	return e.File.getComment(e.paths)
 }
 
+// Get name for definition generation
 func (e *Enum) Name() string {
-	return e.descriptor.GetName()
+	var p string
+	if len(e.prefix) > 0 {
+		p = strings.Join(e.prefix, "_") + "_"
+	}
+	return p + e.descriptor.GetName()
+}
+
+// Get path name with prefix
+func (e *Enum) PathName() string {
+	var p string
+	if len(e.prefix) > 0 {
+		p = strings.Join(e.prefix, ".") + "."
+	}
+	return p + e.descriptor.GetName()
 }
 
 func (e *Enum) SingleName() string {
@@ -57,5 +74,5 @@ func (e *Enum) Values() []*EnumValue {
 }
 
 func (e *Enum) FullPath() string {
-	return e.File.Package() + "." + e.Name()
+	return e.File.Package() + "." + e.PathName()
 }

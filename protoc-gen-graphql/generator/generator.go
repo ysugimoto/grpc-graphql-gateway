@@ -85,7 +85,7 @@ func (g *Generator) Generate(tmpl string, fs []string) ([]*plugin.CodeGeneratorR
 				continue
 			}
 
-			// mark as same package defininition in file
+			// mark as same package definition in file
 			g.analyzeEnum(f)
 			if err := g.analyzeMessage(f); err != nil {
 				return nil, err

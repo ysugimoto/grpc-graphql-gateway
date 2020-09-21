@@ -39,7 +39,7 @@ func NewFile(d *descriptor.FileDescriptorProto, isCamel bool) *File {
 		f.messages = append(f.messages, f.messagesRecursive(m, []string{}, 4, i)...)
 	}
 	for i, e := range d.GetEnumType() {
-		f.enums = append(f.enums, NewEnum(e, f, 5, i))
+		f.enums = append(f.enums, NewEnum(e, f, []string{}, 5, i))
 	}
 	return f
 }
@@ -66,6 +66,14 @@ func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string,
 	messages := []*Message{m}
 
 	prefix = append(prefix, d.GetName())
+
+	// Include enums defined within message
+	for i, e := range d.GetEnumType() {
+		p := make([]int, len(paths))
+		copy(p, paths)
+		f.enums = append(f.enums, NewEnum(e, f, prefix, append(p, 5, i)...))
+	}
+
 	for i, m := range d.GetNestedType() {
 		p := make([]int, len(paths))
 		copy(p, paths)
