@@ -44,10 +44,7 @@ workflows:
   version: 2
   build_and_publish:
     jobs:
-      - build:
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+      - build
       - publish:
           requires:
             - build
