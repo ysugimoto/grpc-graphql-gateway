@@ -43,6 +43,7 @@ func parseRequest(r *http.Request) (*GraphqlRequest, error) {
 	return &req, nil
 }
 
+// MarshalRequest marshals graphql request arguments to gRPC request message
 func MarshalRequest(args interface{}, v interface{}, isCamel bool) error {
 	if args == nil {
 		return errors.New("Resolved params should be non-nil")
@@ -61,6 +62,7 @@ func MarshalRequest(args interface{}, v interface{}, isCamel bool) error {
 	return json.Unmarshal(buf, &v)
 }
 
+// Convert to lower case keyname string
 func toLowerCaseKeys(args map[string]interface{}) map[string]interface{} {
 	lc := make(map[string]interface{})
 	for k, v := range args {
@@ -69,6 +71,7 @@ func toLowerCaseKeys(args map[string]interface{}) map[string]interface{} {
 	return lc
 }
 
+// marshals interface recursively
 func marshal(v interface{}) interface{} {
 	switch t := v.(type) {
 	case map[string]interface{}:

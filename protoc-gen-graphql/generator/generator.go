@@ -323,7 +323,7 @@ func (g *Generator) analyzeService(f *spec.File, s *spec.Service) error {
 		}
 
 		switch m.Schema.GetType() {
-		case graphql.GraphqlType_QUERY:
+		case graphql.GraphqlType_QUERY, graphql.GraphqlType_RESOLVER:
 			q := spec.NewQuery(m, input, output, g.args.FieldCamelCase)
 			if err := g.analyzeQuery(f, q); err != nil {
 				return err

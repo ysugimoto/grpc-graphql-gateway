@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## v0.17.0
+
+- Add default error handler which add `code` extension via gRPC error [#25](https://github.com/ysugimoto/grpc-graphql-gateway/pull/25)
+
+## v0.16.0
+
+## New graphql.proto option
+
+- Add new graphql option of `resolver` [#24](https://github.com/ysugimoto/grpc-graphql-gateway/pull/24)
+
+```protobuf
+message GraphqlField {
+    bool required = 1;
+    string name = 2;
+    string default = 3;
+    bool omit = 4;
+    string resolver = 5;
+}
+```
+
+A new field of `resolve` which resolves as a nested query.
+
 ## v0.15.0
 
 Add `omit` option in graphql.field option.
@@ -8,7 +30,7 @@ Add `omit` option in graphql.field option.
 
 Bugfixes
 
-- enum: use protobuf enum type for value #18 (@bmkessler)
+- enum: use protobuf enum type for value [#18](https://github.com/ysugimoto/grpc-graphql-gateway/pull/18) (@bmkessler)
 
 ## v0.14.5
 

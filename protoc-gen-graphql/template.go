@@ -10,6 +10,7 @@ import (
 
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
+	"github.com/pkg/errors"
 {{- end }}
 	"github.com/graphql-go/graphql"
 
@@ -95,12 +96,68 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 			{{- end }}
 			Fields: graphql.Fields {
 {{- range .Fields }}
+				{{- if .IsResolve }}
+				{{ $query := .ResolveSubField $.Services }}
+				"{{ .FieldName }}": &graphql.Field{
+						Type: {{ $query.QueryType }},
+						{{- if $query.Comment }}
+						Description: ` + "`" + `{{ $query.Comment }}` + "`" + `,
+						{{- end }}
+						Args: graphql.FieldConfigArgument{
+						{{- range $query.Args }}
+							"{{ .FieldName }}": &graphql.ArgumentConfig{
+								Type: {{ .FieldType $.RootPackage.Path }},
+								{{- if .Comment }}
+								Description: ` + "`" + `{{ .Comment }}` + "`" + `,
+								{{- end }}
+								{{- if .DefaultValue }}
+								DefaultValue: {{ .DefaultValue }},
+								{{- end }}
+							},
+						{{- end }}
+						},
+						Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+							var req {{ $query.InputType }}
+							if err := runtime.MarshalRequest(p.Source, &req, {{ if $query.IsCamel }}true{{ else }}false{{ end }}); err != nil {
+								return nil, errors.Wrap(err, "Failed to marshal resolver source for {{ $query.QueryName }}")
+							} else if err = runtime.MarshalRequest(p.Args, &req, {{ if $query.IsCamel }}true{{ else }}false{{ end }}); err != nil {
+								return nil, errors.Wrap(err, "Failed to marshal resolver request for {{ $query.QueryName }}")
+							}
+							{{ $s := index $.Services 0 }}
+							x := new_graphql_resolver_{{ $s.Name }}(nil)
+							conn, closer, err := x.CreateConnection(p.Context)
+							if err != nil {
+								return nil, errors.Wrap(err, "Failed to create gRPC connection for nested resolver")
+							}
+							defer closer()
+							client := {{ $query.Package }}New{{ $query.Method.Service.Name }}Client(conn)
+							resp, err := client.{{ $query.Method.Name }}(p.Context, &req)
+							if err != nil {
+								return nil, errors.Wrap(err, "Failed to call RPC {{ $query.Method.Name }}")
+							}
+							{{- if $query.IsPluckResponse }}
+								{{- if $query.IsCamel }}
+								return runtime.MarshalResponse(resp.Get{{ $query.PluckResponseFieldName }}()), nil
+								{{- else }}
+								return resp.Get{{ $query.PluckResponseFieldName }}(), nil
+								{{- end }}
+							{{- else }}
+								{{- if $query.IsCamel }}
+								return runtime.MarshalResponse(resp), nil
+								{{- else }}
+								return resp, nil
+								{{- end }}
+							{{- end }}
+						},
+				},
+				{{- else }}
 				"{{ .FieldName }}": &graphql.Field{
 					Type: {{ .FieldType $.RootPackage.Path }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
 				},
+				{{- end }}
 {{- end }}
 			},
 			{{- if .Interfaces }}
@@ -155,6 +212,19 @@ type graphql__resolver_{{ $service.Name }} struct {
 	conn *grpc.ClientConn
 }
 
+// new_graphql_resolver_{{ $service.Name }} creates pointer of service struct
+func new_graphql_resolver_{{ $service.Name }}(conn *grpc.ClientConn) *graphql__resolver_{{ $service.Name }} {
+	return &graphql__resolver_{{ .Name }}{
+		conn: conn,
+		host: "{{ if .Host }}{{ .Host }}{{ else }}localhost:50051{{ end }}",
+		dialOptions: []grpc.DialOption{
+		{{- if .Insecure }}
+			grpc.WithInsecure(),
+		{{- end }}
+		},
+	}
+}
+
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
 func (x *graphql__resolver_{{ $service.Name }}) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
@@ -174,7 +244,8 @@ func (x *graphql__resolver_{{ $service.Name }}) CreateConnection(ctx context.Con
 func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn) graphql.Fields {
 	return graphql.Fields{
 {{- range .Queries }}
-		"{{ .QueryName }}": &graphql.Field{
+	{{- if not .IsResolver }}
+	   "{{ .QueryName }}": &graphql.Field{
 			Type: {{ .QueryType }},
 			{{- if .Comment }}
 			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
@@ -195,12 +266,12 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				var req {{ .InputType }}
 				if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for {{ .QueryName }}")
 				}
-				client := {{ .Package }}New{{ $service.Name }}Client(conn)
+				client := {{ .Package }}New{{ .Method.Service.Name }}Client(conn)
 				resp, err := client.{{ .Method.Name }}(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC {{ .Method.Name }}")
 				}
 				{{- if .IsPluckResponse }}
 					{{- if .IsCamel }}
@@ -216,7 +287,8 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 					{{- end }}
 				{{- end }}
 			},
-		},
+	   },
+	{{- end }}
 {{- end }}
 	}
 }
@@ -256,12 +328,12 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 				{{- else }}
 				if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
 				{{- end }}
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for {{ .MutationName }}")
 				}
 				client := {{ .Package }}New{{ $service.Name }}Client(conn)
 				resp, err := client.{{ .Method.Name }}(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC {{ .Method.Name }}")
 				}
 				{{- if .IsPluckResponse }}
 					{{- if .IsCamel }}
@@ -304,15 +376,7 @@ func Register{{ .Name }}Graphql(mux *runtime.ServeMux) error {
 //    ...with RPC definitions
 // }
 func Register{{ .Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return mux.AddHandler(&graphql__resolver_{{ .Name }}{
-		conn: conn,
-		host: "{{ if .Host }}{{ .Host }}{{ else }}localhost:50051{{ end }}",
-		dialOptions: []grpc.DialOption{
-		{{- if .Insecure }}
-			grpc.WithInsecure(),
-		{{- end }}
-		},
-	})
+	return mux.AddHandler(new_graphql_resolver_{{ .Name }}(conn))
 }
 
 {{ end }}
