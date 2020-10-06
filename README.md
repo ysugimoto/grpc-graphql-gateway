@@ -251,8 +251,6 @@ The most of limitations come from the IDL's power of expression -- some kind of 
 Currently we don't support some Protobuf types:
 
 - Builtin `oneof` type
-- Wrapper types in `google/protobuf/wrappers`
-- Any types of `google/protobuf/any`
 
 ## Contribute
 
