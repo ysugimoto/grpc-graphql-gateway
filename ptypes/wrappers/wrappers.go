@@ -123,7 +123,7 @@ func Gql__type_BoolValue() *graphql.Object {
 
 func Gql__type_StringValue() *graphql.Object {
 	if gql__type_StringValue == nil {
-		gql__type_BoolValue = graphql.NewObject(graphql.ObjectConfig{
+		gql__type_StringValue = graphql.NewObject(graphql.ObjectConfig{
 			Name: "Google_type_Wrappers_StringValue",
 			Fields: graphql.Fields{
 				"value": &graphql.Field{
