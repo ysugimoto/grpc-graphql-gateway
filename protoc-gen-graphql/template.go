@@ -253,7 +253,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 			Args: graphql.FieldConfigArgument{
 			{{- range .Args }}
 				"{{ .FieldName }}": &graphql.ArgumentConfig{
-					Type: {{ .FieldType $.RootPackage.Path }},
+					Type: {{ .FieldTypeInput $.RootPackage.Path }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
