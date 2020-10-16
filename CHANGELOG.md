@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.18.1, v0.18.2
+
+- Fix Google's ptypes package and generation [#27](https://github.com/ysugimoto/grpc-graphql-gateway/pull/27) [#29](https://github.com/ysugimoto/grpc-graphql-gateway/pull/29)
+
 ## v0.18.0
 
 - Enable to parse enums within message [#26](https://github.com/ysugimoto/grpc-graphql-gateway/pull/26) (@hychrisli)
