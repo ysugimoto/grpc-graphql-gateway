@@ -267,10 +267,13 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 			return PrefixInterface(strings.ReplaceAll(tn, ".", "_"))
 		}
 		if isInput {
-			if IsGooglePackage(m) {
-				return PrefixPtypesInput(strings.ReplaceAll(tn, ".", "_"))
+			if !IsGooglePackage(m) {
+				return PrefixInput(strings.ReplaceAll(tn, ".", "_"))
 			}
-			return PrefixInput(strings.ReplaceAll(tn, ".", "_"))
+			// Case google.protobuf.XXX
+			name := strings.ToLower(filepath.Base(m.GoPackage()))
+			mustImplementedPtypes(name)
+			return "gql_ptypes_" + name + "." + PrefixInput(strings.ReplaceAll(tn, ".", "_"))
 		}
 		var pkgPrefix string
 		pkg := NewPackage(m)
@@ -281,8 +284,7 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 		} else if rootPackage != "." {
 			// Case message is nested, also includes map_entry
 			if pkg.Name != rootPackage {
-				if IsGooglePackage(m) {
-				} else {
+				if !IsGooglePackage(m) {
 					pkgPrefix = pkg.Name + "."
 				}
 			}
