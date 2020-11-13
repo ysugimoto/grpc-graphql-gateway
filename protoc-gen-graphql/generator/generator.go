@@ -344,7 +344,7 @@ func (g *Generator) analyzeService(f *spec.File, s *spec.Service) error {
 func (g *Generator) analyzeQuery(f *spec.File, q *spec.Query) error {
 	g.logger.Write("package %s depends on query request %s", f.Package(), q.Input.FullPath())
 	q.Input.Depend(spec.DependTypeMessage, f.Package())
-	if err := g.analyzeFields(f.Package(), q.Input, q.PluckRequest(), false, false); err != nil {
+	if err := g.analyzeFields(f.Package(), q.Input, q.PluckRequest(), true, false); err != nil {
 		return err
 	}
 
