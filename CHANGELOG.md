@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.19.0
+
+- Fix Input message type generation [#31](https://github.com/ysugimoto/grpc-graphql-gateway/pull/31)
+- Fix Query argument field type [#30](https://github.com/ysugimoto/grpc-graphql-gateway/pull/30) (@tarunvelli)
+
 ## v0.18.1, v0.18.2
 
 - Fix Google's ptypes package and generation [#27](https://github.com/ysugimoto/grpc-graphql-gateway/pull/27) [#29](https://github.com/ysugimoto/grpc-graphql-gateway/pull/29)
