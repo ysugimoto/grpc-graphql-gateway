@@ -273,6 +273,7 @@ func (g *Generator) analyzeMessage(file *spec.File) error {
 			continue
 		}
 		m.Depend(spec.DependTypeMessage, file.Package())
+		m.Depend(spec.DependTypeInput, file.Package())
 		if err := g.analyzeFields(file.Package(), m, m.Fields(), false, false); err != nil {
 			return err
 		}
