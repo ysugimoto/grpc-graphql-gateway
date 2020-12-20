@@ -106,7 +106,7 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 						Args: graphql.FieldConfigArgument{
 						{{- range $query.Args }}
 							"{{ .FieldName }}": &graphql.ArgumentConfig{
-								Type: {{ .FieldType $.RootPackage.Path }},
+								Type: {{ .FieldTypeInput $.RootPackage.Path }},
 								{{- if .Comment }}
 								Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 								{{- end }}
