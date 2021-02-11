@@ -1,6 +1,6 @@
 module github.com/ysugimoto/grpc-graphql-gateway
 
-go 1.12
+go 1.15
 
 require (
 	github.com/golang/protobuf v1.4.0-rc.4.0.20200313231945-b860323f09d0

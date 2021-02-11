@@ -7,7 +7,7 @@ definitions:
   workspace: &workspace
     docker:
       # specify the version
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.15
 
   job_presets: &job_presets
     build:
@@ -16,8 +16,8 @@ definitions:
         - checkout
         - run:
            command: |
-             PROTOC_ZIP=protoc-3.9.0-linux-x86_64.zip
-             curl -OL https://github.com/google/protobuf/releases/download/v3.9.0/$PROTOC_ZIP
+             PROTOC_ZIP=protoc-3.14.0-linux-x86_64.zip
+             curl -OL https://github.com/google/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
              sudo unzip -o $PROTOC_ZIP -d /usr/local/protoc
              sudo ln -s /usr/local/protoc/bin/protoc /usr/local/bin
              sudo ln -s /usr/local/protoc/include/google `pwd`/include/google
