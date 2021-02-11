@@ -19,6 +19,7 @@ definitions:
              PROTOC_ZIP=protoc-3.14.0-linux-x86_64.zip
              curl -OL https://github.com/google/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
              sudo unzip -o $PROTOC_ZIP -d /usr/local/protoc
+             sudo chmod +x /usr/local/bin/protoc
              sudo ln -s /usr/local/protoc/bin/protoc /usr/local/bin
              sudo ln -s /usr/local/protoc/include/google `pwd`/include/google
              go get -u github.com/golang/protobuf/protoc-gen-go
