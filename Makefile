@@ -2,6 +2,14 @@
 
 GRAPHQL_CMD=protoc-gen-graphql
 VERSION=$(or ${tag}, dev)
+UNAME:=$(shell uname)
+
+ifeq ($(UNAME), Darwin)
+	PROTOPATH := $(shell brew --prefix protobuf)/include
+endif
+ifeq ($(UNAME), Linux)
+	PROTOPATH := /usr/local/include
+endif
 
 command: plugin clean
 	cd ${GRAPHQL_CMD} && \
@@ -9,27 +17,21 @@ command: plugin clean
 			-ldflags "-X main.version=${VERSION}" \
 			-o ../dist/${GRAPHQL_CMD}
 
-lint:
-	golangci-lint run
-
 plugin:
-	protoc -I $(shell brew --prefix protobuf)/include/google \
+	protoc -I ${PROTOPATH} \
 		-I include/graphql \
 		--go_out=./graphql \
 		include/graphql/graphql.proto
 	mv graphql/github.com/ysugimoto/grpc-graphql-gateway/graphql/graphql.pb.go graphql/
 	rm -rf graphql/github.com
+
+lint:
+	golangci-lint run
 
 test:
 	go list ./... | xargs go test
 
-build: test
-	protoc -I google \
-		-I include/graphql \
-		--go_out=./graphql \
-		include/graphql/graphql.proto
-	mv graphql/github.com/ysugimoto/grpc-graphql-gateway/graphql/graphql.pb.go graphql/
-	rm -rf graphql/github.com
+build: test plugin
 
 clean:
 	rm -rf ./dist/*
