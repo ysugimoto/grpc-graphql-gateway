@@ -247,17 +247,6 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 		if f.IsCyclic {
 			return PrefixInterface(strings.ReplaceAll(tn, ".", "_"))
 		}
-		if isInput {
-			if !IsGooglePackage(m) {
-				return PrefixInput(strings.ReplaceAll(tn, ".", "_"))
-			}
-			// Case google.protobuf.XXX
-			ptypeName, err := getImplementedPtypes(m)
-			if err != nil {
-				log.Fatalln("[PROTOC-GEN-GRAPHQL] Error:", err)
-			}
-			return "gql_ptypes_" + ptypeName + "." + PrefixInput(strings.ReplaceAll(tn, ".", "_"))
-		}
 		var pkgPrefix string
 		pkg := NewPackage(m)
 		if IsGooglePackage(m) {
@@ -274,6 +263,9 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 					pkgPrefix = pkg.Name + "."
 				}
 			}
+		}
+		if isInput {
+			return pkgPrefix + PrefixInput(strings.ReplaceAll(tn, ".", "_"))
 		}
 		return pkgPrefix + PrefixType(strings.ReplaceAll(tn, ".", "_"))
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:

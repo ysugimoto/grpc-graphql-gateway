@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.19.2
+
+Bugifxes
+
+- Fix input object when message has dependency of extermal package [#35](https://github.com/ysugimoto/grpc-graphql-gateway/pull/35)
+
 ## v0.19.1
 
 Bugifxes
