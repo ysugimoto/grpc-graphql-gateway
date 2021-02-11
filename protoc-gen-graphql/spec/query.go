@@ -179,6 +179,13 @@ func (q *Query) OutputName() string {
 
 func (q *Query) InputType() string {
 	if q.Method.GoPackage() != q.Input.GoPackage() {
+		if IsGooglePackage(q.Input) {
+			ptypeName, err := getImplementedPtypes(q.Input)
+			if err != nil {
+				log.Fatalln("[PROTOC-GEN-GRAPHQL] Error:", err)
+			}
+			return "gql_ptypes_" + ptypeName + "." + q.Input.Name()
+		}
 		return q.Input.StructName(false)
 	}
 	return q.Input.Name()

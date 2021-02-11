@@ -2,7 +2,11 @@ package timestamppb
 
 import (
 	"github.com/graphql-go/graphql"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// Expose Google defined ptypes as this package types
+type Timestamp = timestamppb.Timestamp
 
 var (
 	gql__type_Timestamp  *graphql.Object

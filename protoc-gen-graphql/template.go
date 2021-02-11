@@ -268,7 +268,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 				if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
 					return nil, errors.Wrap(err, "Failed to marshal request for {{ .QueryName }}")
 				}
-				client := {{ .Package }}New{{ .Method.Service.Name }}Client(conn)
+				client := New{{ .Method.Service.Name }}Client(conn)
 				resp, err := client.{{ .Method.Name }}(p.Context, &req)
 				if err != nil {
 					return nil, errors.Wrap(err, "Failed to call RPC {{ .Method.Name }}")
@@ -330,7 +330,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 				{{- end }}
 					return nil, errors.Wrap(err, "Failed to marshal request for {{ .MutationName }}")
 				}
-				client := {{ .Package }}New{{ $service.Name }}Client(conn)
+				client := New{{ $service.Name }}Client(conn)
 				resp, err := client.{{ .Method.Name }}(p.Context, &req)
 				if err != nil {
 					return nil, errors.Wrap(err, "Failed to call RPC {{ .Method.Name }}")

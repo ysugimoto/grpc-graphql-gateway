@@ -2,6 +2,20 @@ package wrapperspb
 
 import (
 	"github.com/graphql-go/graphql"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+)
+
+// Expose Google defined ptypes as this package types
+type (
+	DoubleValue = wrapperspb.DoubleValue
+	FloatValue  = wrapperspb.FloatValue
+	BoolValue   = wrapperspb.BoolValue
+	Int32Value  = wrapperspb.Int32Value
+	Int64Value  = wrapperspb.Int64Value
+	UInt32Value = wrapperspb.UInt32Value
+	UInt64Value = wrapperspb.UInt64Value
+	StringValue = wrapperspb.StringValue
+	BytesValue  = wrapperspb.BytesValue
 )
 
 var (

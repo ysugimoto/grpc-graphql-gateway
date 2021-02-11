@@ -2,7 +2,11 @@ package emptypb
 
 import (
 	"github.com/graphql-go/graphql"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
+
+// Expose Google defined ptypes as this package types
+type Empty = emptypb.Empty
 
 var (
 	gql__type_Empty  *graphql.Object
