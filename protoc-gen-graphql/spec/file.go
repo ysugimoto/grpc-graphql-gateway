@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 )
 
 // File spec wraps FileDescriptorProto
@@ -20,12 +21,19 @@ type File struct {
 	enums    []*Enum
 
 	isCamel bool
+
+	CompilerVersion *plugin.Version
 }
 
-func NewFile(d *descriptor.FileDescriptorProto, isCamel bool) *File {
+func NewFile(
+	d *descriptor.FileDescriptorProto,
+	cv *plugin.Version,
+	isCamel bool,
+) *File {
 	f := &File{
-		descriptor: d,
-		comments:   makeComments(d),
+		CompilerVersion: cv,
+		descriptor:      d,
+		comments:        makeComments(d),
 
 		services: make([]*Service, 0),
 		messages: make([]*Message, 0),

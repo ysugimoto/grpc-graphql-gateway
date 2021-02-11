@@ -2,7 +2,6 @@ package spec
 
 import (
 	"log"
-	"path/filepath"
 	"strings"
 
 	// nolint: staticcheck
@@ -11,24 +10,6 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 )
-
-var supportedPtypes = []string{
-	"timestamp",
-	"wrappers",
-	"empty",
-}
-
-func mustImplementedPtypes(ptype string) {
-	var found bool
-	for _, v := range supportedPtypes {
-		if ptype == v {
-			found = true
-		}
-	}
-	if !found {
-		log.Fatalf("[PROTOC-GEN-GRAPHQL] Error: google's ptype \"%s\" does not implement for now.\n", ptype)
-	}
-}
 
 // Field spec wraps FieldDescriptorProto with keeping file info
 type Field struct {
@@ -271,16 +252,21 @@ func (f *Field) GraphqlGoType(rootPackage string, isInput bool) string {
 				return PrefixInput(strings.ReplaceAll(tn, ".", "_"))
 			}
 			// Case google.protobuf.XXX
-			name := strings.ToLower(filepath.Base(m.GoPackage()))
-			mustImplementedPtypes(name)
-			return "gql_ptypes_" + name + "." + PrefixInput(strings.ReplaceAll(tn, ".", "_"))
+			ptypeName, err := getImplementedPtypes(m)
+			if err != nil {
+				log.Fatalln("[PROTOC-GEN-GRAPHQL] Error:", err)
+			}
+			return "gql_ptypes_" + ptypeName + "." + PrefixInput(strings.ReplaceAll(tn, ".", "_"))
 		}
 		var pkgPrefix string
 		pkg := NewPackage(m)
 		if IsGooglePackage(m) {
-			name := strings.ToLower(filepath.Base(m.GoPackage()))
-			mustImplementedPtypes(name)
-			pkgPrefix = "gql_ptypes_" + name + "."
+			// Case google.protobuf.XXX
+			ptypeName, err := getImplementedPtypes(m)
+			if err != nil {
+				log.Fatalln("[PROTOC-GEN-GRAPHQL] Error:", err)
+			}
+			pkgPrefix = "gql_ptypes_" + ptypeName + "."
 		} else if rootPackage != "." {
 			// Case message is nested, also includes map_entry
 			if pkg.Name != rootPackage {

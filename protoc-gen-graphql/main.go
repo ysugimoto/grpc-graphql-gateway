@@ -1,12 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"io"
 	"log"
 	"os"
-
-	"io/ioutil"
 
 	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
@@ -42,14 +41,14 @@ func main() {
 		os.Stdout.Write(buf)
 	}()
 
-	buf, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(os.Stdin); err != nil {
 		genError = err
 		return
 	}
 
 	var req plugin.CodeGeneratorRequest
-	if err = proto.Unmarshal(buf, &req); err != nil {
+	if err := proto.Unmarshal(buf.Bytes(), &req); err != nil {
 		genError = err
 		return
 	}
@@ -65,14 +64,14 @@ func main() {
 	}
 
 	if args.FieldCamelCase {
-		log.Println("[INFO] field_camel option is provided, all type fields are transform to camelcase.")
+		log.Println("[INFO] field_camel option is provided. All type fields are transform to camelcase.")
 	}
 
 	// We're dealing with each descriptors to out wrapper struct
 	// in order to access easily plugin options, package name, comment, etc...
 	var files []*spec.File
 	for _, f := range req.GetProtoFile() {
-		files = append(files, spec.NewFile(f, args.FieldCamelCase))
+		files = append(files, spec.NewFile(f, req.GetCompilerVersion(), args.FieldCamelCase))
 	}
 
 	g := generator.New(files, args)
