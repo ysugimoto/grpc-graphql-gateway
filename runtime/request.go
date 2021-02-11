@@ -44,7 +44,7 @@ func parseRequest(r *http.Request) (*GraphqlRequest, error) {
 }
 
 // MarshalRequest marshals graphql request arguments to gRPC request message
-func MarshalRequest(args interface{}, v interface{}, isCamel bool) error {
+func MarshalRequest(args, v interface{}, isCamel bool) error {
 	if args == nil {
 		return errors.New("Resolved params should be non-nil")
 	}

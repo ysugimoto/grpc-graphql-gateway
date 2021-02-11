@@ -30,6 +30,7 @@ func NewFile(
 	cv *plugin.Version,
 	isCamel bool,
 ) *File {
+
 	f := &File{
 		CompilerVersion: cv,
 		descriptor:      d,
