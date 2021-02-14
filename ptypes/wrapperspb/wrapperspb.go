@@ -1,21 +1,21 @@
-package wrappers
+package wrapperspb
 
 import (
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/graphql-go/graphql"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // Expose Google defined ptypes as this package types
 type (
-	DoubleValue = wrappers.DoubleValue
-	FloatValue  = wrappers.FloatValue
-	BoolValue   = wrappers.BoolValue
-	Int32Value  = wrappers.Int32Value
-	Int64Value  = wrappers.Int64Value
-	UInt32Value = wrappers.UInt32Value
-	UInt64Value = wrappers.UInt64Value
-	StringValue = wrappers.StringValue
-	BytesValue  = wrappers.BytesValue
+	DoubleValue = wrapperspb.DoubleValue
+	FloatValue  = wrapperspb.FloatValue
+	BoolValue   = wrapperspb.BoolValue
+	Int32Value  = wrapperspb.Int32Value
+	Int64Value  = wrapperspb.Int64Value
+	UInt32Value = wrapperspb.UInt32Value
+	UInt64Value = wrapperspb.UInt64Value
+	StringValue = wrapperspb.StringValue
+	BytesValue  = wrapperspb.BytesValue
 )
 
 var (

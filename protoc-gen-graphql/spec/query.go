@@ -2,6 +2,7 @@ package spec
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"path/filepath"
@@ -113,9 +114,11 @@ func (q *Query) QueryType() string {
 	var pkgPrefix string
 	if q.GoPackage() != q.Output.GoPackage() {
 		if IsGooglePackage(q.Output) {
-			name := strings.ToLower(filepath.Base(q.Output.GoPackage()))
-			mustImplementedPtypes(name)
-			pkgPrefix = "gql_ptypes_" + name + "."
+			ptypeName, err := getImplementedPtypes(q.Output)
+			if err != nil {
+				log.Fatalf("[PROTOC-GEN-GRAPHQL] Error: %s\n", err)
+			}
+			pkgPrefix = "gql_ptypes_" + ptypeName + "."
 		} else {
 			pkgPrefix = filepath.Base(q.GoPackage())
 			if index := strings.Index(pkgPrefix, ";"); index > -1 {
@@ -176,6 +179,13 @@ func (q *Query) OutputName() string {
 
 func (q *Query) InputType() string {
 	if q.Method.GoPackage() != q.Input.GoPackage() {
+		if IsGooglePackage(q.Input) {
+			ptypeName, err := getImplementedPtypes(q.Input)
+			if err != nil {
+				log.Fatalln("[PROTOC-GEN-GRAPHQL] Error:", err)
+			}
+			return "gql_ptypes_" + ptypeName + "." + q.Input.Name()
+		}
 		return q.Input.StructName(false)
 	}
 	return q.Input.Name()

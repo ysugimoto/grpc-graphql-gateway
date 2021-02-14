@@ -17,7 +17,7 @@ func derefValue(v reflect.Value) reflect.Value {
 func MarshalResponse(resp interface{}) interface{} {
 	// If response is nil, nothing to do.
 	if resp == nil {
-		return resp
+		return nil
 	}
 	v := derefValue(reflect.ValueOf(resp))
 	switch v.Kind() {
