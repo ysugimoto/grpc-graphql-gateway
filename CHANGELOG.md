@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.20.0
+
+- Enable to specify Google's ptype in request message [#36](https://github.com/ysugimoto/grpc-graphql-gateway/pull/36)
+- Support protobuf v3.14.0 [#36](https://github.com/ysugimoto/grpc-graphql-gateway/pull/36)
+
 ## v0.19.2
 
 Bugifxes
