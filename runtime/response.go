@@ -97,11 +97,22 @@ func marshalMap(v reflect.Value) []mapValue {
 	for iter.Next() {
 		key := iter.Key()
 		value := iter.Value()
+		kk := derefValue(key)
 		vv := derefValue(value)
 
-		mapItem := mapValue{
-			Key: key,
+		mapItem := mapValue{}
+
+		switch kk.Kind() {
+		case reflect.Struct:
+			mapItem.Key = marshalStruct(kk)
+		case reflect.Map:
+			mapItem.Key = marshalMap(kk)
+		case reflect.Slice:
+			mapItem.Key = marshalSlice(kk)
+		default:
+			mapItem.Key = primitive(kk)
 		}
+
 		switch vv.Kind() {
 		case reflect.Struct:
 			mapItem.Value = marshalStruct(vv)

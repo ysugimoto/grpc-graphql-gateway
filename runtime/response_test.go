@@ -25,6 +25,7 @@ type exampleStruct struct {
 
 	SubStruct *exampleSubStruct   `json:"sub_struct,omitempty"`
 	SubSlice  []*exampleSubStruct `json:"sub_slice,omitempty"`
+	SubMap    map[string]int64    `json:"sub_map,omitempty"`
 }
 
 type exampleSubStruct struct {
@@ -209,4 +210,34 @@ func TestMarshalSlice(t *testing.T) {
 			"someData": "some_slice",
 		})
 	}
+}
+
+func TestMarshalMap(t *testing.T) {
+	e := &exampleStruct{
+		SubMap: map[string]int64{
+			"item01": 1,
+			"item02": 2,
+		},
+	}
+	v := MarshalResponse(e)
+	m, ok := v.(map[string]interface{})
+	if !assert.True(t, ok) {
+		t.FailNow()
+	}
+
+	a, ok := m["subMap"]
+	if !assert.True(t, ok) {
+		t.FailNow()
+	}
+	aa, ok := a.([]mapValue)
+	if !assert.True(t, ok) {
+		t.FailNow()
+	}
+	if !assert.Len(t, aa, 2) {
+		t.FailNow()
+	}
+	assert.Equal(t, "item01", aa[0].Key)
+	assert.Equal(t, int64(1), aa[0].Value)
+	assert.Equal(t, "item02", aa[1].Key)
+	assert.Equal(t, int64(2), aa[1].Value)
 }
