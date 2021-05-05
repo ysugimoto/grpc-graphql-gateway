@@ -236,8 +236,9 @@ func TestMarshalMap(t *testing.T) {
 	if !assert.Len(t, aa, 2) {
 		t.FailNow()
 	}
-	assert.Equal(t, "item01", aa[0].Key)
-	assert.Equal(t, int64(1), aa[0].Value)
-	assert.Equal(t, "item02", aa[1].Key)
-	assert.Equal(t, int64(2), aa[1].Value)
+	// Map does not consier key order so we need to assert with contains
+	assert.Contains(t, []string{"item01", "item02"}, aa[0].Key)
+	assert.Contains(t, []int64{1, 2}, aa[0].Value)
+	assert.Contains(t, []string{"item01", "item02"}, aa[1].Key)
+	assert.Contains(t, []int64{1, 2}, aa[1].Value)
 }
