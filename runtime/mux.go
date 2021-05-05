@@ -1,9 +1,11 @@
 package runtime
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
+	"compress/gzip"
 	"encoding/json"
 	"net/http"
 
@@ -196,6 +198,13 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			defaultGraphqlErrorHandler(result.Errors)
 		}
 	}
+
+	// If middleware marks as response should be gzip compress, respond it
+	if v := ctx.Value("__gzip_compress__"); v != nil {
+		respondGzipResult(w, result)
+		return
+	}
+
 	respondResult(w, result)
 }
 
@@ -206,4 +215,18 @@ func respondResult(w http.ResponseWriter, result *graphql.Result) {
 	w.Header().Set("Content-Length", fmt.Sprint(len(out)))
 	w.WriteHeader(http.StatusOK)
 	w.Write(out) // nolint: errcheck
+}
+
+func respondGzipResult(w http.ResponseWriter, result *graphql.Result) {
+	out, _ := json.Marshal(result) // nolint: errcheck
+
+	buf := new(bytes.Buffer)
+	gzip.NewWriter(buf).Write(out) // nolint: errcheck
+	compressed := buf.Bytes()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Length", fmt.Sprint(len(compressed)))
+	w.Header().Set("Content-Encoding", "gzip")
+	w.WriteHeader(http.StatusOK)
+	w.Write(compressed) // nolint: errcheck
 }

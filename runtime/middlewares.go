@@ -2,6 +2,8 @@ package runtime
 
 import (
 	"context"
+	"strings"
+
 	"net/http"
 )
 
@@ -28,6 +30,15 @@ func Cors() MiddlewareFunc {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Max-Age", "1728000")
+		return ctx, nil
+	}
+}
+
+func GZip() MiddlewareFunc {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, error) {
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			return context.WithValue(ctx, "__gzip_compress__", 1), nil
+		}
 		return ctx, nil
 	}
 }
