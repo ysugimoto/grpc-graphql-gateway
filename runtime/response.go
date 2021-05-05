@@ -23,6 +23,8 @@ func MarshalResponse(resp interface{}) interface{} {
 	switch v.Kind() {
 	case reflect.Struct:
 		return marshalStruct(v)
+	case reflect.Map:
+		return marshalMap(v)
 	case reflect.Slice:
 		return marshalSlice(v)
 	default:
@@ -40,6 +42,8 @@ func marshalSlice(v reflect.Value) []interface{} {
 		switch vv.Kind() {
 		case reflect.Struct:
 			ret[i] = marshalStruct(vv)
+		case reflect.Map:
+			ret[i] = marshalMap(vv)
 		case reflect.Slice:
 			ret[i] = marshalSlice(vv)
 		default:
@@ -68,12 +72,60 @@ func marshalStruct(v reflect.Value) map[string]interface{} {
 		switch vv.Kind() {
 		case reflect.Struct:
 			ret[name] = marshalStruct(vv)
+		case reflect.Map:
+			ret[name] = marshalMap(vv)
 		case reflect.Slice:
 			ret[name] = marshalSlice(vv)
 		default:
 			ret[name] = primitive(vv)
 		}
 	}
+	return ret
+}
+
+type mapValue struct {
+	Key   interface{} `json:"key"`
+	Value interface{} `json:"value"`
+}
+
+// Marshal reflect value to []mapValue with lower camel case field
+// Note that in GraphQL, Protocol Buffers map structure should be marshaled to an array of key-value object
+func marshalMap(v reflect.Value) []mapValue {
+	var ret []mapValue
+
+	iter := v.MapRange()
+	for iter.Next() {
+		key := iter.Key()
+		value := iter.Value()
+		kk := derefValue(key)
+		vv := derefValue(value)
+
+		mapItem := mapValue{}
+
+		switch kk.Kind() {
+		case reflect.Struct:
+			mapItem.Key = marshalStruct(kk)
+		case reflect.Map:
+			mapItem.Key = marshalMap(kk)
+		case reflect.Slice:
+			mapItem.Key = marshalSlice(kk)
+		default:
+			mapItem.Key = primitive(kk)
+		}
+
+		switch vv.Kind() {
+		case reflect.Struct:
+			mapItem.Value = marshalStruct(vv)
+		case reflect.Map:
+			mapItem.Value = marshalMap(vv)
+		case reflect.Slice:
+			mapItem.Value = marshalSlice(vv)
+		default:
+			mapItem.Value = primitive(vv)
+		}
+		ret = append(ret, mapItem)
+	}
+
 	return ret
 }
 
