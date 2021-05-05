@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.20.1
+
+- Support marshaling map type of Protocol Buffers [#38](https://github.com/ysugimoto/grpc-graphql-gateway/pull/38)
+
 ## v0.20.0
 
 - Enable to specify Google's ptype in request message [#36](https://github.com/ysugimoto/grpc-graphql-gateway/pull/36)
