@@ -66,7 +66,7 @@ service Greeter {
   rpc SayHello (HelloRequest) returns (HelloReply) {
     // Here is plugin definition
     option (graphql.schema) = {
-      type: QUERY   // decleare as Query
+      type: QUERY   // declare as Query
       name: "hello" // query name
     };
   }
@@ -74,7 +74,7 @@ service Greeter {
   rpc SayGoodbye (GoodbyeRequest) returns (GoodbyeReply) {
     // Here is plugin definition
     option (graphql.schema) = {
-      type: QUERY     // decleare as Query
+      type: QUERY     // declare as Query
       name: "goodbye" // query name
     };
   }
