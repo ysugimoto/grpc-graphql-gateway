@@ -1,6 +1,8 @@
 package spec
 
 import (
+	"log"
+
 	"path/filepath"
 
 	"github.com/iancoleman/strcase"
@@ -113,9 +115,17 @@ func (m *Mutation) Args() []*Field {
 func (m *Mutation) MutationType() string {
 	var pkgPrefix string
 	if m.GoPackage() != m.Output.GoPackage() {
-		pkgPrefix = m.Output.GoPackage()
-		if pkgPrefix != mainPackage {
-			pkgPrefix += "."
+		if IsGooglePackage(m.Output) {
+			ptypeName, err := getImplementedPtypes(m.Output)
+			if err != nil {
+				log.Fatalln("[PROTOC-GEN-GRAPHQL] Error:", err)
+			}
+			pkgPrefix = "gql_ptypes_" + ptypeName + "."
+		} else {
+			pkgPrefix = m.Output.GoPackage()
+			if pkgPrefix != mainPackage {
+				pkgPrefix += "."
+			}
 		}
 	}
 	typeName := pkgPrefix + PrefixType(m.Output.Name())
