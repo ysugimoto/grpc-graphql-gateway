@@ -9,7 +9,7 @@ Build protoc to Go code, and start serivce and gateway:
 ```shell
 make
 go run service/main.go
-go run gatewaymain.go
+go run gateway/main.go
 ```
 
 Then services are listening:
