@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.21.0
+
+- Support Google's ptypes in Mutation response [#47](https://github.com/ysugimoto/grpc-graphql-gateway/pull/46)
+- Fix misspelling in example [#46](https://github.com/ysugimoto/grpc-graphql-gateway/pull/46) (@day112)
+
 ## v0.20.1
 
 - Support marshaling map type of Protocol Buffers [#38](https://github.com/ysugimoto/grpc-graphql-gateway/pull/38)
