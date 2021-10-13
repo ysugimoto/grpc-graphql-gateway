@@ -106,7 +106,8 @@ Compile protobuf file with the plugin:
 ```shell
 protoc \
   -I. \
-  --go_out=plugins=grpc:./greeter \
+  --go_out=./greeter \
+  --go-grpc_out=./greeter \
   --graphql_out=./greeter \
   greeter.proto
 ```
