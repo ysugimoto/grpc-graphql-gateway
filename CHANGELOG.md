@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.22.0
+
+- support parths=source_relative option [#51](https://github.com/ysugimoto/grpc-graphql-gateway/pull/51)
+
 ## v0.21.0
 
 - Support Google's ptypes in Mutation response [#47](https://github.com/ysugimoto/grpc-graphql-gateway/pull/46)
