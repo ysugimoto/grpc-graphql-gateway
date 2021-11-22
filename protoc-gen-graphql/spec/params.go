@@ -6,12 +6,18 @@ import (
 	"strings"
 )
 
+var acceptablePathsValues = map[string]struct{}{
+	"import":          {},
+	"source_relative": {},
+}
+
 // Params spec have plugin parameters
 type Params struct {
 	QueryOut       string
 	Excludes       []*regexp.Regexp
 	Verbose        bool
 	FieldCamelCase bool
+	Paths          string
 }
 
 func NewParams(p string) (*Params, error) {
@@ -43,6 +49,13 @@ func NewParams(p string) (*Params, error) {
 			params.Excludes = append(params.Excludes, regex)
 		case "field_camel":
 			params.FieldCamelCase = true
+		case "paths":
+			if len(kv) == 1 {
+				return nil, errors.New("argument " + kv[0] + " must have value")
+			} else if _, ok := acceptablePathsValues[kv[1]]; !ok {
+				return nil, errors.New("argument " + kv[0] + " value must either of import and source_relative")
+			}
+			params.Paths = kv[1]
 		default:
 			return nil, errors.New("Unacceptable argument " + kv[0] + " provided")
 		}
@@ -57,4 +70,8 @@ func (p *Params) IsExclude(pkg string) bool {
 		}
 	}
 	return false
+}
+
+func (p *Params) IsSourceRelative() bool {
+	return p.Paths == "source_relative"
 }
