@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "graphql.proto";
 
-option go_package = ".;greeter";
+option go_package = "./;greeter";
 
 service Greeter {
   // gRPC service information
