@@ -18,9 +18,10 @@ type PackageGetter interface {
 }
 
 type Package struct {
-	Name      string
-	CamelName string
-	Path      string
+	Name                    string
+	CamelName               string
+	Path                    string
+	GeneratedFilenamePrefix string
 }
 
 func NewPackage(g PackageGetter) *Package {
@@ -44,6 +45,7 @@ func NewPackage(g PackageGetter) *Package {
 		)
 	}
 
+	p.GeneratedFilenamePrefix = strings.TrimSuffix(g.Filename(), ".proto")
 	p.CamelName = strcase.ToCamel(p.Name)
 	return p
 }

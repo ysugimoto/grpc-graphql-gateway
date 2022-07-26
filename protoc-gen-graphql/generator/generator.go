@@ -245,13 +245,13 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 	// If paths=source_relative option is provided, put generated file relatively
 	if g.args.IsSourceRelative() {
 		return &plugin.CodeGeneratorResponse_File{
-			Name:    proto.String(fmt.Sprintf("%s.graphql.go", root.Name)),
+			Name:    proto.String(fmt.Sprintf("%s.pb.graphql.go", root.GeneratedFilenamePrefix)),
 			Content: proto.String(string(out)),
 		}, nil
 	}
 
 	return &plugin.CodeGeneratorResponse_File{
-		Name:    proto.String(fmt.Sprintf("%s/%s.graphql.go", root.Path, root.Name)),
+		Name:    proto.String(fmt.Sprintf("%s/%s.pb.graphql.go", root.Path, root.Name)),
 		Content: proto.String(string(out)),
 	}, nil
 }
