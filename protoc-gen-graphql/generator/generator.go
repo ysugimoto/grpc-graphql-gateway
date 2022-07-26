@@ -251,7 +251,7 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 	}
 
 	return &plugin.CodeGeneratorResponse_File{
-		Name:    proto.String(fmt.Sprintf("%s/%s.graphql.go", root.Path, root.Name)),
+		Name:    proto.String(fmt.Sprintf("%s/%s.graphql.go", root.Path, root.FileName)),
 		Content: proto.String(string(out)),
 	}, nil
 }
