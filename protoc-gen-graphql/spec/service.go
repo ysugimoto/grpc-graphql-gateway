@@ -63,17 +63,3 @@ func (s *Service) Name() string {
 func (s *Service) Methods() []*Method {
 	return s.methods
 }
-
-func (s *Service) Host() string {
-	if s.Option == nil {
-		return ""
-	}
-	return s.Option.GetHost()
-}
-
-func (s *Service) Insecure() bool {
-	if s.Option == nil {
-		return false
-	}
-	return s.Option.GetInsecure()
-}

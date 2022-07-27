@@ -55,11 +55,6 @@ message ListDroidsResponse {
 }
 
 service StartwarsService {
-  option (graphql.service) = {
-    host: "grpc:50051"
-    insecure: true
-  };
-
   rpc GetHero(GetHeroRequest) returns (Character) {
     option (graphql.schema) = {
       type: QUERY

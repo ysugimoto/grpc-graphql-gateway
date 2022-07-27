@@ -10,7 +10,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Server struct{}
+type Server struct {
+	greeter.UnimplementedGreeterServer
+}
 
 func (s *Server) SayHello(ctx context.Context, req *greeter.HelloRequest) (*greeter.HelloReply, error) {
 	return &greeter.HelloReply{

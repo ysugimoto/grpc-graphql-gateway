@@ -12,23 +12,8 @@ option go_package = "github.com/ysugimoto/grpc-graphql-gateway/graphql";
 
 import "google/protobuf/descriptor.proto";
 
-// Extend ServiceOptions in order to define grpc connection setting.
-// User can use this option as following:
-//
-// service Greeter {
-//    option (graphql.service) = {
-//      host: "localhost:50051" // define grpc connection host and port
-//      insecure: true          // set true if connect to insecure grpc server
-//    };
-//
-//    ... some rpc definitions
-// }
+// Base GraphqlService that gateway is built upon.
 message GraphqlService {
-  // gRPC default connection host.
-  // This value should include host and port, say localhost:50051.
-  string host = 1;
-  // If true, automatic connection with insecure option.
-  bool insecure = 2;
 }
 
 

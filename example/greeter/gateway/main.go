@@ -7,12 +7,14 @@ import (
 
 	"github.com/ysugimoto/grpc-graphql-gateway/example/greeter/greeter"
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
+	"google.golang.org/grpc"
 )
 
 func main() {
 	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithInsecure()}
 
-	if err := greeter.RegisterGreeterGraphql(mux); err != nil {
+	if err := greeter.RegisterGreeterGraphql(mux, "localhost:50051", opts...); err != nil {
 		log.Fatalln(err)
 	}
 	http.Handle("/graphql", mux)

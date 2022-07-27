@@ -213,7 +213,9 @@ func init() {
 	)
 }
 
-type Server struct{}
+type Server struct {
+	starwars.UnimplementedStartwarsServiceServer
+}
 
 func (s *Server) GetHero(
 	ctx context.Context, req *starwars.GetHeroRequest) (*starwars.Character, error) {

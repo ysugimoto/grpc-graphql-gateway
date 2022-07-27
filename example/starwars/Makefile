@@ -20,11 +20,13 @@ build: init
 			-Iproto \
 			--plugin=../..//dist/protoc-gen-graphql \
 			--graphql_out=${SPECDIR} \
-			--go_out=plugins=grpc:${SPECDIR} \
+			--graphql_opt=paths=source_relative \
+			--go_out=:${SPECDIR} \
+			--go_opt=paths=source_relative \
+			--go-grpc_out=:${SPECDIR}  \
+			--go-grpc_opt=paths=source_relative \
 			$$file; \
 	done
-	mv ${SPECDIR}/github.com/ysugimoto/grpc-graphql-gateway/example/starwars/spec/* ${SPECDIR}
-	rm -rf ${SPECDIR}/github.com
 
 init:
 	if [ -L "./proto/google" ]; then rm ./proto/google; fi
@@ -40,3 +42,9 @@ start: build
 
 stop:
 	docker-compose down
+
+start_graphql:
+	go run app/graphql/main.go
+
+start_grpc:
+	go run app/grpc/main.go

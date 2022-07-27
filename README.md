@@ -43,7 +43,7 @@ git submodule add https://github.com/ysugimoto/grpc-graphql-gateway.git grpc-gra
 
 ## Usage
 
-Please replace  `[your/project]` section to your appropriate project.
+Please replace `[your/project]` section to your appropriate project.
 
 ### Write Protocol Buffers
 
@@ -57,12 +57,6 @@ syntax = "proto3";
 import "graphql.proto";
 
 service Greeter {
-  // gRPC service information
-  option (graphql.service) = {
-    host: "localhost:50051"
-    insecure: true
-  };
-
   rpc SayHello (HelloRequest) returns (HelloReply) {
     // Here is plugin definition
     option (graphql.schema) = {
@@ -147,7 +141,7 @@ func (s *Server) SayGoodbye(ctx context.Context, req *greeter.GoodbyeRequest) (*
 }
 
 func main() {
-	conn, err := net.Listen("tcp", ":500５1")
+	conn, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -184,8 +178,9 @@ import (
 
 func main() {
     mux := runtime.NewServeMux()
+    opts := []grpc.DialOption{grpc.WithInsecure()}
 
-    if err := greeter.RegisterGreeterGraphql(mux); err != nil {
+    if err := greeter.RegisterGreeterGraphql(mux, "localhost:50051", opts...); err != nil {
         log.Fatalln(err)
     }
     http.Handle("/graphql", mux)
@@ -230,14 +225,14 @@ query greeting($name: String = "GraphQL Gateway") {
 #=> {"data":{"goodbye":{"message":"Good-bye, GraphQL Gateway!"},"hello":{"message":"Hello, GraphQL Gateway!"}}}
 ```
 
-This is the most simplest way :-) 
+This is the most simplest way :-)
 
 ## Resources
 
 To learn more, please see the following resources:
 
 - `graphql.proto` Plugin option definition. See a comment section for custom usage (e.g mutation).
-- [example/greeter](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/greeter)  Files of above usage.
+- [example/greeter](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/greeter) Files of above usage.
 - [example/starwars](https://github.com/ysugimoto/grpc-graphql-gateway/tree/master/example/starwars) Common implementation for GraphQL explanation, the StarWars API example
 
 This plugin generates graphql execution code using [graphql-go/graphql](https://github.com/graphql-go/graphql), see that repository in detail.
