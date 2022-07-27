@@ -18,13 +18,18 @@ type PackageGetter interface {
 }
 
 type Package struct {
-	Name      string
-	CamelName string
-	Path      string
+	Name                    string
+	CamelName               string
+	Path                    string
+	GeneratedFilenamePrefix string
+	FileName                string
 }
 
 func NewPackage(g PackageGetter) *Package {
 	p := &Package{}
+	p.GeneratedFilenamePrefix = strings.TrimSuffix(g.Filename(), filepath.Ext(g.Filename()))
+	p.FileName = filepath.Base(p.GeneratedFilenamePrefix)
+
 	if pkg := g.GoPackage(); pkg != "" {
 		// Support custom package definitions like example.com/path/to/package:packageName
 		if index := strings.Index(pkg, ";"); index > -1 {
