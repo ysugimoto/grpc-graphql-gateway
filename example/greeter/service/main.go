@@ -6,7 +6,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/ysugimoto/grpc-graphql-gateway/example/greeter/greeter"
+	"github.com/alehechka/grpc-graphql-gateway/example/greeter/greeter"
 	"google.golang.org/grpc"
 )
 

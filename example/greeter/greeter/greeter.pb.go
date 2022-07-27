@@ -7,7 +7,7 @@
 package greeter
 
 import (
-	_ "github.com/ysugimoto/grpc-graphql-gateway/graphql"
+	_ "github.com/alehechka/grpc-graphql-gateway/graphql"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

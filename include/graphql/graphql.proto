@@ -1,14 +1,12 @@
 // graphql.proto
 //
-// Copyright (c) 2020 ysugimoto
-//
 // Released under the MIT license.
 // see https://opensource.org/licenses/MIT
 syntax = "proto3";
 
 package graphql;
 
-option go_package = "github.com/ysugimoto/grpc-graphql-gateway/graphql";
+option go_package = "github.com/alehechka/grpc-graphql-gateway/graphql";
 
 import "google/protobuf/descriptor.proto";
 

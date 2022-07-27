@@ -1,7 +1,5 @@
 // graphql.proto
 //
-// Copyright (c) 2020 ysugimoto
-//
 // Released under the MIT license.
 // see https://opensource.org/licenses/MIT
 

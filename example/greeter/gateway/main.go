@@ -5,8 +5,8 @@ import (
 
 	"net/http"
 
-	"github.com/ysugimoto/grpc-graphql-gateway/example/greeter/greeter"
-	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
+	"github.com/alehechka/grpc-graphql-gateway/example/greeter/greeter"
+	"github.com/alehechka/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
 )
 

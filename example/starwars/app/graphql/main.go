@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ysugimoto/grpc-graphql-gateway/example/starwars/spec/starwars"
-	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
+	"github.com/alehechka/grpc-graphql-gateway/example/starwars/spec/starwars"
+	"github.com/alehechka/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
 )
 

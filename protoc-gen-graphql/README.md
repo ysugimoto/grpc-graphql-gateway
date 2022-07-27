@@ -4,7 +4,7 @@
 
 ## Usage
 
-Download binary which corresponds to runtime version via [Release Page](https://github.com/ysugimoto/grpc-graphql-gateway/releases) and place in `$PATH` directory.
+Download binary which corresponds to runtime version via [Release Page](https://github.com/alehechka/grpc-graphql-gateway/releases) and place in `$PATH` directory.
 
 Compile with this plugin example:
 

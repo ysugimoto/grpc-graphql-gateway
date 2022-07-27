@@ -59,7 +59,7 @@ func NewGooglePackage(m PackageGetter) *Package {
 	return &Package{
 		Name:      "gql_ptypes_" + strings.ToLower(name),
 		CamelName: strcase.ToCamel(name),
-		Path:      "github.com/ysugimoto/grpc-graphql-gateway/ptypes/" + strings.ToLower(name),
+		Path:      "github.com/alehechka/grpc-graphql-gateway/ptypes/" + strings.ToLower(name),
 	}
 }
 
