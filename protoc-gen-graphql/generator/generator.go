@@ -8,15 +8,14 @@ import (
 	"sort"
 
 	"go/format"
-	"io/ioutil"
+	"io"
 	"text/template"
 
-	// nolint: staticcheck
-	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
+	"google.golang.org/protobuf/proto"
 )
 
 type Template struct {
@@ -53,7 +52,7 @@ func New(files []*spec.File, args *spec.Params) *Generator {
 		}
 	}
 
-	w := ioutil.Discard
+	w := io.Discard
 	if args.Verbose {
 		w = os.Stderr
 	}
@@ -238,7 +237,7 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 
 	out, err := format.Source(buf.Bytes())
 	if err != nil {
-		ioutil.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666) // nolint: errcheck
+		os.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666) // nolint: errcheck
 		return nil, err
 	}
 

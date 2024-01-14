@@ -18,7 +18,6 @@ import "google/protobuf/descriptor.proto";
 // service Greeter {
 //    option (graphql.service) = {
 //      host: "localhost:50051" // define grpc connection host and port
-//      insecure: true          // set true if connect to insecure grpc server
 //    };
 //
 //    ... some rpc definitions
@@ -27,8 +26,6 @@ message GraphqlService {
   // gRPC default connection host.
   // This value should include host and port, say localhost:50051.
   string host = 1;
-  // If true, automatic connection with insecure option.
-  bool insecure = 2;
 }
 
 
