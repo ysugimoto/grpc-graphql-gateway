@@ -354,8 +354,8 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 // therefore gRPC connection will be opened and closed automatically.
 // Occasionally you may worry about open/close performance for each handling graphql request,
 // then you can call Register{{ .Name }}GraphqlHandler with *grpc.ClientConn manually.
-func Register{{ .Name }}Graphql(mux *runtime.ServeMux) error {
-	return Register{{ .Name }}GraphqlHandler(mux, nil)
+func Register{{ .Name }}Graphql(mux *runtime.ServeMux, opts...grpc.DialOption) error {
+	return Register{{ .Name }}GraphqlHandler(mux, nil, opts...)
 }
 
 // Register package divided graphql handler "with" *grpc.ClientConn.
