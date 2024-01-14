@@ -353,17 +353,14 @@ func RegisterStartwarsServiceGraphql(mux *runtime.ServeMux) error {
 // service StartwarsService {
 //    option (graphql.service) = {
 //        host: "host:port"
-//        insecure: true or false
 //    };
 //
 //    ...with RPC definitions
 // }
-func RegisterStartwarsServiceGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+func RegisterStartwarsServiceGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn, opts...grpc.DialOption) error {
 	return mux.AddHandler(&graphql__resolver_StartwarsService{
 		conn: conn,
 		host: "grpc:50051",
-		dialOptions: []grpc.DialOption{
-			grpc.WithInsecure(),
-		},
+		dialOptions: opts,
 	})
 }

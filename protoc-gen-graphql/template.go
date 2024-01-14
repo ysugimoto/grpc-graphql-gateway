@@ -213,15 +213,11 @@ type graphql__resolver_{{ $service.Name }} struct {
 }
 
 // new_graphql_resolver_{{ $service.Name }} creates pointer of service struct
-func new_graphql_resolver_{{ $service.Name }}(conn *grpc.ClientConn) *graphql__resolver_{{ $service.Name }} {
+func new_graphql_resolver_{{ $service.Name }}(conn *grpc.ClientConn, opts...grpc.DialOption) *graphql__resolver_{{ $service.Name }} {
 	return &graphql__resolver_{{ .Name }}{
 		conn: conn,
 		host: "{{ if .Host }}{{ .Host }}{{ else }}localhost:50051{{ end }}",
-		dialOptions: []grpc.DialOption{
-		{{- if .Insecure }}
-			grpc.WithInsecure(),
-		{{- end }}
-		},
+		dialOptions: opts,
 	}
 }
 
@@ -370,13 +366,12 @@ func Register{{ .Name }}Graphql(mux *runtime.ServeMux) error {
 // service {{ .Name }} {
 //    option (graphql.service) = {
 //        host: "host:port"
-//        insecure: true or false
 //    };
 //
 //    ...with RPC definitions
 // }
-func Register{{ .Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return mux.AddHandler(new_graphql_resolver_{{ .Name }}(conn))
+func Register{{ .Name }}GraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn, opts ...grpc.DialOption) error {
+	return mux.AddHandler(new_graphql_resolver_{{ .Name }}(conn, opts...))
 }
 
 {{ end }}

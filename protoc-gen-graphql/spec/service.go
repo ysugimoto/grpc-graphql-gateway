@@ -70,10 +70,3 @@ func (s *Service) Host() string {
 	}
 	return s.Option.GetHost()
 }
-
-func (s *Service) Insecure() bool {
-	if s.Option == nil {
-		return false
-	}
-	return s.Option.GetInsecure()
-}

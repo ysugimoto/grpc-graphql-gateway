@@ -87,7 +87,6 @@ func (GraphqlType) EnumDescriptor() ([]byte, []int) {
 // service Greeter {
 //    option (graphql.service) = {
 //      host: "localhost:50051" // define grpc connection host and port
-//      insecure: true          // set true if connect to insecure grpc server
 //    };
 //
 //    ... some rpc definitions
@@ -100,8 +99,6 @@ type GraphqlService struct {
 	// gRPC default connection host.
 	// This value should include host and port, say localhost:50051.
 	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	// If true, automatic connection with insecure option.
-	Insecure bool `protobuf:"varint,2,opt,name=insecure,proto3" json:"insecure,omitempty"`
 }
 
 func (x *GraphqlService) Reset() {
@@ -141,13 +138,6 @@ func (x *GraphqlService) GetHost() string {
 		return x.Host
 	}
 	return ""
-}
-
-func (x *GraphqlService) GetInsecure() bool {
-	if x != nil {
-		return x.Insecure
-	}
-	return false
 }
 
 // Extend MethodOptions in order to define GraphQL Query or Mutation.

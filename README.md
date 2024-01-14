@@ -60,7 +60,6 @@ service Greeter {
   // gRPC service information
   option (graphql.service) = {
     host: "localhost:50051"
-    insecure: true
   };
 
   rpc SayHello (HelloRequest) returns (HelloReply) {

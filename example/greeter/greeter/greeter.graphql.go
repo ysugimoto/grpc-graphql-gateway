@@ -175,17 +175,14 @@ func RegisterGreeterGraphql(mux *runtime.ServeMux) error {
 // service Greeter {
 //    option (graphql.service) = {
 //        host: "host:port"
-//        insecure: true or false
 //    };
 //
 //    ...with RPC definitions
 // }
-func RegisterGreeterGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+func RegisterGreeterGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn, opts...grpc.DialOption) error {
 	return mux.AddHandler(&graphql__resolver_Greeter{
 		conn: conn,
 		host: "localhost:50051",
-		dialOptions: []grpc.DialOption{
-			grpc.WithInsecure(),
-		},
+		dialOptions: opts,
 	})
 }
