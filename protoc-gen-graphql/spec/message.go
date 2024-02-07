@@ -5,7 +5,7 @@ import (
 
 	"path/filepath"
 
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
 )
 
 // Message spec wraps DescriptorProto

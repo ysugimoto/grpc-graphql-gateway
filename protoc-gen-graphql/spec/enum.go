@@ -3,7 +3,7 @@ package spec
 import (
 	"strings"
 
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
 )
 
 // Enum spec wraps EnumDescriptorProto with keeping file definition.

@@ -3,15 +3,15 @@ package main
 import (
 	"bytes"
 	"flag"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"log"
 	"os"
 
-	// nolint: staticcheck
-	"github.com/golang/protobuf/proto"
-	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/rafdekar/grpc-graphql-gateway/protoc-gen-graphql/generator"
 	"github.com/rafdekar/grpc-graphql-gateway/protoc-gen-graphql/spec"
+	// nolint: staticcheck
+	plugin "google.golang.org/protobuf/types/pluginpb"
 )
 
 var version = "dev"

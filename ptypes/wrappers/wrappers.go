@@ -1,8 +1,8 @@
 package wrappers
 
 import (
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/graphql-go/graphql"
+	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // Expose Google defined ptypes as this package types

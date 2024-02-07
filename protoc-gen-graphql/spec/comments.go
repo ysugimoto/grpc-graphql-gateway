@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
 )
 
 // CommentType indicates comment format.

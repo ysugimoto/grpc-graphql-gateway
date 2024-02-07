@@ -4,11 +4,11 @@ import (
 	"log"
 	"strings"
 
-	// nolint: staticcheck
-	"github.com/golang/protobuf/proto"
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/iancoleman/strcase"
 	"github.com/rafdekar/grpc-graphql-gateway/graphql"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
+	// nolint: staticcheck
+	"google.golang.org/protobuf/proto"
 )
 
 // Field spec wraps FieldDescriptorProto with keeping file info
@@ -34,10 +34,9 @@ func NewField(
 
 	var o *graphql.GraphqlField
 	if opts := d.GetOptions(); opts != nil {
-		if ext, err := proto.GetExtension(opts, graphql.E_Field); err == nil {
-			if field, ok := ext.(*graphql.GraphqlField); ok {
-				o = field
-			}
+		ext := proto.GetExtension(opts, graphql.E_Field)
+		if field, ok := ext.(*graphql.GraphqlField); ok {
+			o = field
 		}
 	}
 

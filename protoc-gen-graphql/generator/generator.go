@@ -11,12 +11,12 @@ import (
 	"io/ioutil"
 	"text/template"
 
-	// nolint: staticcheck
-	"github.com/golang/protobuf/proto"
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/rafdekar/grpc-graphql-gateway/graphql"
 	"github.com/rafdekar/grpc-graphql-gateway/protoc-gen-graphql/spec"
+	// nolint: staticcheck
+	"google.golang.org/protobuf/proto"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
+	plugin "google.golang.org/protobuf/types/pluginpb"
 )
 
 type Template struct {

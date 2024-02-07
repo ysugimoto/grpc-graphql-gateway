@@ -1,8 +1,8 @@
 package empty
 
 import (
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/graphql-go/graphql"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Expose Google defined ptypes as this package types

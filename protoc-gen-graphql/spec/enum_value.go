@@ -1,7 +1,7 @@
 package spec
 
 import (
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
 )
 
 // EnumValue spec wraps EnumValueDescriptorProto with keeping file definition.

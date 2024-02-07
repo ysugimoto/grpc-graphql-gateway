@@ -3,10 +3,9 @@ package spec
 import (
 	"bytes"
 	"fmt"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
+	plugin "google.golang.org/protobuf/types/pluginpb"
 	"strings"
-
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 )
 
 // File spec wraps FileDescriptorProto
