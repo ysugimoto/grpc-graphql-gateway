@@ -6,7 +6,7 @@ import (
 	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
+	"github.com/rafdekar/grpc-graphql-gateway/graphql"
 )
 
 // Method spec wraps MethodDescriptorProto with GraphqlQuery and GraphqlMutation options.

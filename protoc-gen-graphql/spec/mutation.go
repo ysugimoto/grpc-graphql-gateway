@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/iancoleman/strcase"
-	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
+	"github.com/rafdekar/grpc-graphql-gateway/graphql"
 )
 
 // Mutation spec wraps MethodDescriptorProto.
@@ -159,7 +159,6 @@ func (m *Mutation) OutputName() string {
 	return typeName
 }
 
-//
 func (m *Mutation) InputType() string {
 	if m.Method.GoPackage() != m.Input.GoPackage() {
 		return m.Input.StructName(false)

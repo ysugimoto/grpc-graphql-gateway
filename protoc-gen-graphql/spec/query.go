@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/iancoleman/strcase"
-	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
+	"github.com/rafdekar/grpc-graphql-gateway/graphql"
 )
 
 // Query spec wraps MethodDescriptorProto.
