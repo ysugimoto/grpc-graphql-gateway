@@ -9,9 +9,9 @@ import (
 
 	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
-	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/generator"
 	"github.com/ysugimoto/grpc-graphql-gateway/protoc-gen-graphql/spec"
+	plugin "google.golang.org/protobuf/types/pluginpb"
 )
 
 var version = "dev"
@@ -26,7 +26,10 @@ func main() {
 
 	var genError error
 
-	resp := &plugin.CodeGeneratorResponse{}
+	pluginSupportedFeatures := uint64(plugin.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
+	resp := &plugin.CodeGeneratorResponse{
+		SupportedFeatures: &pluginSupportedFeatures,
+	}
 	defer func() {
 		// If some error has been occurred in generate process,
 		// add error message to plugin response
