@@ -31,7 +31,7 @@ func NewPackage(g PackageGetter) *Package {
 	p.FileName = filepath.Base(p.GeneratedFilenamePrefix)
 
 	if pkg := g.GoPackage(); pkg != "" {
-		// Support custom package definitions like example.com/path/to/package:packageName
+		// Support custom package definitions like example.com/path/to/package;packageName
 		if index := strings.Index(pkg, ";"); index > -1 {
 			p.Name = pkg[index+1:]
 			p.Path = pkg[0:index]
