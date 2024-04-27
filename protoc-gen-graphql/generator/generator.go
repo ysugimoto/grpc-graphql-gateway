@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 
 	"go/format"
-	"io/ioutil"
 	"text/template"
 
 	// nolint: staticcheck
@@ -53,7 +53,7 @@ func New(files []*spec.File, args *spec.Params) *Generator {
 		}
 	}
 
-	w := ioutil.Discard
+	w := io.Discard
 	if args.Verbose {
 		w = os.Stderr
 	}
@@ -247,7 +247,7 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 
 	out, err := format.Source(buf.Bytes())
 	if err != nil {
-		ioutil.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666) // nolint: errcheck
+		os.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0o666) // nolint: gomnd,errcheck
 		return nil, err
 	}
 

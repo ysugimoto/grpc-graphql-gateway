@@ -1,0 +1,58 @@
+name: Publish application
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  PROTOC_VERSION: 3.14.0
+  GO_VERSION: 1.21.1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Setup protobuf
+        run: |
+          PROTOC_ZIP=protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip
+          curl -OL https://github.com/google/protobuf/releases/download/v${{ env.PROTOC_VERSION }}/$PROTOC_ZIP
+          sudo unzip -o $PROTOC_ZIP -d /usr/local/protoc
+          sudo chmod +xr -R /usr/local/protoc
+          sudo ln -s /usr/local/protoc/bin/protoc /usr/local/bin
+          sudo ln -s /usr/local/protoc/include/google /usr/local/include/google
+      - name: Lint programs
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54
+          skip-pkg-cache: true
+          skip-build-cache: true
+          skip-go-installation: true
+      - name: Set version
+        id: version
+        run: |
+          VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Build app
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+          make all tag=${{ steps.version.outputs.version }}
+      - name: Release app
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/protoc-gen-graphql.darwin
+            dist/protoc-gen-graphql.darwin.arm64
+            dist/protoc-gen-graphql.linux
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
