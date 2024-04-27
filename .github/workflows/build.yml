@@ -2,8 +2,10 @@ name: Build application
 
 on:
   push:
-    tags-ignore:
+    branches:
       - "*"
+    tags-ignore:
+      - "v*.*.*"
 
 env:
   PROTOC_VERSION: 3.14.0
