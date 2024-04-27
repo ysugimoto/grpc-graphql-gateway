@@ -3,7 +3,7 @@ name: Publish application
 on:
   push:
     tags:
-      - "*"
+      - "v*.*.*"
 
 env:
   PROTOC_VERSION: 3.14.0
