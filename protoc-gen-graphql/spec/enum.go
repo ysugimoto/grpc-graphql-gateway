@@ -37,7 +37,7 @@ func NewEnum(
 	for i, v := range d.GetValue() {
 		ps := make([]int, len(paths))
 		copy(ps, paths)
-		e.values = append(e.values, NewEnumValue(v, f, append(ps, 2, i)...))
+		e.values = append(e.values, NewEnumValue(v, f, append(ps, 2, i)...)) // nolint: gomnd
 	}
 	return e
 }

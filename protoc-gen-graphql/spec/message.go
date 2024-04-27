@@ -41,7 +41,7 @@ func NewMessage(
 	for i, field := range d.GetField() {
 		ps := make([]int, len(paths))
 		copy(ps, paths)
-		ff := NewField(field, f, isCamel, append(ps, 2, i)...)
+		ff := NewField(field, f, isCamel, append(ps, 2, i)...) // nolint: gomnd
 		if !ff.IsOmit() {
 			m.fields = append(m.fields, ff)
 		}

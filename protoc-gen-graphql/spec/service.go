@@ -47,7 +47,7 @@ func NewService(
 	for i, m := range d.GetMethod() {
 		ps := make([]int, len(paths))
 		copy(ps, paths)
-		s.methods = append(s.methods, NewMethod(m, s, append(ps, 4, i)...))
+		s.methods = append(s.methods, NewMethod(m, s, append(ps, 4, i)...)) // nolint: gomnd
 	}
 	return s
 }

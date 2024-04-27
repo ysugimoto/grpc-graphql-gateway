@@ -26,11 +26,7 @@ linters:
     - staticcheck
     - unused
     - gosimple
-    - structcheck
-    - varcheck
     - ineffassign
-    - interfacer
-    - deadcode
     - dogsled
     - dupl
     - funlen
@@ -41,7 +37,6 @@ linters:
     - gofmt
     - gomnd
     - lll
-    - maligned
     - misspell
     - whitespace
     - unparam
