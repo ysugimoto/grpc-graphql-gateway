@@ -10,7 +10,7 @@ run:
 
 issues:
   exclude-rules:
-    ## Add file patters to exclude linter
+    ## Add file patterns to exclude linter
     - path: grpc\/main\.go
       linters:
         - gomnd
@@ -132,16 +132,12 @@ linters-settings:
     simplify: true
   golint:
     min-confidence: 0.8
-  govet:
-    check-shadowing: true
   gomnd:
     settings:
       mnd:
         checks: argument,assign,operation,return
   lll:
     line-length: 120
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
     ignore-words:
