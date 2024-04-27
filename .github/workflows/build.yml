@@ -26,7 +26,6 @@ jobs:
           sudo chmod +xr -R /usr/local/protoc
           sudo ln -s /usr/local/protoc/bin/protoc /usr/local/bin
           sudo ln -s /usr/local/protoc/include/google /usr/local/include/google
-          go get -u github.com/golang/protobuf/protoc-gen-go
       - name: Lint programs
         uses: golangci/golangci-lint-action@v3
         with:
@@ -35,6 +34,8 @@ jobs:
           skip-build-cache: true
           skip-go-installation: true
       - name: Build app
-        run: make all tag=ci
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+          make all tag=ci
 
 
