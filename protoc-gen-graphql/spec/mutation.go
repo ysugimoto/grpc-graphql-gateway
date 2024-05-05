@@ -159,7 +159,6 @@ func (m *Mutation) OutputName() string {
 	return typeName
 }
 
-//
 func (m *Mutation) InputType() string {
 	if m.Method.GoPackage() != m.Input.GoPackage() {
 		return m.Input.StructName(false)
