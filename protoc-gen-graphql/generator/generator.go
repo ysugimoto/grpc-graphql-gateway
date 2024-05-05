@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 
 	"go/format"
-	"io/ioutil"
 	"text/template"
 
 	// nolint: staticcheck
@@ -53,7 +53,7 @@ func New(files []*spec.File, args *spec.Params) *Generator {
 		}
 	}
 
-	w := ioutil.Discard
+	w := io.Discard
 	if args.Verbose {
 		w = os.Stderr
 	}
@@ -101,6 +101,10 @@ func (g *Generator) Generate(tmpl string, fs []string) ([]*plugin.CodeGeneratorR
 	return outFiles, nil
 }
 
+func isDependedGoogleEmptyMessage(m *spec.Message, pkg string) bool {
+	return m.IsDepended(spec.DependTypeMessage, pkg) && spec.IsGooglePackage(m) && m.Name() == "Empty"
+}
+
 // nolint: gocognit, funlen, gocyclo
 func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.Service) (
 	*plugin.CodeGeneratorResponse_File,
@@ -114,6 +118,11 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 	for _, m := range g.messages {
 		// skip empty field message, otherwise graphql-go raise error
 		if len(m.Fields()) == 0 {
+			// although true, Google's empty message has no fields,
+			// ptypes package define a dummy field, that way no errors raised
+			if isDependedGoogleEmptyMessage(m, file.Package()) {
+				packages = append(packages, spec.NewGooglePackage(m))
+			}
 			continue
 		}
 		if m.IsDepended(spec.DependTypeMessage, file.Package()) {
@@ -238,7 +247,7 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 
 	out, err := format.Source(buf.Bytes())
 	if err != nil {
-		ioutil.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0666) // nolint: errcheck
+		os.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0o666) // nolint: gomnd,errcheck
 		return nil, err
 	}
 

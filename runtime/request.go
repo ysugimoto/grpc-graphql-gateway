@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/iancoleman/strcase"
@@ -23,7 +23,7 @@ func parseRequest(r *http.Request) (*GraphqlRequest, error) {
 	// Get request body
 	switch r.Method {
 	case http.MethodPost:
-		buf, err := ioutil.ReadAll(r.Body)
+		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return nil, errors.New("malformed request body, " + err.Error())
 		}
