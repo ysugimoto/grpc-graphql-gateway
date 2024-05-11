@@ -68,7 +68,7 @@ func Gql__interface_{{ .TypeName }}() *graphql.Interface {
 {{- range .Fields }}
 			{{- if not .IsCyclic }}
 				"{{ .FieldName }}": &graphql.Field{
-					Type: {{ .FieldType $.RootPackage.Path }},
+					Type: {{ .FieldType $.RootPackage.Name }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
@@ -106,7 +106,7 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 						Args: graphql.FieldConfigArgument{
 						{{- range $query.Args }}
 							"{{ .FieldName }}": &graphql.ArgumentConfig{
-								Type: {{ .FieldTypeInput $.RootPackage.Path }},
+								Type: {{ .FieldTypeInput $.RootPackage.Name }},
 								{{- if .Comment }}
 								Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 								{{- end }}
@@ -152,7 +152,7 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 				},
 				{{- else }}
 				"{{ .FieldName }}": &graphql.Field{
-					Type: {{ .FieldType $.RootPackage.Path }},
+					Type: {{ .FieldType $.RootPackage.Name }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
@@ -185,7 +185,7 @@ func Gql__input_{{ .TypeName }}() *graphql.InputObject {
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
-					Type: {{ .FieldTypeInput $.RootPackage.Path }},
+					Type: {{ .FieldTypeInput $.RootPackage.Name }},
 				},
 {{- end }}
 			},
@@ -253,7 +253,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn
 			Args: graphql.FieldConfigArgument{
 			{{- range .Args }}
 				"{{ .FieldName }}": &graphql.ArgumentConfig{
-					Type: {{ .FieldTypeInput $.RootPackage.Path }},
+					Type: {{ .FieldTypeInput $.RootPackage.Name }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}
@@ -310,7 +310,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 			{{- else }}
 			{{- range .Args }}
 				"{{ .FieldName }}": &graphql.ArgumentConfig{
-					Type: {{ .FieldTypeInput $.RootPackage.Path }},
+					Type: {{ .FieldTypeInput $.RootPackage.Name }},
 					{{- if .Comment }}
 					Description: ` + "`" + `{{ .Comment }}` + "`" + `,
 					{{- end }}

@@ -94,10 +94,13 @@ func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string,
 	return messages
 }
 
+// Package is a package name retrieved from protobuf's package keyword
 func (f *File) Package() string {
 	return f.descriptor.GetPackage()
 }
 
+// GoPackage will search for an option named go_package and, if found, returns it.
+// Otherwise, it calls Package
 func (f *File) GoPackage() string {
 	var pkgName string
 	if opt := f.descriptor.GetOptions(); opt == nil {
