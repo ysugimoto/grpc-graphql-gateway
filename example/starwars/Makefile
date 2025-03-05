@@ -20,7 +20,8 @@ build: init
 			-Iproto \
 			--plugin=../..//dist/protoc-gen-graphql \
 			--graphql_out=${SPECDIR} \
-			--go_out=plugins=grpc:${SPECDIR} \
+			--go_out=${SPECDIR} \
+			--go-grpc_out=${SPECDIR} \
 			$$file; \
 	done
 	mv ${SPECDIR}/github.com/ysugimoto/grpc-graphql-gateway/example/starwars/spec/* ${SPECDIR}
