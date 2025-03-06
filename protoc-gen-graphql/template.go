@@ -8,9 +8,14 @@ import (
 {{- if .Services }}
 
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc"
 	"github.com/pkg/errors"
+{{- end }}
+{{- range .Services }}
+	{{- if .Insecure }}
+	"google.golang.org/grpc/credentials/insecure"
+	{{- break }}
+	{{- end }}
 {{- end }}
 	"github.com/graphql-go/graphql"
 
