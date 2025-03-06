@@ -247,7 +247,7 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 
 	out, err := format.Source(buf.Bytes())
 	if err != nil {
-		os.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0o666) // nolint: gomnd,errcheck
+		os.WriteFile("/tmp/"+root.Name+".go", buf.Bytes(), 0o666) // nolint: mnd,errcheck
 		return nil, err
 	}
 

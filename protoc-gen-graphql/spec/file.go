@@ -42,13 +42,13 @@ func NewFile(
 		isCamel:  isCamel,
 	}
 	for i, s := range d.GetService() {
-		f.services = append(f.services, NewService(s, f, 6, i)) // nolint: gomnd
+		f.services = append(f.services, NewService(s, f, 6, i)) // nolint: mnd
 	}
 	for i, m := range d.GetMessageType() {
-		f.messages = append(f.messages, f.messagesRecursive(m, []string{}, 4, i)...) // nolint: gomnd
+		f.messages = append(f.messages, f.messagesRecursive(m, []string{}, 4, i)...) // nolint: mnd
 	}
 	for i, e := range d.GetEnumType() {
-		f.enums = append(f.enums, NewEnum(e, f, []string{}, 5, i)) // nolint: gomnd
+		f.enums = append(f.enums, NewEnum(e, f, []string{}, 5, i)) // nolint: mnd
 	}
 	return f
 }
@@ -80,7 +80,7 @@ func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string,
 	for i, e := range d.GetEnumType() {
 		p := make([]int, len(paths))
 		copy(p, paths)
-		f.enums = append(f.enums, NewEnum(e, f, prefix, append(p, 5, i)...)) // nolint: gomnd
+		f.enums = append(f.enums, NewEnum(e, f, prefix, append(p, 5, i)...)) // nolint: mnd
 	}
 
 	for i, m := range d.GetNestedType() {
@@ -88,7 +88,7 @@ func (f *File) messagesRecursive(d *descriptor.DescriptorProto, prefix []string,
 		copy(p, paths)
 		messages = append(
 			messages,
-			f.messagesRecursive(m, prefix, append(p, 3, i)...)..., // nolint: gomnd
+			f.messagesRecursive(m, prefix, append(p, 3, i)...)..., // nolint: mnd
 		)
 	}
 	return messages

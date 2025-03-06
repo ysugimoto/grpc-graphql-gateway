@@ -2,18 +2,18 @@
 run:
   concurrency: 4
   timeout: 3m
-  tests: false
-  skip-dirs:
+  tests: false  
+
+issues:
+  exclude-dirs:
     - dist
     - include
     - playground
-
-issues:
   exclude-rules:
     ## Add file patterns to exclude linter
     - path: grpc\/main\.go
       linters:
-        - gomnd
+        - mnd
     - path: protoc-gen-graphql\/template\.go
       linters:
         - lll
@@ -35,7 +35,7 @@ linters:
     - gocritic
     - gocyclo
     - gofmt
-    - gomnd
+    - mnd
     - lll
     - misspell
     - whitespace
@@ -78,7 +78,6 @@ linters-settings:
       - caseOrder
       - commentFormatting
       - commentedOutCode
-      - commentedOutimport
       - defaultCaseOrder
       - dupArg
       - dupBranchBody
@@ -130,12 +129,12 @@ linters-settings:
     min-complexity: 20
   gofmt:
     simplify: true
-  golint:
-    min-confidence: 0.8
-  gomnd:
-    settings:
-      mnd:
-        checks: argument,assign,operation,return
+  mnd:
+    checks: 
+      - argument
+      - assign
+      - operation
+      - return
   lll:
     line-length: 120
   misspell:

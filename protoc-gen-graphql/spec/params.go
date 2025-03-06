@@ -29,7 +29,7 @@ func NewParams(p string) (*Params, error) {
 	}
 
 	for _, v := range strings.Split(p, ",") {
-		kv := strings.SplitN(v, "=", 2) // nolint: gomnd
+		kv := strings.SplitN(v, "=", 2) // nolint: mnd
 		switch kv[0] {
 		case "verbose":
 			params.Verbose = true

@@ -9,7 +9,7 @@ on:
 
 env:
   PROTOC_VERSION: 29.3
-  GO_VERSION: 1.23.4
+  GO_VERSION: 1.24
 
 jobs:
   build:
@@ -31,9 +31,9 @@ jobs:
           sudo ln -s /usr/local/protoc/bin/protoc /usr/local/bin
           sudo ln -s /usr/local/protoc/include/google /usr/local/include/google
       - name: Lint programs
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54
+          version: v1.64
           skip-pkg-cache: true
           skip-build-cache: true
           skip-go-installation: true
