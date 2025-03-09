@@ -41,7 +41,7 @@ func NewMessage(
 	for i, field := range d.GetField() {
 		ps := make([]int, len(paths))
 		copy(ps, paths)
-		ff := NewField(field, f, isCamel, append(ps, 2, i)...) // nolint: gomnd
+		ff := NewField(field, f, isCamel, append(ps, 2, i)...) // nolint: mnd
 		if !ff.IsOmit() {
 			m.fields = append(m.fields, ff)
 		}
@@ -117,7 +117,11 @@ func (m *Message) Interfaces() (ifs []*Message) {
 		if !f.IsCyclic {
 			continue
 		}
-		ifs = append(ifs, f.DependType.(*Message))
+		msg, ok := f.DependType.(*Message)
+		if !ok {
+			continue
+		}
+		ifs = append(ifs, msg)
 	}
 	return ifs
 }

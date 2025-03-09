@@ -2,18 +2,22 @@
 package greeter
 
 import (
-	"context"
-
 	"github.com/graphql-go/graphql"
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
-	gql__type_HelloRequest   *graphql.Object // message HelloRequest in greeter.proto
-	gql__type_HelloReply     *graphql.Object // message HelloReply in greeter.proto
-	gql__type_GoodbyeRequest *graphql.Object // message GoodbyeRequest in greeter.proto
-	gql__type_GoodbyeReply   *graphql.Object // message GoodbyeReply in greeter.proto
+	gql__type_HelloRequest    *graphql.Object      // message HelloRequest in greeter.proto
+	gql__type_HelloReply      *graphql.Object      // message HelloReply in greeter.proto
+	gql__type_GoodbyeRequest  *graphql.Object      // message GoodbyeRequest in greeter.proto
+	gql__type_GoodbyeReply    *graphql.Object      // message GoodbyeReply in greeter.proto
+	gql__input_HelloRequest   *graphql.InputObject // message HelloRequest in greeter.proto
+	gql__input_HelloReply     *graphql.InputObject // message HelloReply in greeter.proto
+	gql__input_GoodbyeRequest *graphql.InputObject // message GoodbyeRequest in greeter.proto
+	gql__input_GoodbyeReply   *graphql.InputObject // message GoodbyeReply in greeter.proto
 )
 
 func Gql__type_HelloRequest() *graphql.Object {
@@ -74,6 +78,64 @@ func Gql__type_GoodbyeReply() *graphql.Object {
 	return gql__type_GoodbyeReply
 }
 
+func Gql__input_HelloRequest() *graphql.InputObject {
+	if gql__input_HelloRequest == nil {
+		gql__input_HelloRequest = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Greeter_Input_HelloRequest",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"name": &graphql.InputObjectFieldConfig{
+					Description: `Below line means the "name" field is required in GraphQL argument`,
+					Type:        graphql.NewNonNull(graphql.String),
+				},
+			},
+		})
+	}
+	return gql__input_HelloRequest
+}
+
+func Gql__input_HelloReply() *graphql.InputObject {
+	if gql__input_HelloReply == nil {
+		gql__input_HelloReply = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Greeter_Input_HelloReply",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"message": &graphql.InputObjectFieldConfig{
+					Type: graphql.String,
+				},
+			},
+		})
+	}
+	return gql__input_HelloReply
+}
+
+func Gql__input_GoodbyeRequest() *graphql.InputObject {
+	if gql__input_GoodbyeRequest == nil {
+		gql__input_GoodbyeRequest = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Greeter_Input_GoodbyeRequest",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"name": &graphql.InputObjectFieldConfig{
+					Description: `Below line means the "name" field is required in GraphQL argument`,
+					Type:        graphql.NewNonNull(graphql.String),
+				},
+			},
+		})
+	}
+	return gql__input_GoodbyeRequest
+}
+
+func Gql__input_GoodbyeReply() *graphql.InputObject {
+	if gql__input_GoodbyeReply == nil {
+		gql__input_GoodbyeReply = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Greeter_Input_GoodbyeReply",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"message": &graphql.InputObjectFieldConfig{
+					Type: graphql.String,
+				},
+			},
+		})
+	}
+	return gql__input_GoodbyeReply
+}
+
 // graphql__resolver_Greeter is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_Greeter struct {
@@ -89,15 +151,26 @@ type graphql__resolver_Greeter struct {
 	conn *grpc.ClientConn
 }
 
+// new_graphql_resolver_Greeter creates pointer of service struct
+func new_graphql_resolver_Greeter(conn *grpc.ClientConn) *graphql__resolver_Greeter {
+	return &graphql__resolver_Greeter{
+		conn: conn,
+		host: "localhost:50051",
+		dialOptions: []grpc.DialOption{
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		},
+	}
+}
+
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
-func (x *graphql__resolver_Greeter) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
+func (x *graphql__resolver_Greeter) CreateConnection() (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
 	if x.conn != nil {
 		return x.conn, func() {}, nil
 	}
 
 	// Otherwise, this handler opens connection with specified host
-	conn, err := grpc.DialContext(ctx, x.host, x.dialOptions...)
+	conn, err := grpc.NewClient(x.host, x.dialOptions...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -117,14 +190,14 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *HelloRequest
+				var req HelloRequest
 				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for hello")
 				}
 				client := NewGreeterClient(conn)
-				resp, err := client.SayHello(p.Context, req)
+				resp, err := client.SayHello(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC SayHello")
 				}
 				return resp, nil
 			},
@@ -139,14 +212,14 @@ func (x *graphql__resolver_Greeter) GetQueries(conn *grpc.ClientConn) graphql.Fi
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *GoodbyeRequest
+				var req GoodbyeRequest
 				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for goodbye")
 				}
 				client := NewGreeterClient(conn)
-				resp, err := client.SayGoodbye(p.Context, req)
+				resp, err := client.SayGoodbye(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC SayGoodbye")
 				}
 				return resp, nil
 			},
@@ -172,20 +245,14 @@ func RegisterGreeterGraphql(mux *runtime.ServeMux) error {
 // You need to close it maunally when application will terminate.
 // Otherwise, you can specify automatic opening connection with ServiceOption directive:
 //
-// service Greeter {
-//    option (graphql.service) = {
-//        host: "host:port"
-//        insecure: true or false
-//    };
+//	service Greeter {
+//	   option (graphql.service) = {
+//	       host: "host:port"
+//	       insecure: true or false
+//	   };
 //
-//    ...with RPC definitions
-// }
+//	   ...with RPC definitions
+//	}
 func RegisterGreeterGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return mux.AddHandler(&graphql__resolver_Greeter{
-		conn: conn,
-		host: "localhost:50051",
-		dialOptions: []grpc.DialOption{
-			grpc.WithInsecure(),
-		},
-	})
+	return mux.AddHandler(new_graphql_resolver_Greeter(conn))
 }

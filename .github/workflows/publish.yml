@@ -6,8 +6,8 @@ on:
       - "v*.*.*"
 
 env:
-  PROTOC_VERSION: 3.14.0
-  GO_VERSION: 1.21.1
+  PROTOC_VERSION: 29.3
+  GO_VERSION: 1.24
 
 jobs:
   build:
@@ -29,9 +29,9 @@ jobs:
           sudo ln -s /usr/local/protoc/bin/protoc /usr/local/bin
           sudo ln -s /usr/local/protoc/include/google /usr/local/include/google
       - name: Lint programs
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54
+          version: v1.64
           skip-pkg-cache: true
           skip-build-cache: true
           skip-go-installation: true
@@ -42,7 +42,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Build app
         run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.5
           make all tag=${{ steps.version.outputs.version }}
       - name: Release app
         uses: softprops/action-gh-release@v2

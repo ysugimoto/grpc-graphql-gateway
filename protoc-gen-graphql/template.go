@@ -6,11 +6,16 @@ package {{ .RootPackage.Name }}
 
 import (
 {{- if .Services }}
-	"context"
 
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
 	"github.com/pkg/errors"
+{{- end }}
+{{- range .Services }}
+	{{- if .Insecure }}
+	"google.golang.org/grpc/credentials/insecure"
+	{{- break }}
+	{{- end }}
 {{- end }}
 	"github.com/graphql-go/graphql"
 
@@ -125,7 +130,7 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 							}
 							{{ $s := index $.Services 0 }}
 							x := new_graphql_resolver_{{ $s.Name }}(nil)
-							conn, closer, err := x.CreateConnection(p.Context)
+							conn, closer, err := x.CreateConnection()
 							if err != nil {
 								return nil, errors.Wrap(err, "Failed to create gRPC connection for nested resolver")
 							}
@@ -219,21 +224,21 @@ func new_graphql_resolver_{{ $service.Name }}(conn *grpc.ClientConn) *graphql__r
 		host: "{{ if .Host }}{{ .Host }}{{ else }}localhost:50051{{ end }}",
 		dialOptions: []grpc.DialOption{
 		{{- if .Insecure }}
-			grpc.WithInsecure(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		{{- end }}
 		},
 	}
 }
 
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
-func (x *graphql__resolver_{{ $service.Name }}) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
+func (x *graphql__resolver_{{ $service.Name }}) CreateConnection() (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
 	if x.conn != nil {
 		return x.conn, func() {}, nil
 	}
 
 	// Otherwise, this handler opens connection with specified host
-	conn, err := grpc.DialContext(ctx, x.host, x.dialOptions...)
+	conn, err := grpc.NewClient(x.host, x.dialOptions...)
 	if err != nil {
 		return nil, nil, err
 	}

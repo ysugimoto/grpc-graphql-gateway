@@ -37,7 +37,7 @@ func marshalSlice(v reflect.Value) []interface{} {
 	size := v.Len()
 	ret := make([]interface{}, size)
 
-	for i := 0; i < size; i++ {
+	for i := range size {
 		vv := derefValue(v.Index(i))
 		switch vv.Kind() {
 		case reflect.Struct:

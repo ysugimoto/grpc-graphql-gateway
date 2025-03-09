@@ -2,23 +2,29 @@
 package starwars
 
 import (
-	"context"
-
 	"github.com/graphql-go/graphql"
+	"github.com/pkg/errors"
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
-	gql__enum_Type               *graphql.Enum      // enum Type in starwars/starwars.proto
-	gql__enum_Episode            *graphql.Enum      // enum Episode in starwars/starwars.proto
-	gql__interface_Character     *graphql.Interface // message Character in starwars/starwars.proto
-	gql__type_ListHumansResponse *graphql.Object    // message ListHumansResponse in starwars/starwars.proto
-	gql__type_ListDroidsResponse *graphql.Object    // message ListDroidsResponse in starwars/starwars.proto
-	gql__type_GetHumanRequest    *graphql.Object    // message GetHumanRequest in starwars/starwars.proto
-	gql__type_GetHeroRequest     *graphql.Object    // message GetHeroRequest in starwars/starwars.proto
-	gql__type_GetDroidRequest    *graphql.Object    // message GetDroidRequest in starwars/starwars.proto
-	gql__type_Character          *graphql.Object    // message Character in starwars/starwars.proto
+	gql__enum_Type                *graphql.Enum        // enum Type in starwars/starwars.proto
+	gql__enum_Episode             *graphql.Enum        // enum Episode in starwars/starwars.proto
+	gql__interface_Character      *graphql.Interface   // message Character in starwars/starwars.proto
+	gql__type_ListHumansResponse  *graphql.Object      // message ListHumansResponse in starwars/starwars.proto
+	gql__type_ListDroidsResponse  *graphql.Object      // message ListDroidsResponse in starwars/starwars.proto
+	gql__type_GetHumanRequest     *graphql.Object      // message GetHumanRequest in starwars/starwars.proto
+	gql__type_GetHeroRequest      *graphql.Object      // message GetHeroRequest in starwars/starwars.proto
+	gql__type_GetDroidRequest     *graphql.Object      // message GetDroidRequest in starwars/starwars.proto
+	gql__type_Character           *graphql.Object      // message Character in starwars/starwars.proto
+	gql__input_ListHumansResponse *graphql.InputObject // message ListHumansResponse in starwars/starwars.proto
+	gql__input_ListDroidsResponse *graphql.InputObject // message ListDroidsResponse in starwars/starwars.proto
+	gql__input_GetHumanRequest    *graphql.InputObject // message GetHumanRequest in starwars/starwars.proto
+	gql__input_GetHeroRequest     *graphql.InputObject // message GetHeroRequest in starwars/starwars.proto
+	gql__input_GetDroidRequest    *graphql.InputObject // message GetDroidRequest in starwars/starwars.proto
+	gql__input_Character          *graphql.InputObject // message Character in starwars/starwars.proto
 )
 
 func Gql__enum_Type() *graphql.Enum {
@@ -27,10 +33,10 @@ func Gql__enum_Type() *graphql.Enum {
 			Name: "Starwars_Enum_Type",
 			Values: graphql.EnumValueConfigMap{
 				"HUMAN": &graphql.EnumValueConfig{
-					Value: 0,
+					Value: Type(0),
 				},
 				"DROID": &graphql.EnumValueConfig{
-					Value: 1,
+					Value: Type(1),
 				},
 			},
 		})
@@ -44,16 +50,16 @@ func Gql__enum_Episode() *graphql.Enum {
 			Name: "Starwars_Enum_Episode",
 			Values: graphql.EnumValueConfigMap{
 				"_": &graphql.EnumValueConfig{
-					Value: 0,
+					Value: Episode(0),
 				},
 				"NEWHOPE": &graphql.EnumValueConfig{
-					Value: 1,
+					Value: Episode(1),
 				},
 				"EMPIRE": &graphql.EnumValueConfig{
-					Value: 2,
+					Value: Episode(2),
 				},
 				"JEDI": &graphql.EnumValueConfig{
-					Value: 3,
+					Value: Episode(3),
 				},
 			},
 		})
@@ -201,6 +207,111 @@ func Gql__type_Character() *graphql.Object {
 	return gql__type_Character
 }
 
+func Gql__input_ListHumansResponse() *graphql.InputObject {
+	if gql__input_ListHumansResponse == nil {
+		gql__input_ListHumansResponse = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Starwars_Input_ListHumansResponse",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"humans": &graphql.InputObjectFieldConfig{
+					Type: graphql.NewList(Gql__input_Character()),
+				},
+			},
+		})
+	}
+	return gql__input_ListHumansResponse
+}
+
+func Gql__input_ListDroidsResponse() *graphql.InputObject {
+	if gql__input_ListDroidsResponse == nil {
+		gql__input_ListDroidsResponse = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Starwars_Input_ListDroidsResponse",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"droids": &graphql.InputObjectFieldConfig{
+					Type: graphql.NewList(Gql__input_Character()),
+				},
+			},
+		})
+	}
+	return gql__input_ListDroidsResponse
+}
+
+func Gql__input_GetHumanRequest() *graphql.InputObject {
+	if gql__input_GetHumanRequest == nil {
+		gql__input_GetHumanRequest = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Starwars_Input_GetHumanRequest",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"id": &graphql.InputObjectFieldConfig{
+					Description: `id of the human`,
+					Type:        graphql.NewNonNull(graphql.Int),
+				},
+			},
+		})
+	}
+	return gql__input_GetHumanRequest
+}
+
+func Gql__input_GetHeroRequest() *graphql.InputObject {
+	if gql__input_GetHeroRequest == nil {
+		gql__input_GetHeroRequest = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Starwars_Input_GetHeroRequest",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"episode": &graphql.InputObjectFieldConfig{
+					Description: `If omitted, returns the hero of the whope saga. If provided, returns the hero of that particular episode.`,
+					Type:        Gql__enum_Episode(),
+				},
+			},
+		})
+	}
+	return gql__input_GetHeroRequest
+}
+
+func Gql__input_GetDroidRequest() *graphql.InputObject {
+	if gql__input_GetDroidRequest == nil {
+		gql__input_GetDroidRequest = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Starwars_Input_GetDroidRequest",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"id": &graphql.InputObjectFieldConfig{
+					Description: `id of the droid`,
+					Type:        graphql.NewNonNull(graphql.Int),
+				},
+			},
+		})
+	}
+	return gql__input_GetDroidRequest
+}
+
+func Gql__input_Character() *graphql.InputObject {
+	if gql__input_Character == nil {
+		gql__input_Character = graphql.NewInputObject(graphql.InputObjectConfig{
+			Name: "Starwars_Input_Character",
+			Fields: graphql.InputObjectConfigFieldMap{
+				"id": &graphql.InputObjectFieldConfig{
+					Type: graphql.Int,
+				},
+				"name": &graphql.InputObjectFieldConfig{
+					Type: graphql.String,
+				},
+				"friends": &graphql.InputObjectFieldConfig{
+					Type: graphql.NewList(Gql__interface_Character()),
+				},
+				"appears_in": &graphql.InputObjectFieldConfig{
+					Type: graphql.NewList(Gql__enum_Episode()),
+				},
+				"home_planet": &graphql.InputObjectFieldConfig{
+					Type: graphql.String,
+				},
+				"primary_function": &graphql.InputObjectFieldConfig{
+					Type: graphql.String,
+				},
+				"type": &graphql.InputObjectFieldConfig{
+					Type: Gql__enum_Type(),
+				},
+			},
+		})
+	}
+	return gql__input_Character
+}
+
 // graphql__resolver_StartwarsService is a struct for making query, mutation and resolve fields.
 // This struct must be implemented runtime.SchemaBuilder interface.
 type graphql__resolver_StartwarsService struct {
@@ -216,15 +327,26 @@ type graphql__resolver_StartwarsService struct {
 	conn *grpc.ClientConn
 }
 
+// new_graphql_resolver_StartwarsService creates pointer of service struct
+func new_graphql_resolver_StartwarsService(conn *grpc.ClientConn) *graphql__resolver_StartwarsService {
+	return &graphql__resolver_StartwarsService{
+		conn: conn,
+		host: "grpc:50051",
+		dialOptions: []grpc.DialOption{
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		},
+	}
+}
+
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
-func (x *graphql__resolver_StartwarsService) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
+func (x *graphql__resolver_StartwarsService) CreateConnection() (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
 	if x.conn != nil {
 		return x.conn, func() {}, nil
 	}
 
 	// Otherwise, this handler opens connection with specified host
-	conn, err := grpc.DialContext(ctx, x.host, x.dialOptions...)
+	conn, err := grpc.NewClient(x.host, x.dialOptions...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -243,14 +365,14 @@ func (x *graphql__resolver_StartwarsService) GetQueries(conn *grpc.ClientConn) g
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *GetHeroRequest
+				var req GetHeroRequest
 				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for hero")
 				}
 				client := NewStartwarsServiceClient(conn)
-				resp, err := client.GetHero(p.Context, req)
+				resp, err := client.GetHero(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC GetHero")
 				}
 				return resp, nil
 			},
@@ -264,14 +386,14 @@ func (x *graphql__resolver_StartwarsService) GetQueries(conn *grpc.ClientConn) g
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *GetHumanRequest
+				var req GetHumanRequest
 				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for human")
 				}
 				client := NewStartwarsServiceClient(conn)
-				resp, err := client.GetHuman(p.Context, req)
+				resp, err := client.GetHuman(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC GetHuman")
 				}
 				return resp, nil
 			},
@@ -285,14 +407,14 @@ func (x *graphql__resolver_StartwarsService) GetQueries(conn *grpc.ClientConn) g
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *GetDroidRequest
+				var req GetDroidRequest
 				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for droid")
 				}
 				client := NewStartwarsServiceClient(conn)
-				resp, err := client.GetDroid(p.Context, req)
+				resp, err := client.GetDroid(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC GetDroid")
 				}
 				return resp, nil
 			},
@@ -301,14 +423,14 @@ func (x *graphql__resolver_StartwarsService) GetQueries(conn *grpc.ClientConn) g
 			Type: graphql.NewList(Gql__type_Character()),
 			Args: graphql.FieldConfigArgument{},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *ListEmptyRequest
+				var req ListEmptyRequest
 				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for humans")
 				}
 				client := NewStartwarsServiceClient(conn)
-				resp, err := client.ListHumans(p.Context, req)
+				resp, err := client.ListHumans(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC ListHumans")
 				}
 				return resp.GetHumans(), nil
 			},
@@ -317,14 +439,14 @@ func (x *graphql__resolver_StartwarsService) GetQueries(conn *grpc.ClientConn) g
 			Type: graphql.NewList(Gql__type_Character()),
 			Args: graphql.FieldConfigArgument{},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				var req *ListEmptyRequest
+				var req ListEmptyRequest
 				if err := runtime.MarshalRequest(p.Args, &req, false); err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to marshal request for droids")
 				}
 				client := NewStartwarsServiceClient(conn)
-				resp, err := client.ListDroids(p.Context, req)
+				resp, err := client.ListDroids(p.Context, &req)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "Failed to call RPC ListDroids")
 				}
 				return resp.GetDroids(), nil
 			},
@@ -350,20 +472,14 @@ func RegisterStartwarsServiceGraphql(mux *runtime.ServeMux) error {
 // You need to close it maunally when application will terminate.
 // Otherwise, you can specify automatic opening connection with ServiceOption directive:
 //
-// service StartwarsService {
-//    option (graphql.service) = {
-//        host: "host:port"
-//        insecure: true or false
-//    };
+//	service StartwarsService {
+//	   option (graphql.service) = {
+//	       host: "host:port"
+//	       insecure: true or false
+//	   };
 //
-//    ...with RPC definitions
-// }
+//	   ...with RPC definitions
+//	}
 func RegisterStartwarsServiceGraphqlHandler(mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return mux.AddHandler(&graphql__resolver_StartwarsService{
-		conn: conn,
-		host: "grpc:50051",
-		dialOptions: []grpc.DialOption{
-			grpc.WithInsecure(),
-		},
-	})
+	return mux.AddHandler(new_graphql_resolver_StartwarsService(conn))
 }
