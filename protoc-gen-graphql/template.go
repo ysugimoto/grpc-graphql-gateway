@@ -360,46 +360,53 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 }
 
 // GetSubscriptions returns graphql.Fields for Subscription.
+// GetSubscriptions returns graphql.Fields for Subscription.
 func (x *graphql__resolver_{{ $service.Name }}) GetSubscriptions(conn *grpc.ClientConn) graphql.Fields {
-	return graphql.Fields{
-	{{- range .Subscriptions }}
-	"{{ .SubscriptionName }}": &graphql.Field{
-		Type: {{ .SubscriptionType }},
-		Args: graphql.FieldConfigArgument{
-		{{- range .Args }}
-		"{{ .FieldName }}": &graphql.ArgumentConfig{Type: {{ .FieldTypeInput $.RootPackage.Name }}},
-		{{- end }}
-		},
-		Subscribe: func(p graphql.ResolveParams) (interface{}, error) {
-			var req {{ .InputType }}
-			if err := runtime.MarshalRequest(p.Args, &req, {{ if .isCamel }}true{{ else }}false{{ end }}); err != nil {
-				return nil, errors.Wrap(err, "marshal subscription request for {{ .SubscriptionName }}")
-			}
-			client := New{{ $service.Name }}Client(conn)
-			stream, err := client.{{ .Method.Name }}(p.Context, &req)
-			if err != nil {
-				return nil, errors.Wrap(err, "call streaming RPC {{ .Method.Name }}")
-			}
-			ch := make(chan interface{})
-			go func() {
-				defer close(ch)
-				for {
-					resp, err := stream.Recv()
-					if err != nil {
-						break
-					}
-					ch <- resp
-				}
-			}()
-			return ch, nil
-		},
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			return p.Source, nil
-		},
-	},
-	{{- end }}
-	}
+    return graphql.Fields{
+    {{- range .Subscriptions }}
+    "{{ .SubscriptionName }}": &graphql.Field{
+        Type: {{ .SubscriptionType }},
+        Args: graphql.FieldConfigArgument{
+        {{- range .Args }}
+        "{{ .FieldName }}": &graphql.ArgumentConfig{Type: {{ .FieldTypeInput $.RootPackage.Name }}},
+        {{- end }}
+        },
+        Subscribe: func(p graphql.ResolveParams) (interface{}, error) {
+            // Create the request object of the correct Go type
+            var req {{ .Method.InputType }}
+            // Marshal GraphQL args into the gRPC request; respect camel-case option
+            if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+                return nil, errors.Wrap(err, "marshal subscription request for {{ .SubscriptionName }}")
+            }
+            client := New{{ $service.Name }}Client(conn)
+            stream, err := client.{{ .Method.Name }}(p.Context, &req)
+            if err != nil {
+                return nil, errors.Wrap(err, "call streaming RPC {{ .Method.Name }}")
+            }
+            // Fan out responses onto a channel
+            ch := make(chan interface{})
+            go func() {
+                defer close(ch)
+                for {
+                    resp, err := stream.Recv()
+                    if err != nil {
+                        break
+                    }
+                    ch <- resp
+                }
+            }()
+            return ch, nil
+        },
+        Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+            // Pass the streamed value straight through
+            return p.Source, nil
+        },
+    },
+    {{- end }}
+    }
 }
+
+
 
 // Register package divided graphql handler "without" *grpc.ClientConn,
 // therefore gRPC connection will be opened and closed automatically.
