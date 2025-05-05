@@ -30,6 +30,10 @@ func (s *Subscription) SubscriptionType() string {
 	return PrefixType(s.Output.Name())
 }
 
+func (s *Subscription) IsCamel() bool {
+	return s.isCamel
+}
+
 // Request returns the GraphQL subscription request metadata.
 func (s *Subscription) Request() *graphql.GraphqlRequest {
 	return s.Schema.GetRequest()
@@ -80,4 +84,8 @@ func (s *Subscription) PluckResponse() []*Field {
 		fields = append(fields, f)
 	}
 	return fields
+}
+
+func (s *Subscription) InputType() string {
+	return s.Input.FullPath() // or however you qualify your Go structs
 }
