@@ -180,6 +180,24 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 				}
 			}
 		}
+
+		for _, s := range s.Subscriptions {
+			input, output := s.Input, s.Output
+			if input.Package() != file.Package() {
+				if spec.IsGooglePackage(input) {
+					packages = append(packages, spec.NewGooglePackage(input))
+				} else {
+					packages = append(packages, spec.NewPackage(input))
+				}
+			}
+			if output.Package() != file.Package() {
+				if spec.IsGooglePackage(output) {
+					packages = append(packages, spec.NewGooglePackage(output))
+				} else {
+					packages = append(packages, spec.NewPackage(output))
+				}
+			}
+		}
 	}
 
 	for _, e := range g.enums {
@@ -318,7 +336,7 @@ func (g *Generator) analyzeServices() (map[string][]*spec.Service, error) {
 			if err := g.analyzeService(f, s); err != nil {
 				return nil, err
 			}
-			if len(s.Queries) > 0 || len(s.Mutations) > 0 {
+			if len(s.Queries) > 0 || len(s.Mutations) > 0 || len(s.Subscriptions) > 0 {
 				services[f.Package()] = append(services[f.Package()], s)
 			}
 		}
@@ -353,8 +371,32 @@ func (g *Generator) analyzeService(f *spec.File, s *spec.Service) error {
 				return err
 			}
 			s.Mutations = append(s.Mutations, mu)
+		case graphql.GraphqlType_SUBSCRIPTION:
+			sub := spec.NewSubscription(m, input, output, g.args.FieldCamelCase)
+			if err := g.analyzeSubscription(f, sub); err != nil {
+				return err
+			}
+			s.Subscriptions = append(s.Subscriptions, sub)
 		}
 	}
+	return nil
+}
+
+func (g *Generator) analyzeSubscription(f *spec.File, s *spec.Subscription) error {
+	g.logger.Write("package %s depends on subscription request %s", f.Package(), s.Input.FullPath())
+
+	// Mark the request type as an input dependency
+	s.Input.Depend(spec.DependTypeInput, f.Package())
+	if err := g.analyzeFields(f.Package(), s.Input, s.PluckRequest(), true, false); err != nil {
+		return err
+	}
+
+	// Mark the streamed response type as a message dependency
+	s.Output.Depend(spec.DependTypeMessage, f.Package())
+	if err := g.analyzeFields(f.Package(), s.Output, s.PluckResponse(), false, false); err != nil {
+		return err
+	}
+
 	return nil
 }
 

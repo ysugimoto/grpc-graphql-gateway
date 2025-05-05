@@ -15,8 +15,9 @@ type Service struct {
 	paths   []int
 	methods []*Method
 
-	Queries   []*Query
-	Mutations []*Mutation
+	Queries       []*Query
+	Mutations     []*Mutation
+	Subscriptions []*Subscription
 }
 
 func NewService(
