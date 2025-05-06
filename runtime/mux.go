@@ -91,7 +91,23 @@ func (s *ServeMux) AddHandler(h GraphqlHandler) error {
 	return nil
 }
 
-// validateHandler, Use remain unchanged
+// ServeWs handles the GraphQL WebSocket upgrade and subscription traffic.
+func (s *ServeMux) ServeWs(w http.ResponseWriter, r *http.Request, schema graphql.Schema) {
+	// If it's not an upgrade or there are no subscriptions, bail out
+	if !websocket.IsWebSocketUpgrade(r) {
+		http.Error(w, "Not a websocket upgrade request", http.StatusBadRequest)
+		return
+	}
+
+	// Create and configure the subscription manager
+	subManager := graphqlws.NewSubscriptionManager(&schema)
+	handler := graphqlws.NewHandler(graphqlws.HandlerConfig{
+		SubscriptionManager: subManager,
+	})
+
+	// Delegate to the graphqlws handler
+	handler.ServeHTTP(w, r)
+}
 
 // ServeHTTP implements http.Handler
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -143,9 +159,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Handle WebSocket upgrade for subscriptions
 	if websocket.IsWebSocketUpgrade(r) && len(subs) > 0 {
 		// Create subscription manager and WS handler
-		subManager := graphqlws.NewSubscriptionManager(&schema)
-		hs := graphqlws.NewHandler(graphqlws.HandlerConfig{SubscriptionManager: subManager})
-		hs.ServeHTTP(w, r)
+		s.ServeWs(w, r, schema)
 		return
 	}
 
