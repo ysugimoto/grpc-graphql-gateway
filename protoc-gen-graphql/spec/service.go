@@ -36,13 +36,14 @@ func NewService(
 	}
 
 	s := &Service{
-		descriptor: d,
-		Option:     o,
-		File:       f,
-		paths:      paths,
-		methods:    make([]*Method, 0),
-		Queries:    make([]*Query, 0),
-		Mutations:  make([]*Mutation, 0),
+		descriptor:    d,
+		Option:        o,
+		File:          f,
+		paths:         paths,
+		methods:       make([]*Method, 0),
+		Queries:       make([]*Query, 0),
+		Mutations:     make([]*Mutation, 0),
+		Subscriptions: make([]*Subscription, 0),
 	}
 
 	for i, m := range d.GetMethod() {

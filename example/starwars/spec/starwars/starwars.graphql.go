@@ -459,6 +459,10 @@ func (x *graphql__resolver_StartwarsService) GetMutations(conn *grpc.ClientConn)
 	return graphql.Fields{}
 }
 
+func (x *graphql__resolver_StartwarsService) GetSubscriptions(conn *grpc.ClientConn) graphql.Fields {
+	return graphql.Fields{}
+}
+
 // Register package divided graphql handler "without" *grpc.ClientConn,
 // therefore gRPC connection will be opened and closed automatically.
 // Occasionally you may worry about open/close performance for each handling graphql request,
