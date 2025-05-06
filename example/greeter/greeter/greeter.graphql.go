@@ -232,6 +232,11 @@ func (x *graphql__resolver_Greeter) GetMutations(conn *grpc.ClientConn) graphql.
 	return graphql.Fields{}
 }
 
+// GetSubscriptions returns acceptable graphql.Fields for Subscription.
+func (x *graphql__resolver_Greeter) GetSubscriptions(conn *grpc.ClientConn) graphql.Fields {
+	return graphql.Fields{}
+}
+
 // Register package divided graphql handler "without" *grpc.ClientConn,
 // therefore gRPC connection will be opened and closed automatically.
 // Occasionally you may worry about open/close performance for each handling graphql request,
