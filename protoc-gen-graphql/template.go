@@ -361,44 +361,69 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 
 // GetSubscriptions returns graphql.Fields for Subscription.
 func (x *graphql__resolver_{{ $service.Name }}) GetSubscriptions(conn *grpc.ClientConn) graphql.Fields {
-	return graphql.Fields{
-	{{- range .Subscriptions }}
-	"{{ .SubscriptionName }}": &graphql.Field{
-		Type: {{ .SubscriptionType }},
-		Args: graphql.FieldConfigArgument{
-		{{- range .Args }}
-		"{{ .FieldName }}": &graphql.ArgumentConfig{Type: {{ .FieldTypeInput $.RootPackage.Name }}},
-		{{- end }}
-		},
-		Subscribe: func(p graphql.ResolveParams) (interface{}, error) {
-			var req {{ .InputType }}
-			if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
-				return nil, errors.Wrap(err, "marshal subscription request for {{ .SubscriptionName }}")
-			}
-			client := New{{ $service.Name }}Client(conn)
-			stream, err := client.{{ .Method.Name }}(p.Context, &req)
-			if err != nil {
-				return nil, errors.Wrap(err, "call streaming RPC {{ .Method.Name }}")
-			}
-			ch := make(chan interface{})
-			go func() {
-				defer close(ch)
-				for {
-					resp, err := stream.Recv()
-					if err != nil {
-						break
-					}
-					ch <- resp
-				}
-			}()
-			return ch, nil
-		},
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			return p.Source, nil
-		},
-	},
-	{{- end }}
-	}
+    return graphql.Fields{
+    {{- range .Subscriptions }}
+        "{{ .SubscriptionName }}": &graphql.Field{
+            Type: {{ .SubscriptionType }},
+            {{- if .Comment }}
+            Description: ` + "`{{ .Comment }}`" + `,
+            {{- end }}
+            Args: graphql.FieldConfigArgument{
+            {{- range .Args }}
+                "{{ .FieldName }}": &graphql.ArgumentConfig{
+                    Type: {{ .FieldTypeInput $.RootPackage.Name }},
+                    {{- if .Comment }}
+                    Description: ` + "`{{ .Comment }}`" + `,
+                    {{- end }}
+                },
+            {{- end }}
+            },
+            Subscribe: func(p graphql.ResolveParams) (interface{}, error) {
+                var req {{ .InputType }}
+                if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+                    return nil, errors.Wrap(err, "Failed to marshal subscription request for {{ .SubscriptionName }}")
+                }
+                client := New{{ $service.Name }}Client(conn)
+                stream, err := client.{{ .Method.Name }}(p.Context, &req)
+                if err != nil {
+                    return nil, errors.Wrap(err, "Failed to call streaming RPC {{ .Method.Name }}")
+                }
+                ch := make(chan interface{})
+                go func() {
+                    defer close(ch)
+                    for {
+                        resp, err := stream.Recv()
+                        if err != nil {
+                            break
+                        }
+                        {{- if .IsPluckResponse }}
+                        // push only the plucked field
+                        ch <- resp.Get{{ .PluckResponseFieldName }}()
+                        {{- else }}
+                        // push the entire message
+                        ch <- resp
+                        {{- end }}
+                    }
+                }()
+                return ch, nil
+            },
+            Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+                {{- if .IsPluckResponse }}
+                // already a scalar or slice, just return it
+                return p.Source, nil
+                {{- else }}
+                    {{- if .IsCamel }}
+                // marshal the full message
+                return runtime.MarshalResponse(p.Source), nil
+                    {{- else }}
+                // raw message, no extra marshalling
+                return p.Source, nil
+                    {{- end }}
+                {{- end }}
+            },
+        },
+    {{- end }}
+    }
 }
 
 

@@ -89,3 +89,11 @@ func (s *Subscription) PluckResponse() []*Field {
 func (s *Subscription) InputType() string {
 	return s.Input.FullPath() // or however you qualify your Go structs
 }
+
+func (s *Subscription) IsPluckResponse() bool {
+	resp := s.Response()
+	if resp == nil {
+		return false
+	}
+	return resp.GetPluck() != ""
+}
