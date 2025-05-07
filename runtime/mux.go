@@ -19,7 +19,7 @@ type (
 )
 
 type GraphqlHandler interface {
-	CreateConnection() (*grpc.ClientConn, func(), error)
+	CreateConnection(context.Context) (*grpc.ClientConn, func(), error)
 	GetMutations(*grpc.ClientConn) graphql.Fields
 	GetQueries(*grpc.ClientConn) graphql.Fields
 	GetSubscriptions(*grpc.ClientConn) graphql.Fields
@@ -140,7 +140,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	subs := graphql.Fields{}
 
 	for _, h := range s.handlers {
-		c, closer, err := h.CreateConnection()
+		c, closer, err := h.CreateConnection(ctx)
 		if err != nil {
 			respondResult(w, &graphql.Result{
 				Errors: []gqlerrors.FormattedError{{
