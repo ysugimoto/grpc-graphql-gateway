@@ -231,7 +231,6 @@ func new_graphql_resolver_{{ $service.Name }}(conn *grpc.ClientConn) *graphql__r
 }
 
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
-// CreateConnection() returns grpc connection which user specified or newly connected and closing function
 func (x *graphql__resolver_{{ $service.Name }}) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
 	if x.conn != nil {
