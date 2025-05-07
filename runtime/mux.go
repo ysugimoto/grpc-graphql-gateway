@@ -111,6 +111,29 @@ func (s *ServeMux) ServeWs(w http.ResponseWriter, r *http.Request, schema graphq
 
 // ServeHTTP implements http.Handler
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	for _, m := range s.middlewares {
+		var err error
+		ctx, err = m(ctx, w, r)
+		if err != nil {
+			ge := GraphqlError{}
+			if me, ok := err.(*MiddlewareError); ok {
+				ge.Message = me.Message
+				ge.Extensions = map[string]interface{}{
+					"code": me.Code,
+				}
+			} else {
+				ge.Message = err.Error()
+				ge.Extensions = map[string]interface{}{
+					"code": "MIDDLEWARE_ERROR",
+				}
+			}
+			respondResult(w, &graphql.Result{
+				Errors: []GraphqlError{ge},
+			})
+			return
+		}
+	}
 	// Build root schema from all handlers
 	queries := graphql.Fields{}
 	mutations := graphql.Fields{}
