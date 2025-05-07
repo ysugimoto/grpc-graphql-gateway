@@ -1,6 +1,8 @@
 package spec
 
 import (
+	"log"
+
 	"github.com/ysugimoto/grpc-graphql-gateway/graphql"
 )
 
@@ -86,14 +88,25 @@ func (s *Subscription) PluckResponse() []*Field {
 	return fields
 }
 
-func (s *Subscription) InputType() string {
-	return s.Input.FullPath() // or however you qualify your Go structs
-}
-
 func (s *Subscription) IsPluckResponse() bool {
 	resp := s.Response()
 	if resp == nil {
 		return false
 	}
 	return resp.GetPluck() != ""
+}
+
+func (s *Subscription) InputType() string {
+	if s.Method.GoPackage() != s.Input.GoPackage() { // If input type is from a different package
+		if IsGooglePackage(s.Input) { // You might need to ensure IsGooglePackage is usable here
+			ptypeName, err := getImplementedPtypes(s.Input) // and getImplementedPtypes
+			if err != nil {
+				log.Fatalln("[PROTOC-GEN-GRAPHQL] Error (Subscription.InputType for Google Ptype):", err)
+			}
+			return "gql_ptypes_" + ptypeName + "." + s.Input.Name() // Assumes s.Input.Name() is simple for ptypes
+		}
+		return s.Input.StructName(false) // Uses the (now fixed) StructName
+	}
+	// If in the same package, use TypeName for correct Go type name
+	return s.Input.TypeName()
 }
