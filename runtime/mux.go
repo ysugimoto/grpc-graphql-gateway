@@ -69,7 +69,7 @@ func (s *ServeMux) validateHandler(h GraphqlHandler) error {
 	}
 
 	if len(subscriptions) > 0 {
-		schemaConfig.Mutation = graphql.NewObject(graphql.ObjectConfig{
+		schemaConfig.Subscription = graphql.NewObject(graphql.ObjectConfig{
 			Name:   "Subscription",
 			Fields: subscriptions,
 		})
