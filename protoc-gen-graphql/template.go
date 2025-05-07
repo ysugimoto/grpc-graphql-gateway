@@ -365,9 +365,9 @@ func (x *graphql__resolver_{{ $service.Name }}) GetSubscriptions(conn *grpc.Clie
     {{- range .Subscriptions }}
         "{{ .SubscriptionName }}": &graphql.Field{
             Type: {{ .SubscriptionType }},
-            {{- if .Comment }}
-            Description: ` + "`{{ .Comment }}`" + `,
-            {{- end }}
+    	  	{{- if .Comment }}
+      			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
+	      	{{- end }}
             Args: graphql.FieldConfigArgument{
             {{- range .Args }}
                 "{{ .FieldName }}": &graphql.ArgumentConfig{
