@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/functionalfoundry/graphqlws"
+	wsgraphql "github.com/eientei/wsgraphql/v1"
+	"github.com/eientei/wsgraphql/v1/compat/gorillaws"
 	"github.com/gorilla/websocket"
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/gqlerrors"
@@ -93,20 +94,33 @@ func (s *ServeMux) AddHandler(h GraphqlHandler) error {
 
 // ServeWs handles the GraphQL WebSocket upgrade and subscription traffic.
 func (s *ServeMux) ServeWs(w http.ResponseWriter, r *http.Request, schema graphql.Schema) {
-	// If it's not an upgrade or there are no subscriptions, bail out
-	if !websocket.IsWebSocketUpgrade(r) {
-		http.Error(w, "Not a websocket upgrade request", http.StatusBadRequest)
+	// wrap your upgrader so it will negotiate *both* the old and the new sub-protocols
+	upgrader := &websocket.Upgrader{
+		Subprotocols: []string{
+			wsgraphql.WebsocketSubprotocolGraphqlWS.String(),          // "graphql-ws"
+			wsgraphql.WebsocketSubprotocolGraphqlTransportWS.String(), // "graphql-transport-ws"
+		},
+		CheckOrigin: func(r *http.Request) bool {
+			// your origin logic here (or just return true)
+			return true
+		},
+	}
+
+	// create a single http.Handler that will do the upgrade & the message loop
+	srv, err := wsgraphql.NewServer(
+		schema,
+		wsgraphql.WithUpgrader(gorillaws.Wrap(upgrader)), // hook into gorilla's upgrader
+		// you can also add interceptors, logging, etc:
+		// wsgraphql.WithInterceptor(myAuthInterceptor),
+	)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to initialize websocket server: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// Create and configure the subscription manager
-	subManager := graphqlws.NewSubscriptionManager(&schema)
-	handler := graphqlws.NewHandler(graphqlws.HandlerConfig{
-		SubscriptionManager: subManager,
-	})
-
-	// Delegate to the graphqlws handler
-	handler.ServeHTTP(w, r)
+	// hand off to wsgraphql — it will do the upgrade, subprotocol negotiation,
+	// and then run your schema over whichever protocol the client picked
+	srv.ServeHTTP(w, r)
 }
 
 // ServeHTTP implements http.Handler
