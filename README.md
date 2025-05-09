@@ -270,7 +270,7 @@ query greeting($name: String = "GraphQL Gateway") {
 #=> {"data":{"goodbye":{"message":"Good-bye, GraphQL Gateway!"},"hello":{"message":"Hello, GraphQL Gateway!"}}}
 ```
 
-We can send subscription
+You can send subscription
 ```shell
 wscat -c ws://localhost:8888/graphql -s graphql-ws
 {"id":"1","type":"subscribe","payload":{"query":"subscription($name:String!){ streamHello(name:$name){ message }}","variables":{"name":"Kamil"}}}
