@@ -76,6 +76,13 @@ service Greeter {
       name: "goodbye" // query name
     };
   }
+
+  rpc StreamGreetings (HelloRequest) returns (stream HelloReply) {
+    option (graphql.schema) = {
+      type: SUBSCRIPTION;
+      name: "streamHello";
+    };
+  }
 }
 
 message HelloRequest {
