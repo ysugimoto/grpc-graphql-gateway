@@ -151,6 +151,41 @@ func (s *Server) SayGoodbye(ctx context.Context, req *greeter.GoodbyeRequest) (*
 	}, nil
 }
 
+func (s *Server) StreamGreetings(req *greeter.HelloRequest, stream greeter.Greeter_StreamGreetingsServer) error {
+	// Get the name from the request
+	name := req.GetName()
+	if name == "" {
+		return status.Error(codes.InvalidArgument, "name cannot be empty")
+	}
+
+	// Define a list of greeting messages to send
+	greetings := []string{
+		fmt.Sprintf("Hello, %s!", name),
+		fmt.Sprintf("Greetings, %s!", name),
+		fmt.Sprintf("Good day, %s!", name),
+		fmt.Sprintf("Welcome, %s!", name),
+		fmt.Sprintf("Hi there, %s!", name),
+	}
+
+	// Stream each greeting to the client
+	for _, greeting := range greetings {
+		// Create the response message
+		reply := &greeter.HelloReply{
+			Message: greeting,
+		}
+
+		// Send the message to the client
+		if err := stream.Send(reply); err != nil {
+			return status.Errorf(codes.Internal, "failed to send greeting: %v", err)
+		}
+
+		// Add a small delay between messages (optional)
+		time.Sleep(time.Millisecond * 200)
+	}
+
+	return nil
+}
+
 func main() {
 	conn, err := net.Listen("tcp", ":500５1")
 	if err != nil {
@@ -233,6 +268,18 @@ query greeting($name: String = "GraphQL Gateway") {
   }
 }'
 #=> {"data":{"goodbye":{"message":"Good-bye, GraphQL Gateway!"},"hello":{"message":"Hello, GraphQL Gateway!"}}}
+```
+
+We can send subscription
+```shell
+wscat -c ws://localhost:8888/graphql -s graphql-ws
+{"id":"1","type":"subscribe","payload":{"query":"subscription($name:String!){ streamHello(name:$name){ message }}","variables":{"name":"Kamil"}}}
+#=>  {"payload":{"data":{"streamHello":{"message":"Hello, Kamil!"}}},"id":"1","type":"data"}
+#=> {"payload":{"data":{"streamHello":{"message":"Greetings, Kamil!"}}},"id":"1","type":"data"}
+#=> {"payload":{"data":{"streamHello":{"message":"Good day, Kamil!"}}},"id":"1","type":"data"}
+#=> {"payload":{"data":{"streamHello":{"message":"Welcome, Kamil!"}}},"id":"1","type":"data"}
+#=> {"payload":{"data":{"streamHello":{"message":"Hi there, Kamil!"}}},"id":"1","type":"data"}
+#=> {"id":"1","type":"complete"}
 ```
 
 This is the most simplest way :-) 
