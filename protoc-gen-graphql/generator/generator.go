@@ -181,8 +181,8 @@ func (g *Generator) generateFile(file *spec.File, tmpl string, services []*spec.
 			}
 		}
 
-		for _, s := range s.Subscriptions {
-			input, output := s.Input, s.Output
+		for _, sub := range s.Subscriptions {
+			input, output := sub.Input, sub.Output
 			if input.Package() != file.Package() {
 				if spec.IsGooglePackage(input) {
 					packages = append(packages, spec.NewGooglePackage(input))
