@@ -6,6 +6,8 @@ on:
       - "*"
     tags-ignore:
       - "v*.*.*"
+  pull_request:
+    branches: [ main ]
 
 env:
   PROTOC_VERSION: 29.3

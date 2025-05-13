@@ -415,7 +415,7 @@ func (x *graphql__resolver_{{ $service.Name }}) GetSubscriptions(conn *grpc.Clie
                 // marshal the full message
                 return runtime.MarshalResponse(p.Source), nil
                     {{- else }}
-                // raw message, no extra marshalling
+                // raw message, no extra marshaling
                 return p.Source, nil
                     {{- end }}
                 {{- end }}

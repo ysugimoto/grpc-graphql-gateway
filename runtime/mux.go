@@ -178,7 +178,11 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	schemaConfig := graphql.SchemaConfig{Query: buildObject("Query", queries), Mutation: buildObject("Mutation", mutations), Subscription: buildObject("Subscription", subs)}
+	schemaConfig := graphql.SchemaConfig{
+		Query:        buildObject("Query", queries),
+		Mutation:     buildObject("Mutation", mutations),
+		Subscription: buildObject("Subscription", subs),
+	}
 	schema, err := graphql.NewSchema(schemaConfig)
 	if err != nil {
 		respondResult(w, &graphql.Result{
@@ -215,7 +219,14 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := graphql.Do(graphql.Params{Schema: schema, RequestString: req.Query, VariableValues: req.Variables, Context: r.Context()})
+	result := graphql.Do(
+		graphql.Params{
+			Schema:         schema,
+			RequestString:  req.Query,
+			VariableValues: req.Variables,
+			Context:        r.Context(),
+		},
+	)
 
 	if len(result.Errors) > 0 {
 		if s.ErrorHandler != nil {
