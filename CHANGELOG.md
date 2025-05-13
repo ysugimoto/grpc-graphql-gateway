@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.24.0
+
+- Adding subscriptions [#79](https://github.com/ysugimoto/grpc-graphql-gateway/pull/79) (@Raezil)
+
 ## v0.22.0
 
 - support parths=source_relative option [#51](https://github.com/ysugimoto/grpc-graphql-gateway/pull/51)
