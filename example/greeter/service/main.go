@@ -60,7 +60,7 @@ func (s *Server) StreamGreetings(req *greeter.HelloRequest, stream greeter.Greet
 		}
 
 		// Add a small delay between messages (optional)
-		time.Sleep(time.Millisecond * 200)
+		time.Sleep(time.Millisecond * 200) // nolint:mnd
 	}
 
 	return nil
