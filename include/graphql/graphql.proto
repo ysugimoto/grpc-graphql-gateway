@@ -150,6 +150,8 @@ enum GraphqlType {
   MUTATION = 1;
   // schema will generate as Resolver. Resolver behaves not listed in query, but can resolve nested field.
   RESOLVER = 2;
+  // schema will generate Subscription.
+  SUBSCRIPTION = 3;
 }
 
 // GraphqlField is FieldOptions in protobuf in order to define type field attribute.

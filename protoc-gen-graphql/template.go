@@ -6,7 +6,7 @@ package {{ .RootPackage.Name }}
 
 import (
 {{- if .Services }}
-
+	"context"
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
 	"github.com/pkg/errors"
@@ -130,7 +130,7 @@ func Gql__type_{{ .TypeName }}() *graphql.Object {
 							}
 							{{ $s := index $.Services 0 }}
 							x := new_graphql_resolver_{{ $s.Name }}(nil)
-							conn, closer, err := x.CreateConnection()
+							conn, closer, err := x.CreateConnection(p.Context)
 							if err != nil {
 								return nil, errors.Wrap(err, "Failed to create gRPC connection for nested resolver")
 							}
@@ -231,20 +231,19 @@ func new_graphql_resolver_{{ $service.Name }}(conn *grpc.ClientConn) *graphql__r
 }
 
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
-func (x *graphql__resolver_{{ $service.Name }}) CreateConnection() (*grpc.ClientConn, func(), error) {
+func (x *graphql__resolver_{{ $service.Name }}) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
 	if x.conn != nil {
 		return x.conn, func() {}, nil
 	}
 
 	// Otherwise, this handler opens connection with specified host
-	conn, err := grpc.NewClient(x.host, x.dialOptions...)
+	conn, err := grpc.DialContext(ctx, x.host, x.dialOptions...)
 	if err != nil {
 		return nil, nil, err
 	}
 	return conn, func() { conn.Close() }, nil
 }
-
 // GetQueries returns acceptable graphql.Fields for Query.
 func (x *graphql__resolver_{{ $service.Name }}) GetQueries(conn *grpc.ClientConn) graphql.Fields {
 	return graphql.Fields{
@@ -357,6 +356,73 @@ func (x *graphql__resolver_{{ $service.Name }}) GetMutations(conn *grpc.ClientCo
 		},
 {{ end }}
 	}
+}
+
+// GetSubscriptions returns graphql.Fields for Subscription.
+func (x *graphql__resolver_{{ $service.Name }}) GetSubscriptions(conn *grpc.ClientConn) graphql.Fields {
+    return graphql.Fields{
+    {{- range .Subscriptions }}
+        "{{ .SubscriptionName }}": &graphql.Field{
+            Type: {{ .SubscriptionType }},
+    	  	{{- if .Comment }}
+      			Description: ` + "`" + `{{ .Comment }}` + "`" + `,
+	      	{{- end }}
+            Args: graphql.FieldConfigArgument{
+            {{- range .Args }}
+                "{{ .FieldName }}": &graphql.ArgumentConfig{
+                    Type: {{ .FieldTypeInput $.RootPackage.Name }},
+                    {{- if .Comment }}
+                    Description: ` + "`{{ .Comment }}`" + `,
+                    {{- end }}
+                },
+            {{- end }}
+            },
+            Subscribe: func(p graphql.ResolveParams) (interface{}, error) {
+                var req {{ .InputType }}
+                if err := runtime.MarshalRequest(p.Args, &req, {{ if .IsCamel }}true{{ else }}false{{ end }}); err != nil {
+                    return nil, errors.Wrap(err, "Failed to marshal subscription request for {{ .SubscriptionName }}")
+                }
+                client := New{{ $service.Name }}Client(conn)
+                stream, err := client.{{ .Method.Name }}(p.Context, &req)
+                if err != nil {
+                    return nil, errors.Wrap(err, "Failed to call streaming RPC {{ .Method.Name }}")
+                }
+                ch := make(chan interface{})
+                go func() {
+                    defer close(ch)
+                    for {
+                        resp, err := stream.Recv()
+                        if err != nil {
+                            break
+                        }
+                        {{- if .IsPluckResponse }}
+                        // push only the plucked field
+                        ch <- resp.Get{{ .PluckResponseFieldName }}()
+                        {{- else }}
+                        // push the entire message
+                        ch <- resp
+                        {{- end }}
+                    }
+                }()
+                return ch, nil
+            },
+            Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+                {{- if .IsPluckResponse }}
+                // already a scalar or slice, just return it
+                return p.Source, nil
+                {{- else }}
+                    {{- if .IsCamel }}
+                // marshal the full message
+                return runtime.MarshalResponse(p.Source), nil
+                    {{- else }}
+                // raw message, no extra marshalling
+                return p.Source, nil
+                    {{- end }}
+                {{- end }}
+            },
+        },
+    {{- end }}
+    }
 }
 
 // Register package divided graphql handler "without" *grpc.ClientConn,

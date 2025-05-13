@@ -7,6 +7,7 @@ import (
 	"github.com/ysugimoto/grpc-graphql-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"context"
 )
 
 var (
@@ -339,19 +340,20 @@ func new_graphql_resolver_StartwarsService(conn *grpc.ClientConn) *graphql__reso
 }
 
 // CreateConnection() returns grpc connection which user specified or newly connected and closing function
-func (x *graphql__resolver_StartwarsService) CreateConnection() (*grpc.ClientConn, func(), error) {
+func (x *graphql__resolver_StartwarsService) CreateConnection(ctx context.Context) (*grpc.ClientConn, func(), error) {
 	// If x.conn is not nil, user injected their own connection
 	if x.conn != nil {
 		return x.conn, func() {}, nil
 	}
 
 	// Otherwise, this handler opens connection with specified host
-	conn, err := grpc.NewClient(x.host, x.dialOptions...)
+	conn, err := grpc.DialContext(ctx, x.host, x.dialOptions...)
 	if err != nil {
 		return nil, nil, err
 	}
 	return conn, func() { conn.Close() }, nil
 }
+
 
 // GetQueries returns acceptable graphql.Fields for Query.
 func (x *graphql__resolver_StartwarsService) GetQueries(conn *grpc.ClientConn) graphql.Fields {
@@ -456,6 +458,10 @@ func (x *graphql__resolver_StartwarsService) GetQueries(conn *grpc.ClientConn) g
 
 // GetMutations returns acceptable graphql.Fields for Mutation.
 func (x *graphql__resolver_StartwarsService) GetMutations(conn *grpc.ClientConn) graphql.Fields {
+	return graphql.Fields{}
+}
+
+func (x *graphql__resolver_StartwarsService) GetSubscriptions(conn *grpc.ClientConn) graphql.Fields {
 	return graphql.Fields{}
 }
 
