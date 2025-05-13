@@ -3,11 +3,12 @@ name: Build application
 on:
   push:
     branches:
-      - "main"
+      - "master"
     tags-ignore:
       - "v*.*.*"
   pull_request:
-    branches: [ main ]
+    branches:
+      - "master"
 
 env:
   PROTOC_VERSION: 29.3
